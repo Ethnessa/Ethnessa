@@ -21,63 +21,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terraria;
 
 namespace TShockAPI.Database
 {
-	public class CharacterManager
+	public static class CharacterManager
 	{
-		public IDbConnection database;
-
-		public CharacterManager(IDbConnection db)
-		{
-			database = db;
-
-			var table = new SqlTable("tsCharacter",
-			                         new SqlColumn("Account", MySqlDbType.Int32) {Primary = true},
-									 new SqlColumn("Health", MySqlDbType.Int32),
-			                         new SqlColumn("MaxHealth", MySqlDbType.Int32),
-									 new SqlColumn("Mana", MySqlDbType.Int32),
-			                         new SqlColumn("MaxMana", MySqlDbType.Int32),
-			                         new SqlColumn("Inventory", MySqlDbType.Text),
-									 new SqlColumn("extraSlot", MySqlDbType.Int32),
-									 new SqlColumn("spawnX", MySqlDbType.Int32),
-									 new SqlColumn("spawnY", MySqlDbType.Int32),
-									 new SqlColumn("skinVariant", MySqlDbType.Int32),
-									 new SqlColumn("hair", MySqlDbType.Int32),
-									 new SqlColumn("hairDye", MySqlDbType.Int32),
-									 new SqlColumn("hairColor", MySqlDbType.Int32),
-									 new SqlColumn("pantsColor", MySqlDbType.Int32),
-									 new SqlColumn("shirtColor", MySqlDbType.Int32),
-									 new SqlColumn("underShirtColor", MySqlDbType.Int32),
-									 new SqlColumn("shoeColor", MySqlDbType.Int32),
-									 new SqlColumn("hideVisuals", MySqlDbType.Int32),
-									 new SqlColumn("skinColor", MySqlDbType.Int32),
-									 new SqlColumn("eyeColor", MySqlDbType.Int32),
-									 new SqlColumn("questsCompleted", MySqlDbType.Int32),
-									 new SqlColumn("usingBiomeTorches", MySqlDbType.Int32),
-									 new SqlColumn("happyFunTorchTime", MySqlDbType.Int32),
-									 new SqlColumn("unlockedBiomeTorches", MySqlDbType.Int32),
-									 new SqlColumn("currentLoadoutIndex", MySqlDbType.Int32),
-									 new SqlColumn("ateArtisanBread", MySqlDbType.Int32),
-									 new SqlColumn("usedAegisCrystal", MySqlDbType.Int32),
-									 new SqlColumn("usedAegisFruit", MySqlDbType.Int32),
-									 new SqlColumn("usedArcaneCrystal", MySqlDbType.Int32),
-									 new SqlColumn("usedGalaxyPearl", MySqlDbType.Int32),
-									 new SqlColumn("usedGummyWorm", MySqlDbType.Int32),
-									 new SqlColumn("usedAmbrosia", MySqlDbType.Int32),
-									 new SqlColumn("unlockedSuperCart", MySqlDbType.Int32),
-									 new SqlColumn("enabledSuperCart", MySqlDbType.Int32)
-				);
-			var creator = new SqlTableCreator(db,
-			                                  db.GetSqlType() == SqlType.Sqlite
-			                                  	? (IQueryBuilder) new SqliteQueryCreator()
-			                                  	: new MysqlQueryCreator());
-			creator.EnsureTableStructure(table);
-		}
-
-		public PlayerData GetPlayerData(TSPlayer player, int acctid)
+		public static Task<PlayerData> GetPlayerData(TSPlayer player, int acctid)
 		{
 			PlayerData playerData = new PlayerData(player);
 

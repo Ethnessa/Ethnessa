@@ -26,7 +26,7 @@ using Terraria.ID;
 
 namespace TShockAPI
 {
-	public class PlayerData
+	public class PlayerData : Entity
 	{
 		public NetItem[] inventory = new NetItem[NetItem.MaxInventory];
 		public int health = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
