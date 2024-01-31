@@ -18,20 +18,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Entities;
 using TShockAPI.Hooks;
 
 namespace TShockAPI.Database
 {
-	public static class ProjectileManager
+	public static class ItemBanManager
 	{
-		public static async Task AddNewBan(short id = 0)
+
+		public static async Task AddNewBan(string itemname = "")
 		{
 			try
 			{
-				ProjectileBan ban = new ProjectileBan(id);
-				await ban.SaveAsync();
+				ItemBan itemban = new ItemBan(itemname);
+
+				if (!(await ItemIsBanned(itemname, null)))
+					await itemban.SaveAsync();
 			}
 			catch (Exception ex)
 			{
@@ -39,13 +44,13 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task RemoveBan(short id)
+		public static async Task RemoveBan(string itemname)
 		{
-			if (!(await ProjectileIsBanned(id, null)))
+			if (!(await ItemIsBanned(itemname, null)))
 				return;
 			try
 			{
-				await DB.DeleteAsync<ProjectileBan>(x => x.ID == id);
+				await DB.DeleteAsync<ItemBan>(x => x.Name == itemname);
 			}
 			catch (Exception ex)
 			{
@@ -53,33 +58,27 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task<bool> ProjectileIsBanned(short id)
+		public static async Task<bool> ItemIsBanned(string name)
 		{
-			return await DB.CountAsync<ProjectileBan>(x => x.ID == id) > 0;
+			return await DB.CountAsync<ItemBan>(x => x.Name == name) > 0;
 		}
 
-		public static async Task<bool> ProjectileIsBanned(short id, TSPlayer ply)
+		public static async Task<bool> ItemIsBanned(string name, TSPlayer ply)
 		{
-			if (await ProjectileIsBanned(id))
-			{
-				ProjectileBan b = await GetBanById(id);
-				return !(await b.HasPermissionToCreateProjectile(ply));
-			}
-
-			return false;
+			ItemBan b = await GetItemBanByName(name);
+			return b != null &&!(await b.HasPermissionToUseItem(ply));
 		}
 
-		public static async Task<bool> AllowGroup(short id, string name)
+		public static async Task<bool> AllowGroup(string item, string name)
 		{
 			string groupsNew = "";
-			ProjectileBan b = await GetBanById(id);
+			ItemBan b = await GetItemBanByName(item);
 			if (b != null)
 			{
 				try
 				{
 					b.AllowedGroups.Add(name);
 					await b.SaveAsync();
-					return true;
 				}
 				catch (Exception ex)
 				{
@@ -90,15 +89,16 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<bool> RemoveGroup(short id, string group)
+		public static async Task<bool> RemoveGroup(string item, string group)
 		{
-			ProjectileBan b = await GetBanById(id);
+			ItemBan b = await GetItemBanByName(item);
 			if (b != null)
 			{
 				try
 				{
 					b.AllowedGroups.Remove(group);
 					await b.SaveAsync();
+
 					return true;
 				}
 				catch (Exception ex)
@@ -110,45 +110,44 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<ProjectileBan?> GetBanById(short id)
+		public static async Task<ItemBan?> GetItemBanByName(string name)
 		{
-			return await DB.Find<ProjectileBan>().Match(x => x.ID == id)
-				.ExecuteFirstAsync();
+			return await DB.Find<ItemBan>().Match(x => x.Name == name).ExecuteFirstAsync();
 		}
 	}
 
-	public class ProjectileBan : Entity, IEquatable<ProjectileBan>
+	public class ItemBan : MongoDB.Entities.Entity, IEquatable<ItemBan>
 	{
-		public short ID { get; set; }
+		public string Name { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
-		public ProjectileBan(short id)
+		public ItemBan(string name)
 			: this()
 		{
-			ID = id;
+			Name = name;
 			AllowedGroups = new List<string>();
 		}
 
-		public ProjectileBan()
+		public ItemBan()
 		{
-			ID = 0;
+			Name = "";
 			AllowedGroups = new List<string>();
 		}
 
-		public bool Equals(ProjectileBan other)
+		public bool Equals(ItemBan other)
 		{
-			return ID == other.ID;
+			return Name == other.Name;
 		}
 
-		public async Task<bool> HasPermissionToCreateProjectile(TSPlayer ply)
+		public async Task<bool> HasPermissionToUseItem(TSPlayer ply)
 		{
 			if (ply == null)
 				return false;
 
-			if (ply.HasPermission(Permissions.canusebannedprojectiles))
+			if (ply.HasPermission(Permissions.usebanneditem))
 				return true;
 
-			PermissionHookResult hookResult = PlayerHooks.OnPlayerProjbanPermission(ply, this);
+			PermissionHookResult hookResult = PlayerHooks.OnPlayerItembanPermission(ply, this);
 			if (hookResult != PermissionHookResult.Unhandled)
 				return hookResult == PermissionHookResult.Granted;
 
@@ -160,23 +159,20 @@ namespace TShockAPI.Database
 				{
 					return true;
 				}
-
 				if (traversed.Contains(cur))
 				{
-					throw new InvalidOperationException(GetString($"Infinite group parenting ({cur.Name})"));
+					throw new InvalidOperationException("Infinite group parenting ({0})".SFormat(cur.Name));
 				}
-
 				traversed.Add(cur);
 				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
-
 			return false;
 			// could add in the other permissions in this class instead of a giant if switch.
 		}
 
 		public override string ToString()
 		{
-			return ID + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
+			return Name + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
 		}
 	}
 }

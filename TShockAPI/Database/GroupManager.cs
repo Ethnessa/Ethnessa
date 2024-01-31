@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Entities;
-using MySql.Data.MySqlClient;
 
 namespace TShockAPI.Database
 {

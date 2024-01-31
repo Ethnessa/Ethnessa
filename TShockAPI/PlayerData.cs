@@ -26,8 +26,9 @@ using Terraria.ID;
 
 namespace TShockAPI
 {
-	public class PlayerData : Entity
+	public class PlayerData : MongoDB.Entities.Entity
 	{
+		public int UserId { get; set; }
 		public NetItem[] inventory = new NetItem[NetItem.MaxInventory];
 		public int health = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
 		public int maxHealth = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
@@ -76,6 +77,8 @@ namespace TShockAPI
 				StoreSlot(i, item.NetId, item.PrefixId, item.Stack);
 			}
 		}
+
+		public PlayerData(){}
 
 		/// <summary>
 		/// Stores an item at the specific storage slot

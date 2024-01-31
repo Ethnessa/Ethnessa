@@ -402,10 +402,8 @@ namespace TShockAPI
 				Warps = new WarpManager();
 				Regions = new RegionManager();
 				UserAccounts = new UserAccountManager();
-				ProjectileBans = new ProjectileManager();
 				TileBans = new TileManager();
 				RememberedPos = new RememberedPosManager();
-				CharacterDB = new CharacterManager();
 				ResearchDatastore = new ResearchDatastore();
 				RestApi = new SecureRest(Netplay.ServerIP, Config.Settings.RestApiPort);
 				RestManager = new RestManager(RestApi);

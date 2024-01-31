@@ -20,104 +20,23 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using MySql.Data.MySqlClient;
+using System.Threading.Tasks;
 using Terraria;
 using Microsoft.Xna.Framework;
+using MongoDB.Driver;
+using MongoDB.Entities;
+using Entity = MongoDB.Entities.Entity;
 
 namespace TShockAPI.Database
 {
 	/// <summary>
 	/// Represents the Region database manager.
 	/// </summary>
-	public class RegionManager
+	public static class RegionManager
 	{
-		/// <summary>
-		/// The list of regions.
-		/// </summary>
-		public List<Region> Regions = new List<Region>();
-
-		private IDbConnection database;
-
-		internal RegionManager(IDbConnection db)
+		public static async Task<int> CountRegions()
 		{
-			database = db;
-			var table = new SqlTable("Regions",
-									 new SqlColumn("Id", MySqlDbType.Int32) {Primary = true, AutoIncrement = true},
-									 new SqlColumn("X1", MySqlDbType.Int32),
-									 new SqlColumn("Y1", MySqlDbType.Int32),
-									 new SqlColumn("width", MySqlDbType.Int32),
-									 new SqlColumn("height", MySqlDbType.Int32),
-									 new SqlColumn("RegionName", MySqlDbType.VarChar, 50) {Unique = true},
-									 new SqlColumn("WorldID", MySqlDbType.VarChar, 50) { Unique = true },
-									 new SqlColumn("UserIds", MySqlDbType.Text),
-									 new SqlColumn("Protected", MySqlDbType.Int32),
-									 new SqlColumn("Groups", MySqlDbType.Text),
-									 new SqlColumn("Owner", MySqlDbType.VarChar, 50),
-									 new SqlColumn("Z", MySqlDbType.Int32){ DefaultValue = "0" }
-				);
-			var creator = new SqlTableCreator(db,
-											  db.GetSqlType() == SqlType.Sqlite
-											  	? (IQueryBuilder) new SqliteQueryCreator()
-											  	: new MysqlQueryCreator());
-			creator.EnsureTableStructure(table);
-		}
-
-		/// <summary>
-		/// Reloads all regions.
-		/// </summary>
-		public void Reload()
-		{
-			try
-			{
-				using (var reader = database.QueryReader("SELECT * FROM Regions WHERE WorldID=@0", Main.worldID.ToString()))
-				{
-					Regions.Clear();
-					while (reader.Read())
-					{
-						int id = reader.Get<int>("Id");
-						int X1 = reader.Get<int>("X1");
-						int Y1 = reader.Get<int>("Y1");
-						int height = reader.Get<int>("height");
-						int width = reader.Get<int>("width");
-						int Protected = reader.Get<int>("Protected");
-						string mergedids = reader.Get<string>("UserIds");
-						string name = reader.Get<string>("RegionName");
-						string owner = reader.Get<string>("Owner");
-						string groups = reader.Get<string>("Groups");
-						int z = reader.Get<int>("Z");
-
-						string[] splitids = mergedids.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
-
-						Region r = new Region(id, new Rectangle(X1, Y1, width, height), name, owner, Protected != 0, Main.worldID.ToString(), z);
-						r.SetAllowedGroups(groups);
-						try
-						{
-							for (int i = 0; i < splitids.Length; i++)
-							{
-								int userid;
-
-								if (Int32.TryParse(splitids[i], out userid)) // if unparsable, it's not an int, so silently skip
-									r.AllowedIDs.Add(userid);
-								else
-									TShock.Log.Warn(GetString($"One of your UserIDs is not a usable integer: {splitids[i]}"));
-							}
-						}
-						catch (Exception e)
-						{
-							TShock.Log.Error(GetString("Your database contains invalid UserIDs (they should be integers)."));
-							TShock.Log.Error(GetString("A lot of things will fail because of this. You must manually delete and re-create the allowed field."));
-							TShock.Log.Error(e.ToString());
-							TShock.Log.Error(e.StackTrace);
-						}
-
-						Regions.Add(r);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				TShock.Log.Error(ex.ToString());
-			}
+			return Convert.ToInt32(await DB.CountAsync<Region>());
 		}
 
 		/// <summary>
@@ -132,31 +51,16 @@ namespace TShockAPI.Database
 		/// <param name="worldid">The world id that this region is in.</param>
 		/// <param name="z">The Z index of the region.</param>
 		/// <returns>Whether the region was created and added successfully.</returns>
-		public bool AddRegion(int tx, int ty, int width, int height, string regionname, string owner, string worldid, int z = 0)
+		public static async Task<bool> AddRegion(int tx, int ty, int width, int height, string regionname, string owner, string worldid, int z = 0)
 		{
-			if (GetRegionByName(regionname) != null)
+			if (await GetRegionByName(regionname) != null)
 			{
 				return false;
 			}
 			try
 			{
-				database.Query(
-					"INSERT INTO Regions (X1, Y1, width, height, RegionName, WorldID, UserIds, Protected, `Groups`, Owner, Z) VALUES (@0, @1, @2, @3, @4, @5, @6, @7, @8, @9, @10);",
-					tx, ty, width, height, regionname, worldid, "", 1, "", owner, z);
-				int id;
-				using (QueryResult res = database.QueryReader("SELECT Id FROM Regions WHERE RegionName = @0 AND WorldID = @1", regionname, worldid))
-				{
-					if (res.Read())
-					{
-						id = res.Get<int>("Id");
-					}
-					else
-					{
-						return false;
-					}
-				}
-				Region region = new Region(id, new Rectangle(tx, ty, width, height), regionname, owner, true, worldid, z);
-				Regions.Add(region);
+				int nextId = await CountRegions();
+				Region region = new Region(nextId, new Rectangle(tx, ty, width, height), regionname, owner, true, worldid, z);
 				Hooks.RegionHooks.OnRegionCreated(region);
 				return true;
 			}
@@ -172,15 +76,21 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="id">The ID of the region to delete.</param>
 		/// <returns>Whether the region was successfully deleted.</returns>
-		public bool DeleteRegion(int id)
+		public static async Task<bool> DeleteRegion(int id)
 		{
 			try
 			{
-				database.Query("DELETE FROM Regions WHERE Id=@0 AND WorldID=@1", id, Main.worldID.ToString());
 				var worldid = Main.worldID.ToString();
-				var region = Regions.FirstOrDefault(r => r.ID == id && r.WorldID == worldid);
-				Regions.RemoveAll(r => r.ID == id && r.WorldID == worldid);
-				Hooks.RegionHooks.OnRegionDeleted(region);
+
+				var region = await DB.Find<Region>().Match(x=>x.ID == id && x.WorldID == worldid)
+					.ExecuteFirstAsync();
+
+				if (region is not null)
+				{
+					Hooks.RegionHooks.OnRegionDeleted(region);
+					await region.DeleteAsync();
+				}
+
 				return true;
 			}
 			catch (Exception ex)
@@ -195,15 +105,21 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">The name of the region to delete.</param>
 		/// <returns>Whether the region was successfully deleted.</returns>
-		public bool DeleteRegion(string name)
+		public static async Task<bool> DeleteRegion(string name)
 		{
 			try
 			{
-				database.Query("DELETE FROM Regions WHERE RegionName=@0 AND WorldID=@1", name, Main.worldID.ToString());
 				var worldid = Main.worldID.ToString();
-				var region = Regions.FirstOrDefault(r => r.Name == name && r.WorldID == worldid);
-				Regions.RemoveAll(r => r.Name == name && r.WorldID == worldid);
-				Hooks.RegionHooks.OnRegionDeleted(region);
+
+				var region = await DB.Find<Region>().Match(x=>x.Name == name && x.WorldID == worldid)
+					.ExecuteFirstAsync();
+
+				if (region is not null)
+				{
+					Hooks.RegionHooks.OnRegionDeleted(region);
+					await region.DeleteAsync();
+				}
+
 				return true;
 			}
 			catch (Exception ex)
@@ -219,16 +135,19 @@ namespace TShockAPI.Database
 		/// <param name="id">The ID of the region to change.</param>
 		/// <param name="state">New protected state of the region.</param>
 		/// <returns>Whether the region's state was successfully changed.</returns>
-		public bool SetRegionState(int id, bool state)
+		public static async Task<bool> SetRegionState(int id, bool state)
 		{
 			try
 			{
-				database.Query("UPDATE Regions SET Protected = @0 WHERE Id = @1 AND WorldID = @2", state ? 1 : 0, id,
-							   Main.worldID.ToString());
-				var region = GetRegionByID(id);
-				if (region != null)
+				var worldId = Main.worldID.ToString();
+
+				var region = await DB.Find<Region>().Match(x=>x.ID == id && x.WorldID == worldId)
+					.ExecuteFirstAsync();
+
+				if (region is not null)
 				{
 					region.DisableBuild = state;
+					await region.SaveAsync();
 				}
 				return true;
 			}
@@ -245,15 +164,17 @@ namespace TShockAPI.Database
 		/// <param name="name">The name of the region to change.</param>
 		/// <param name="state">New protected state of the region.</param>
 		/// <returns>Whether the region's state was successfully changed.</returns>
-		public bool SetRegionState(string name, bool state)
+		public static async Task<bool> SetRegionState(string name, bool state)
 		{
 			try
 			{
-				database.Query("UPDATE Regions SET Protected=@0 WHERE RegionName=@1 AND WorldID=@2", state ? 1 : 0, name,
-							   Main.worldID.ToString());
-				var region = GetRegionByName(name);
-				if (region != null)
+				var region = await GetRegionByName(name);
+				if (region is not null)
+				{
 					region.DisableBuild = state;
+					await region.SaveAsync();
+				}
+
 				return true;
 			}
 			catch (Exception ex)
@@ -270,7 +191,7 @@ namespace TShockAPI.Database
 		/// <param name="y">Y coordinate</param>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player can build at the given (x, y) coordinate</returns>
-		public bool CanBuild(int x, int y, TSPlayer ply)
+		public static async Task<bool> CanBuild(int x, int y, TSPlayer ply)
 		{
 			if (!ply.HasPermission(Permissions.canbuild))
 			{
@@ -278,7 +199,10 @@ namespace TShockAPI.Database
 			}
 			Region top = null;
 
-			foreach (Region region in Regions.ToList())
+			var regions = await DB.Find<Region>().Match(r => r.InArea(x, y) && r.WorldID == Main.worldID.ToString())
+				.ExecuteAsync();
+
+			foreach (Region region in regions)
 			{
 				if (region.InArea(x, y))
 				{
@@ -295,33 +219,9 @@ namespace TShockAPI.Database
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
 		/// <returns>Whether any regions exist at the given (x, y) coordinate</returns>
-		public bool InArea(int x, int y)
+		public static async Task<bool> InArea(int x, int y)
 		{
-			return Regions.Any(r => r.InArea(x, y));
-		}
-
-		/// <summary>
-		/// Checks if any regions exist at the given (x, y) coordinate
-		/// and returns an IEnumerable containing their names
-		/// </summary>
-		/// <param name="x">X coordinate</param>
-		/// <param name="y">Y coordinate</param>
-		/// <returns>The names of any regions that exist at the given (x, y) coordinate</returns>
-		public IEnumerable<string> InAreaRegionName(int x, int y)
-		{
-			return Regions.Where(r => r.InArea(x, y)).Select(r => r.Name);
-		}
-
-		/// <summary>
-		/// Checks if any regions exist at the given (x, y) coordinate
-		/// and returns an IEnumerable containing their IDs
-		/// </summary>
-		/// <param name="x">X coordinate</param>
-		/// <param name="y">Y coordinate</param>
-		/// <returns>The IDs of any regions that exist at the given (x, y) coordinate</returns>
-		public IEnumerable<int> InAreaRegionID(int x, int y)
-		{
-			return Regions.Where(r => r.InArea(x, y)).Select(r => r.ID);
+			return await DB.CountAsync<Region>(r => r.InArea(x, y)) > 0;
 		}
 
 		/// <summary>
@@ -331,9 +231,9 @@ namespace TShockAPI.Database
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
 		/// <returns>The <see cref="Region"/> objects of any regions that exist at the given (x, y) coordinate</returns>
-		public IEnumerable<Region> InAreaRegion(int x, int y)
+		public static async Task<IEnumerable<Region>> InAreaRegion(int x, int y)
 		{
-			return Regions.Where(r => r.InArea(x, y));
+			return await DB.Find<Region>().Match(r => r.InArea(x, y)).ExecuteAsync();
 		}
 
 		/// <summary>
@@ -709,7 +609,7 @@ namespace TShockAPI.Database
 		}
 	}
 
-	public class Region
+	public class Region : Entity
 	{
 		public int ID { get; set; }
 		public Rectangle Area { get; set; }

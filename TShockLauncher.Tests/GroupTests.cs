@@ -9,7 +9,6 @@ public class GroupTests
 	/// <summary>
 	/// This tests to ensure the group commands work.
 	/// </summary>
-	/// <remarks>Due to the switch to Microsoft.Data.Sqlite, nulls have to be replaced with DBNull for the query to complete</remarks>
 	[TestCase]
 	public void TestPermissions()
 	{

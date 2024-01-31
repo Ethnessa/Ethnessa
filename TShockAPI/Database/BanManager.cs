@@ -20,7 +20,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Data;
-using MySql.Data.MySqlClient;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -173,7 +172,7 @@ namespace TShockAPI.Database
 
 			await ban.SaveAsync();
 
-			TShock.Log.Info("A new ban has been created for: ");
+			TShock.Log.Info("A new ban has been created, ID:  " + ban.BanId);
 			OnBanAdd?.Invoke(ban);
 			return ban;
 		}

@@ -38,7 +38,7 @@ namespace TShockAPI
 	{
 
 		/// <summary>The database connection layer to for the item ban subsystem.</summary>
-		public ItemManager DataModel;
+		public ItemBanManager DataModel;
 
 		/// <summary>The last time the second update process was run. Used to throttle task execution.</summary>
 		private DateTime LastTimelyRun = DateTime.UtcNow;
@@ -52,7 +52,7 @@ namespace TShockAPI
 		/// <returns>A new item ban system.</returns>
 		internal ItemBans(TShock plugin, IDbConnection database)
 		{
-			DataModel = new ItemManager(database);
+			DataModel = new ItemBanManager(database);
 			Plugin = plugin;
 
 			ServerApi.Hooks.GameUpdate.Register(plugin, OnGameUpdate);
