@@ -3531,7 +3531,7 @@ namespace TShockAPI
 
 							try
 							{
-								TShock.Groups.UpdateGroup(groupName, group.ParentName, group.Permissions, group.ChatColor, newSuffix, group.Prefix);
+								TShock.Groups.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, group.ChatColor, newSuffix, group.Prefix);
 
 								if (!string.IsNullOrWhiteSpace(newSuffix))
 									args.Player.SendSuccessMessage(GetString("Suffix of group \"{0}\" set to \"{1}\".", groupName, newSuffix));
@@ -3576,7 +3576,7 @@ namespace TShockAPI
 
 							try
 							{
-								TShock.Groups.UpdateGroup(groupName, group.ParentName, group.Permissions, group.ChatColor, group.Suffix, newPrefix);
+								TShock.Groups.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, group.ChatColor, group.Suffix, newPrefix);
 
 								if (!string.IsNullOrWhiteSpace(newPrefix))
 									args.Player.SendSuccessMessage(GetString("Prefix of group \"{0}\" set to \"{1}\".", groupName, newPrefix));
@@ -3627,7 +3627,7 @@ namespace TShockAPI
 							{
 								try
 								{
-									TShock.Groups.UpdateGroup(groupName, group.ParentName, group.Permissions, newColor, group.Suffix, group.Prefix);
+									TShock.Groups.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, newColor, group.Suffix, group.Prefix);
 
 									args.Player.SendSuccessMessage(GetString("Chat color for group \"{0}\" set to \"{1}\".", groupName, newColor));
 								}

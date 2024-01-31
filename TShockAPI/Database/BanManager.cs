@@ -48,12 +48,12 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Event invoked after a ban is added
 		/// </summary>
-		public static event EventHandler<BanEventArgs> OnBanAdd;
+		public static event Action<Ban> OnBanAdd;
 
 		/// <summary>
 		/// Event invoked after a user is unbanned
 		/// </summary>
-		public static event EventHandler<BanEventArgs> OnBanRemove;
+		public static event Action<Ban> OnBanRemove;
 
 
 		internal static async Task<bool> IsPlayerBanned(TSPlayer player)
@@ -140,7 +140,7 @@ namespace TShockAPI.Database
 			};
 		}
 
-		public static Ban CreateBan(BanType type, string value, string reason, UserAccount banningUser, DateTime start,
+		public static async Task<Ban> CreateBan(BanType type, string value, string reason, UserAccount banningUser, DateTime start,
 			DateTime? endDate = null)
 		{
 			Ban ban = new()
@@ -171,15 +171,40 @@ namespace TShockAPI.Database
 				default: throw new Exception("Invalid ban type!");
 			}
 
+			await ban.SaveAsync();
+
 			TShock.Log.Info("A new ban has been created for: ");
+			OnBanAdd?.Invoke(ban);
 			return ban;
 		}
 
-		public static bool UnbanPlayer(string accountName)
+		/// <summary>
+		/// Remove a ban from the database
+		/// </summary>
+		/// <param name="value">An account name, ban ID, Ip Address, or Uuid</param>
+		/// <returns>True if the ban was found and removed</returns>
+		public static async Task<bool> RemoveBan(string value)
 		{
-			
-		}
+			var ban = await DB.Find<Ban>()
+				.Match(x => x.AccountName == value || x.BanId.ToString() == value
+				|| x.IpAddress == value || x.Uuid == value)
+				.ExecuteFirstAsync();
 
+			if (ban == null) return false;
+
+			try
+			{
+				OnBanRemove?.Invoke(ban);
+				await ban.DeleteAsync();
+				return true;
+			}
+			catch (Exception ex)
+			{
+				TShock.Log.Error("There was an error removing the ban: " + ban.BanId);
+				TShock.Log.ConsoleError(ex.ToString());
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// Removes all bans from the database

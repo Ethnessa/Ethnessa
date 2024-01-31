@@ -95,9 +95,6 @@ namespace TShockAPI
 		/// <summary>Players - Contains all TSPlayer objects for accessing TSPlayers currently on the server</summary>
 		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
 
-		/// <summary>Bans - Static reference to the ban manager for accessing bans &amp; related functions.</summary>
-		public static BanManager Bans;
-
 		/// <summary>Warps - Static reference to the warp manager for accessing the warp system.</summary>
 		public static WarpManager Warps;
 
@@ -106,9 +103,6 @@ namespace TShockAPI
 
 		/// <summary>Backups - Static reference to the backup manager for accessing the backup system.</summary>
 		public static BackupManager Backups;
-
-		/// <summary>Groups - Static reference to the group manager for accessing the group system.</summary>
-		public static GroupManager Groups;
 
 		/// <summary>Users - Static reference to the user manager for accessing the user database system.</summary>
 		public static UserAccountManager UserAccounts;
@@ -402,11 +396,12 @@ namespace TShockAPI
 				Backups = new BackupManager(Path.Combine(SavePath, "backups"));
 				Backups.KeepFor = Config.Settings.BackupKeepFor;
 				Backups.Interval = Config.Settings.BackupInterval;
-				Bans = new BanManager();
+
+				await GroupManager.EnsureDefaultGroups();
+
 				Warps = new WarpManager();
 				Regions = new RegionManager();
 				UserAccounts = new UserAccountManager();
-				Groups = new GroupManager();
 				ProjectileBans = new ProjectileManager();
 				TileBans = new TileManager();
 				RememberedPos = new RememberedPosManager();

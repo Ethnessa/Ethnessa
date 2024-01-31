@@ -1082,7 +1082,7 @@ namespace TShockAPI
 			var groups = new ArrayList();
 			foreach (Group group in TShock.Groups)
 			{
-				groups.Add(new Dictionary<string, object> { { "name", group.Name }, { "parent", group.ParentName }, { "chatcolor", group.ChatColor } });
+				groups.Add(new Dictionary<string, object> { { "name", group.Name }, { "parent", group.ParentGroupName }, { "chatcolor", group.ChatColor } });
 			}
 			return new RestObject() { { "groups", groups } };
 		}
@@ -1101,7 +1101,7 @@ namespace TShockAPI
 			Group group = (Group)ret;
 			return new RestObject() {
 				{"name", group.Name},
-				{"parent", group.ParentName},
+				{"parent", group.ParentGroupName},
 				{"chatcolor", string.Format("{0},{1},{2}", group.R, group.G, group.B)},
 				{"permissions", group.permissions},
 				{"negatedpermissions", group.negatedpermissions},
@@ -1172,7 +1172,7 @@ namespace TShockAPI
 				return ret;
 
 			Group group = (Group)ret;
-			var parent = (null == args.Parameters["parent"]) ? group.ParentName : args.Parameters["parent"];
+			var parent = (null == args.Parameters["parent"]) ? group.ParentGroupName : args.Parameters["parent"];
 			var chatcolor = (null == args.Parameters["chatcolor"]) ? string.Format("{0}.{1}.{2}", group.R, group.G, group.B) : args.Parameters["chatcolor"];
 			var permissions = (null == args.Parameters["permissions"]) ? group.Permissions : args.Parameters["permissions"];
 			try
