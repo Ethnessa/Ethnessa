@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using TShockAPI.Database;
+using TShockAPI.Database.Models;
+
 namespace TShockAPI.Hooks
 {
 	public class AccountDeleteEventArgs

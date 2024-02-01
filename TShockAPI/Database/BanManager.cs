@@ -26,6 +26,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using MongoDB.Entities;
+using TShockAPI.Database.Models;
 using Entity = Terraria.Entity;
 
 namespace TShockAPI.Database

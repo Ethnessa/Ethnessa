@@ -20,56 +20,21 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using MySql.Data.MySqlClient;
+using System.Threading.Tasks;
+using MongoDB.Entities;
+using Terraria;
 using TShockAPI.Hooks;
 
 namespace TShockAPI.Database
 {
-	public class TileManager
+	public static class TileManager
 	{
-		private IDbConnection database;
-		public List<TileBan> TileBans = new List<TileBan>();
-
-		public TileManager(IDbConnection db)
-		{
-			database = db;
-
-			var table = new SqlTable("TileBans",
-				new SqlColumn("TileId", MySqlDbType.Int32) { Primary = true },
-				new SqlColumn("AllowedGroups", MySqlDbType.Text)
-				);
-			var creator = new SqlTableCreator(db,
-				db.GetSqlType() == SqlType.Sqlite
-					? (IQueryBuilder)new SqliteQueryCreator()
-					: new MysqlQueryCreator());
-			creator.EnsureTableStructure(table);
-			UpdateBans();
-		}
-
-		public void UpdateBans()
-		{
-			TileBans.Clear();
-
-			using (var reader = database.QueryReader("SELECT * FROM TileBans"))
-			{
-				while (reader != null && reader.Read())
-				{
-					TileBan ban = new TileBan((short)reader.Get<Int32>("TileId"));
-					ban.SetAllowedGroups(reader.Get<string>("AllowedGroups"));
-					TileBans.Add(ban);
-				}
-			}
-		}
-
-		public void AddNewBan(short id = 0)
+		public static async Task AddNewBan(short id = 0)
 		{
 			try
 			{
-				database.Query("INSERT INTO TileBans (TileId, AllowedGroups) VALUES (@0, @1);",
-					id, "");
-
-				if (!TileIsBanned(id, null))
-					TileBans.Add(new TileBan(id));
+				TileBan tileban = new TileBan(id);
+				await tileban.SaveAsync();
 			}
 			catch (Exception ex)
 			{
@@ -77,14 +42,13 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public void RemoveBan(short id)
+		public static async Task RemoveBan(short id)
 		{
-			if (!TileIsBanned(id, null))
+			if (!(await TileIsBanned(id, null)))
 				return;
 			try
 			{
-				database.Query("DELETE FROM TileBans WHERE TileId=@0;", id);
-				TileBans.Remove(new TileBan(id));
+				await DB.DeleteAsync<TileBan>(x => x.Eq(y=>y.ID, id));
 			}
 			catch (Exception ex)
 			{
@@ -92,90 +56,59 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public bool TileIsBanned(short id)
+		public static async Task<bool> TileIsBanned(short id)
 		{
-			if (TileBans.Contains(new TileBan(id)))
-			{
-				return true;
-			}
+			return (await DB.CountAsync<TileBan>(x=>x.ID==id)) > 0;
+		}
+
+		public static async Task<bool> TileIsBanned(short id, TSPlayer ply)
+		{
+			TileBan b = await GetBanById(id);
+			return !(await b.HasPermissionToPlaceTile(ply));
+
 			return false;
 		}
 
-		public bool TileIsBanned(short id, TSPlayer ply)
-		{
-			if (TileBans.Contains(new TileBan(id)))
-			{
-				TileBan b = GetBanById(id);
-				return !b.HasPermissionToPlaceTile(ply);
-			}
-			return false;
-		}
-
-		public bool AllowGroup(short id, string name)
+		public static async Task<bool> AllowGroup(short id, string name)
 		{
 			string groupsNew = "";
-			TileBan b = GetBanById(id);
+			var b = await GetBanById(id);
 			if (b != null)
 			{
-				try
+				if (!b.AllowedGroups.Contains(name))
 				{
-					groupsNew = String.Join(",", b.AllowedGroups);
-					if (groupsNew.Length > 0)
-						groupsNew += ",";
-					groupsNew += name;
-					b.SetAllowedGroups(groupsNew);
-
-					int q = database.Query("UPDATE TileBans SET AllowedGroups=@0 WHERE TileId=@1", groupsNew,
-						id);
-
-					return q > 0;
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
+					b.AllowedGroups.Add(name);
+					groupsNew = string.Join(",", b.AllowedGroups);
+					await b.SaveAsync();
+					return true;
 				}
 			}
 
 			return false;
 		}
 
-		public bool RemoveGroup(short id, string group)
+		public static async Task<bool> RemoveGroup(short id, string name)
 		{
-			TileBan b = GetBanById(id);
+			var b = await GetBanById(id);
 			if (b != null)
 			{
-				try
+				if (b.RemoveGroup(name))
 				{
-					b.RemoveGroup(group);
-					string groups = string.Join(",", b.AllowedGroups);
-					int q = database.Query("UPDATE TileBans SET AllowedGroups=@0 WHERE TileId=@1", groups,
-						id);
-
-					if (q > 0)
-						return true;
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
+					await b.SaveAsync();
+					return true;
 				}
 			}
+
 			return false;
 		}
 
-		public TileBan GetBanById(short id)
+		public static async Task<TileBan?> GetBanById(short id)
 		{
-			foreach (TileBan b in TileBans)
-			{
-				if (b.ID == id)
-				{
-					return b;
-				}
-			}
-			return null;
+			return await DB.Find<TileBan>().Match(x=>x.ID==id).ExecuteFirstAsync();
 		}
 	}
 
-	public class TileBan : IEquatable<TileBan>
+	public class TileBan : MongoDB.Entities.Entity, IEquatable<TileBan>
 	{
 		public short ID { get; set; }
 		public List<string> AllowedGroups { get; set; }
@@ -198,7 +131,7 @@ namespace TShockAPI.Database
 			return ID == other.ID;
 		}
 
-		public bool HasPermissionToPlaceTile(TSPlayer ply)
+		public async Task<bool> HasPermissionToPlaceTile(TSPlayer ply)
 		{
 			if (ply == null)
 				return false;
@@ -223,7 +156,7 @@ namespace TShockAPI.Database
 					throw new InvalidOperationException(GetString($"Infinite group parenting ({cur.Name})"));
 				}
 				traversed.Add(cur);
-				cur = cur.Parent;
+				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
 			return false;
 			// could add in the other permissions in this class instead of a giant if switch.

@@ -9,22 +9,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="270e07cd-11a2-4564-8334-4f153bba4dd7" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/RememberedPosition.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/SacrificedItem.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/UserAccount.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/.name" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/IQueryBuilder.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ItemManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ItemBanManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/SqlColumn.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/SqlTable.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/SqlValue.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/PlayerData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/TShock.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShock.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/RememberedPosManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/RememberedPosManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/WarpsManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/WarpsManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/AccountHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/AccountHooks.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/TShockAPI.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShockAPI.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockLauncher.Tests/GroupTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockLauncher.Tests/GroupTests.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,6 +118,7 @@
       <updated>1706669685380</updated>
       <workItem from="1706669687665" duration="6597000" />
       <workItem from="1706709458367" duration="4057000" />
+      <workItem from="1706804502037" duration="8457000" />
     </task>
     <servers />
   </component>

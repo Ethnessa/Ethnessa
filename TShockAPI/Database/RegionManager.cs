@@ -247,7 +247,7 @@ namespace TShockAPI.Database
 		/// 2 = resize height.
 		/// 3 = resize width and X.</param>
 		/// <returns></returns>
-		public bool ResizeRegion(string regionName, int addAmount, int direction)
+		public static async Task<bool> ResizeRegion(string regionName, int addAmount, int direction)
 		{
 			//0 = up
 			//1 = right
@@ -260,17 +260,12 @@ namespace TShockAPI.Database
 
 			try
 			{
-				using (var reader = database.QueryReader("SELECT X1, Y1, height, width FROM Regions WHERE RegionName=@0 AND WorldID=@1",
-													  regionName, Main.worldID.ToString()))
+				Region region = await GetRegionByName(regionName);
+				if (region is null)
 				{
-					if (reader.Read())
-					{
-						X = reader.Get<int>("X1");
-						width = reader.Get<int>("width");
-						Y = reader.Get<int>("Y1");
-						height = reader.Get<int>("height");
-					}
+					return false;
 				}
+
 				switch (direction)
 				{
 					case 0:
@@ -291,12 +286,9 @@ namespace TShockAPI.Database
 						return false;
 				}
 
-				foreach (var region in Regions.Where(r => r.Name == regionName))
-					region.Area = new Rectangle(X, Y, width, height);
-				int q = database.Query("UPDATE Regions SET X1 = @0, Y1 = @1, width = @2, height = @3 WHERE RegionName = @4 AND WorldID=@5", X, Y, width,
-						height, regionName, Main.worldID.ToString());
-				if (q > 0)
-					return true;
+				region.Area = new Rectangle(X, Y, width, height);
+				await region.SaveAsync();
+				return true;
 			}
 			catch (Exception ex)
 			{
@@ -311,32 +303,29 @@ namespace TShockAPI.Database
 		/// <param name="oldName">Name of the region to rename</param>
 		/// <param name="newName">New name of the region</param>
 		/// <returns>true if renamed successfully, false otherwise</returns>
-		public bool RenameRegion(string oldName, string newName)
+		public static async Task<bool> RenameRegion(string oldName, string newName)
 		{
-			Region region = null;
-			string worldID = Main.worldID.ToString();
-
-			bool result = false;
-
 			try
 			{
-				int q = database.Query("UPDATE Regions SET RegionName = @0 WHERE RegionName = @1 AND WorldID = @2",
-																					newName, oldName, worldID);
-
-				if (q > 0)
+				Region region = await GetRegionByName(oldName);
+				if (region is null)
 				{
-					region = Regions.First(r => r.Name == oldName && r.WorldID == worldID);
-					region.Name = newName;
-					Hooks.RegionHooks.OnRegionRenamed(region, oldName, newName);
-					result = true;
+					return false;
 				}
+
+
+				region.Name = newName;
+				await region.SaveAsync();
+				Hooks.RegionHooks.OnRegionRenamed(region, oldName, newName);
+				return true;
+
 			}
 			catch (Exception ex)
 			{
 				TShock.Log.Error(ex.ToString());
 			}
 
-			return result;
+			return false;
 		}
 
 		/// <summary>
@@ -345,22 +334,18 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Name of the region to modify</param>
 		/// <param name="userName">Username to remove</param>
 		/// <returns>true if removed successfully</returns>
-		public bool RemoveUser(string regionName, string userName)
+		public static async Task<bool> RemoveUser(string regionName, string userName)
 		{
-			Region r = GetRegionByName(regionName);
-			if (r != null)
-			{
-				if (!r.RemoveID(TShock.UserAccounts.GetUserAccountID(userName)))
-				{
-					return false;
-				}
+			Region r = await GetRegionByName(regionName);
+			if (r == null) return false;
 
-				string ids = string.Join(",", r.AllowedIDs);
-				return database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", ids,
-									   regionName, Main.worldID.ToString()) > 0;
+			if (!r.RemoveID((await UserAccountManager.GetUserAccountByName(userName))?.ID ?? 0))
+			{
+				return false;
 			}
 
-			return false;
+			await r.SaveAsync();
+			return true;
 		}
 
 		/// <summary>
@@ -369,38 +354,23 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Name of the region to modify</param>
 		/// <param name="userName">Username to add</param>
 		/// <returns>true if added successfully</returns>
-		public bool AddNewUser(string regionName, string userName)
+		public static async Task<bool> AddNewUser(string regionName, string userName)
 		{
 			try
 			{
-				string mergedIDs = string.Empty;
-				using (
-					var reader = database.QueryReader("SELECT UserIds FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName,
-													  Main.worldID.ToString()))
-				{
-					if (reader.Read())
-						mergedIDs = reader.Get<string>("UserIds");
-				}
+				Region region = await GetRegionByName(regionName);
+				var userId = (await UserAccountManager.GetUserAccountByName(userName))?.ID;
 
-				string userIdToAdd = Convert.ToString(TShock.UserAccounts.GetUserAccountID(userName));
-				string[] ids = mergedIDs.Split(',');
+				if (userId is null)
+					return false;
+
 				// Is the user already allowed to the region?
-				if (ids.Contains(userIdToAdd))
+				if (region.AllowedIDs.Contains(userId.GetValueOrDefault()))
 					return true;
 
-				if (string.IsNullOrEmpty(mergedIDs))
-					mergedIDs = userIdToAdd;
-				else
-					mergedIDs = string.Concat(mergedIDs, ",", userIdToAdd);
-
-				int q = database.Query("UPDATE Regions SET UserIds=@0 WHERE RegionName=@1 AND WorldID=@2", mergedIDs,
-									   regionName, Main.worldID.ToString());
-				foreach (var r in Regions)
-				{
-					if (r.Name == regionName && r.WorldID == Main.worldID.ToString())
-						r.SetAllowedIDs(mergedIDs);
-				}
-				return q != 0;
+				region.AllowedIDs.Add(userId.GetValueOrDefault());
+				await region.SaveAsync();
+				return true;
 			}
 			catch (Exception ex)
 			{
@@ -418,16 +388,20 @@ namespace TShockAPI.Database
 		/// <param name="height">The height.</param>
 		/// <param name="width">The width.</param>
 		/// <returns>Whether the operation succeeded.</returns>
-		public bool PositionRegion(string regionName, int x, int y, int width, int height)
+		public static async Task<bool> PositionRegion(string regionName, int x, int y, int width, int height)
 		{
 			try
 			{
-				Region region = Regions.First(r => String.Equals(regionName, r.Name, StringComparison.OrdinalIgnoreCase));
+				Region region = await GetRegionByName(regionName);
+				if (region is null)
+				{
+					throw new Exception("Region not found");
+				}
+
 				region.Area = new Rectangle(x, y, width, height);
 
-				if (database.Query("UPDATE Regions SET X1 = @0, Y1 = @1, width = @2, height = @3 WHERE RegionName = @4 AND WorldID = @5",
-					x, y, width, height, regionName, Main.worldID.ToString()) > 0)
-					return true;
+				await region.SaveAsync();
+				return true;
 			}
 			catch (Exception ex)
 			{
@@ -439,18 +413,14 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Gets all the regions names from world
 		/// </summary>
-		/// <param name="worldid">World name to get regions from</param>
+		/// <param name="worldId">World name to get regions from</param>
 		/// <returns>List of regions with only their names</returns>
-		public List<Region> ListAllRegions(string worldid)
+		public static async Task<List<Region>> ListAllRegions(string worldId)
 		{
 			var regions = new List<Region>();
 			try
 			{
-				using (var reader = database.QueryReader("SELECT RegionName FROM Regions WHERE WorldID=@0", worldid))
-				{
-					while (reader.Read())
-						regions.Add(new Region {Name = reader.Get<string>("RegionName")});
-				}
+				regions = await DB.Find<Region>().Match(x => x.WorldID == worldId).ExecuteAsync();
 			}
 			catch (Exception ex)
 			{
@@ -464,9 +434,10 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">Region name</param>
 		/// <returns>The region with the given name, or null if not found</returns>
-		public Region GetRegionByName(String name)
+		public static async Task<Region?> GetRegionByName(String name)
 		{
-			return Regions.FirstOrDefault(r => r.Name.Equals(name) && r.WorldID == Main.worldID.ToString());
+			return await DB.Find<Region>().Match(x => x.Name == name && x.WorldID == Main.worldID.ToString())
+				.ExecuteFirstAsync();
 		}
 
 		/// <summary>
@@ -474,9 +445,10 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="id">Region ID</param>
 		/// <returns>The region with the given ID, or null if not found</returns>
-		public Region GetRegionByID(int id)
+		public static async Task<Region?> GetRegionByID(int id)
 		{
-			return Regions.FirstOrDefault(r => r.ID == id && r.WorldID == Main.worldID.ToString());
+			return await DB.Find<Region>().Match(x => x.ID == id && x.WorldID == Main.worldID.ToString())
+				.ExecuteFirstAsync();
 		}
 
 		/// <summary>
@@ -485,18 +457,14 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Region name</param>
 		/// <param name="newOwner">New owner's username</param>
 		/// <returns>Whether the change was successful</returns>
-		public bool ChangeOwner(string regionName, string newOwner)
+		public static async Task<bool> ChangeOwner(string regionName, string newOwner)
 		{
-			var region = GetRegionByName(regionName);
-			if (region != null)
-			{
-				region.Owner = newOwner;
-				int q = database.Query("UPDATE Regions SET Owner=@0 WHERE RegionName=@1 AND WorldID=@2", newOwner,
-									   regionName, Main.worldID.ToString());
-				if (q > 0)
-					return true;
-			}
-			return false;
+			var region = await GetRegionByName(regionName);
+			if (region == null) return false;
+
+			region.Owner = newOwner;
+			await region.SaveAsync();
+			return true;
 		}
 
 		/// <summary>
@@ -505,40 +473,21 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Region name</param>
 		/// <param name="groupName">Group's name</param>
 		/// <returns>Whether the change was successful</returns>
-		public bool AllowGroup(string regionName, string groupName)
+		public static async Task<bool> AllowGroup(string regionName, string groupName)
 		{
-			string mergedGroups = "";
-			using (
-				var reader = database.QueryReader("SELECT `Groups` FROM Regions WHERE RegionName=@0 AND WorldID=@1", regionName,
-												  Main.worldID.ToString()))
-			{
-				if (reader.Read())
-					mergedGroups = reader.Get<string>("Groups");
-			}
-
-			string[] groups = mergedGroups.Split(',');
-			// Is the group already allowed to the region?
-			if (groups.Contains(groupName))
-				return true;
-
-			if (mergedGroups != "")
-				mergedGroups += ",";
-			mergedGroups += groupName;
-
-			int q = database.Query("UPDATE Regions SET `Groups`=@0 WHERE RegionName=@1 AND WorldID=@2", mergedGroups,
-								   regionName, Main.worldID.ToString());
-
-			Region r = GetRegionByName(regionName);
-			if (r != null)
-			{
-				r.SetAllowedGroups(mergedGroups);
-			}
-			else
+			var region = await GetRegionByName(regionName);
+			if (region is null)
 			{
 				return false;
 			}
 
-			return q > 0;
+			// Is the group already allowed to the region?
+			if (region.AllowedGroups.Contains(groupName))
+				return true;
+
+			region.AllowedGroups.Add(groupName);
+			await region.SaveAsync();
+			return true;
 		}
 
 		/// <summary>
@@ -547,19 +496,21 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Region name</param>
 		/// <param name="group">Group name</param>
 		/// <returns>Whether the change was successful</returns>
-		public bool RemoveGroup(string regionName, string group)
+		public static async Task<bool> RemoveGroup(string regionName, string group)
 		{
-			Region r = GetRegionByName(regionName);
-			if (r != null)
+			var region = await GetRegionByName(regionName);
+			if (region is null)
 			{
-				r.RemoveGroup(group);
-				string groups = string.Join(",", r.AllowedGroups);
-				int q = database.Query("UPDATE Regions SET `Groups`=@0 WHERE RegionName=@1 AND WorldID=@2", groups,
-									   regionName, Main.worldID.ToString());
-				if (q > 0)
-					return true;
+				return false;
 			}
-			return false;
+
+			if (!region.RemoveGroup(group))
+			{
+				return false;
+			}
+
+			await region.SaveAsync();
+			return true;
 		}
 
 		/// <summary>
@@ -567,7 +518,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="regions">List of Regions to compare</param>
 		/// <returns></returns>
-		public Region GetTopRegion(IEnumerable<Region> regions)
+		public static async Task<Region> GetTopRegion(IEnumerable<Region> regions)
 		{
 			Region ret = null;
 			foreach (Region r in regions)
@@ -589,16 +540,15 @@ namespace TShockAPI.Database
 		/// <param name="name">Region name</param>
 		/// <param name="z">New Z index</param>
 		/// <returns>Whether the change was successful</returns>
-		public bool SetZ(string name, int z)
+		public static async Task<bool> SetZ(string name, int z)
 		{
 			try
 			{
-				database.Query("UPDATE Regions SET Z=@0 WHERE RegionName=@1 AND WorldID=@2", z, name,
-							   Main.worldID.ToString());
+				var region = await GetRegionByName(name);
+				if (region is null) return false;
 
-				var region = GetRegionByName(name);
-				if (region != null)
-					region.Z = z;
+				region.Z = z;
+				await region.SaveAsync();
 				return true;
 			}
 			catch (Exception ex)

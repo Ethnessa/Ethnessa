@@ -29,6 +29,7 @@ using Rests;
 using Terraria;
 using TShockAPI.Database;
 using Newtonsoft.Json;
+using Nito.AsyncEx;
 
 namespace TShockAPI
 {
@@ -306,9 +307,7 @@ namespace TShockAPI
 		{
 			if (string.IsNullOrWhiteSpace(args.Parameters["cmd"]))
 				return RestMissingParam("cmd");
-
-			Group restPlayerGroup = TShock.Groups.GetGroupByName(args.TokenData.UserGroupName);
-
+			
 			TSRestPlayer tr = new TSRestPlayer(args.TokenData.Username, restPlayerGroup);
 			Commands.HandleCommand(tr, args.Parameters["cmd"]);
 			return new RestObject()

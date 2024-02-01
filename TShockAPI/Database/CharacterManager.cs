@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MongoDB.Entities;
 using Terraria;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI.Database
 {

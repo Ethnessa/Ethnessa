@@ -18,51 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Data;
-using MySql.Data.MySqlClient;
+using System.Threading.Tasks;
 using Terraria;
 using Microsoft.Xna.Framework;
+using MongoDB.Entities;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI.Database
 {
-	public class RememberedPosManager
+	public static class RememberedPosManager
 	{
-		public IDbConnection database;
-
-		public RememberedPosManager(IDbConnection db)
-		{
-			database = db;
-
-			var table = new SqlTable("RememberedPos",
-			                         new SqlColumn("Name", MySqlDbType.VarChar, 50) {Primary = true},
-			                         new SqlColumn("IP", MySqlDbType.Text),
-			                         new SqlColumn("X", MySqlDbType.Int32),
-			                         new SqlColumn("Y", MySqlDbType.Int32),
-			                         new SqlColumn("WorldID", MySqlDbType.Text)
-				);
-			var creator = new SqlTableCreator(db,
-			                                  db.GetSqlType() == SqlType.Sqlite
-			                                  	? (IQueryBuilder) new SqliteQueryCreator()
-			                                  	: new MysqlQueryCreator());
-			creator.EnsureTableStructure(table);
-		}
-
-		public Vector2 CheckLeavePos(string name)
+		public static async Task<Vector2?> GetLeavePos(int accountId)
 		{
 			try
 			{
-				using (var reader = database.QueryReader("SELECT * FROM RememberedPos WHERE Name=@0", name))
+				var pos = await DB.Find<RememberedPosition>()
+					.Match(x => x.AccountId == accountId && x.WorldId == Main.worldID)
+					.Sort(x=>x.Descending(y=>y.Created))
+					.ExecuteFirstAsync();
+
+				if (pos is not null)
 				{
-					if (reader.Read())
-					{
-						int checkX=reader.Get<int>("X");
-						int checkY=reader.Get<int>("Y");
-						//fix leftover inconsistencies
-						if (checkX==0)
-						   checkX++;
-						if (checkY==0)
-						   checkY++;
-						return new Vector2(checkX, checkY);
-					}
+					return pos.Position;
 				}
 			}
 			catch (Exception ex)
@@ -70,56 +47,19 @@ namespace TShockAPI.Database
 				TShock.Log.Error(ex.ToString());
 			}
 
-			return new Vector2();
+			return null;
 		}
 
-
-
-		public Vector2 GetLeavePos(string name, string IP)
+		public static async Task InsertLeavePos(int accountId, int X, int Y)
 		{
 			try
 			{
-				using (var reader = database.QueryReader("SELECT * FROM RememberedPos WHERE Name=@0 AND IP=@1 AND WorldID=@2", name, IP, Main.worldID.ToString()))
-				{
-					if (reader.Read())
-					{
-						return new Vector2(reader.Get<int>("X"), reader.Get<int>("Y"));
-					}
-				}
+				RememberedPosition pos = new(accountId, X, Y, Main.worldID);
+				await pos.SaveAsync();
 			}
 			catch (Exception ex)
 			{
 				TShock.Log.Error(ex.ToString());
-			}
-
-			return new Vector2();
-		}
-
-		public void InsertLeavePos(string name, string IP, int X, int Y)
-		{
-			if (CheckLeavePos(name) == Vector2.Zero)
-			{
-				try
-				{
-					if ((X != 0) && ( Y !=0)) //invalid pos!
-					database.Query("INSERT INTO RememberedPos (Name, IP, X, Y, WorldID) VALUES (@0, @1, @2, @3, @4);", name, IP, X, Y , Main.worldID.ToString());
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
-				}
-			}
-			else
-			{
-				try
-				{
-					if ((X != 0) && ( Y !=0)) //invalid pos!
-					database.Query("UPDATE RememberedPos SET X = @0, Y = @1, IP = @2, WorldID = @3 WHERE Name = @4;", X, Y, IP, Main.worldID.ToString(), name);
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
-				}
 			}
 		}
 	}
