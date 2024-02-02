@@ -65,12 +65,34 @@ namespace TShockAPI.Localization
 					Buffs.Add(i, Lang.GetBuffName(i));
 				}
 
-				foreach (var field in typeof(Main).Assembly.GetType("Terraria.ID.PrefixID")
-							.GetFields().Where(f => !f.Name.Equals("Count", StringComparison.Ordinal)))
+				try
 				{
-					var i = (int)field.GetValue(null);
-					Prefixs.Add(i, Lang.prefix[i].Value);
+					// Ensure the type is found before proceeding
+					var prefixIdType = typeof(Main).Assembly.GetType("Terraria.AccountId.PrefixID");
+					if (prefixIdType != null)
+					{
+						// Iterate over fields excluding "Count"
+						foreach (var field in prefixIdType.GetFields().Where(f => !f.Name.Equals("Count", StringComparison.Ordinal)))
+						{
+							// Ensure the field is static and of type int
+							if (field.IsStatic && field.FieldType == typeof(int))
+							{
+								var i = (int)field.GetValue(null); // Safe cast as we checked field type
+
+								// Ensure Lang.prefix is properly initialized and index exists
+								if (Lang.prefix != null && i >= 0 && i < Lang.prefix.Length && Lang.prefix[i] != null)
+								{
+									Prefixs.Add(i, Lang.prefix[i].Value);
+								}
+							}
+						}
+					}
 				}
+				catch (Exception ex)
+				{
+					TShock.Log.ConsoleError($"Error processing fields: {ex.Message}");
+				}
+
 			}
 			finally
 			{
@@ -84,7 +106,7 @@ namespace TShockAPI.Localization
 		/// <summary>
 		/// Get the english name of an item
 		/// </summary>
-		/// <param name="id">Id of the item</param>
+		/// <param name="id">AccountId of the item</param>
 		/// <returns>Item name in English</returns>
 		public static string GetItemNameById(int id)
 		{
@@ -98,7 +120,7 @@ namespace TShockAPI.Localization
 		/// <summary>
 		/// Get the english name of a npc
 		/// </summary>
-		/// <param name="id">Id of the npc</param>
+		/// <param name="id">AccountId of the npc</param>
 		/// <returns>Npc name in English</returns>
 		public static string GetNpcNameById(int id)
 		{
@@ -112,7 +134,7 @@ namespace TShockAPI.Localization
 		/// <summary>
 		/// Get prefix in English
 		/// </summary>
-		/// <param name="id">Prefix Id</param>
+		/// <param name="id">Prefix AccountId</param>
 		/// <returns>Prefix in English</returns>
 		public static string GetPrefixById(int id)
 		{
@@ -126,7 +148,7 @@ namespace TShockAPI.Localization
 		/// <summary>
 		/// Get buff name in English
 		/// </summary>
-		/// <param name="id">Buff Id</param>
+		/// <param name="id">Buff AccountId</param>
 		/// <returns>Buff name in English</returns>
 		public static string GetBuffNameById(int id)
 		{

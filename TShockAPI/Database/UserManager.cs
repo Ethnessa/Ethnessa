@@ -26,6 +26,7 @@ using BCrypt.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using MongoDB.Entities;
 using TShockAPI.Database.Models;
 
@@ -53,6 +54,7 @@ namespace TShockAPI.Database
 					throw new UserAccountExistsException(account.Name);
 				}
 
+				account.AccountId = await GetNextUserId();
 				await account.SaveAsync();
 			}
 			catch (Exception ex)
@@ -61,6 +63,13 @@ namespace TShockAPI.Database
 			}
 
 			Hooks.AccountHooks.OnAccountCreate(account);
+		}
+
+		public static async Task<int> GetNextUserId()
+		{
+			if (await DB.Queryable<UserAccount>().AnyAsync() is false)
+				return 0;
+			return (int)await DB.Queryable<UserAccount>().MaxAsync(x => x.AccountId) + 1;
 		}
 
 		/// <summary>
@@ -160,14 +169,14 @@ namespace TShockAPI.Database
 			}
 		}
 
-		/// <summary>Gets the database ID of a given user account object from the database.</summary>
+		/// <summary>Gets the database AccountId of a given user account object from the database.</summary>
 		/// <param name="username">The username of the user account to query for.</param>
-		/// <returns>The user account ID</returns>
+		/// <returns>The user account AccountId</returns>
 		public static async Task<int?> GetUserAccountId(string username)
 		{
 			try
 			{
-				return (await DB.Find<UserAccount>().Match(x => x.Name == username).ExecuteFirstAsync())?.ID;
+				return (await DB.Find<UserAccount>().Match(x => x.Name == username).ExecuteFirstAsync())?.AccountId;
 			}
 			catch (Exception ex)
 			{
@@ -192,14 +201,14 @@ namespace TShockAPI.Database
 			}
 		}
 
-		/// <summary>Gets a user account object by their user account ID.</summary>
-		/// <param name="id">The user's ID.</param>
+		/// <summary>Gets a user account object by their user account AccountId.</summary>
+		/// <param name="id">The user's AccountId.</param>
 		/// <returns>The user account object returned from the search.</returns>
 		public static async Task<UserAccount?> GetUserAccountById(int id)
 		{
 			try
 			{
-				return await GetUserAccount(new UserAccount { ID = id });
+				return await GetUserAccount(new UserAccount { AccountId = id });
 			}
 			catch (UserAccountManagerException)
 			{
@@ -212,11 +221,11 @@ namespace TShockAPI.Database
 		/// <returns>The user object that is returned from the search.</returns>
 		public static async Task<UserAccount?> GetUserAccount(UserAccount account)
 		{
-			if (account.ID == 0 && string.IsNullOrWhiteSpace(account.Name))
-				throw new UserAccountManagerException(GetString("User account ID and Name are both empty"));
+			if (account.AccountId == 0 && string.IsNullOrWhiteSpace(account.Name))
+				throw new UserAccountManagerException(GetString("User account AccountId and Name are both empty"));
 
 			return await DB.Find<UserAccount>()
-				.Match(x => x.Name == account.Name || x.ID == account.ID)
+				.Match(x => x.Name == account.Name || x.AccountId == account.AccountId)
 				.ExecuteFirstAsync();
 		}
 

@@ -76,7 +76,7 @@ namespace TShockAPI
 		internal delegate int PlaceStyleCorrector(Player player, int requestedPlaceStyle, int actualItemPlaceStyle);
 
 		/// <summary>
-		/// Represents a dictionary of <see cref="PlaceStyleCorrector"/>s, the key is the tile ID and the value is the corrector.
+		/// Represents a dictionary of <see cref="PlaceStyleCorrector"/>s, the key is the tile AccountId and the value is the corrector.
 		/// </summary>
 		internal Dictionary<int, PlaceStyleCorrector> PlaceStyleCorrectors = new Dictionary<int, PlaceStyleCorrector>();
 
@@ -211,7 +211,7 @@ namespace TShockAPI
 				(player, requestedPlaceStyle, actualItemPlaceStyle) =>
 				{
 					// RNG only generates placeStyles less than 18, so permit only <18.
-					// Note: Gelatin Crystals(Queen Slime summon) share the same ID as Crystal Shards.
+					// Note: Gelatin Crystals(Queen Slime summon) share the same AccountId as Crystal Shards.
 					// <18 includes all shards except Gelatin Crystals.
 					if (requestedPlaceStyle < 18)
 					{
@@ -658,7 +658,7 @@ namespace TShockAPI
 						return;
 					}
 
-					// This is the actual tile ID we expect the selected item to create. If the tile ID from the packet and the tile ID from the item do not match
+					// This is the actual tile AccountId we expect the selected item to create. If the tile AccountId from the packet and the tile AccountId from the item do not match
 					// we need to inspect further to determine if Terraria is sending funny information (which it does sometimes) or if someone is being malicious
 					var actualTileToBeCreated = selectedItem.createTile;
 					// This is the actual place style we expect the selected item to create. Same as above - if it differs from what the client tells us,
@@ -1875,7 +1875,7 @@ namespace TShockAPI
 			if (id >= Main.maxPlayers)
 			{
 				TShock.Log.ConsoleDebug(GetString(
-					"Bouncer / OnPlayerBuff rejected {0} ({1}) applying buff {2} to {3} for {4} ticks: target ID out of bounds",
+					"Bouncer / OnPlayerBuff rejected {0} ({1}) applying buff {2} to {3} for {4} ticks: target AccountId out of bounds",
 					args.Player.Name, args.Player.Index, type, id, time));
 				Reject(false);
 				return;
@@ -2834,7 +2834,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Returns the max <see cref="Item.placeStyle"/> associated with the given <paramref name="tileID"/>. Or -1 if there's no association
 		/// </summary>
-		/// <param name="tileID">Tile ID to query for</param>
+		/// <param name="tileID">Tile AccountId to query for</param>
 		/// <returns>The max <see cref="Item.placeStyle"/>, otherwise -1 if there's no association</returns>
 		internal static int GetMaxPlaceStyle(int tileID)
 		{
@@ -2856,7 +2856,7 @@ namespace TShockAPI
 		{
 			{ BuffID.Poisoned, 3600 },              // BuffID: 20
 			{ BuffID.OnFire, 1200 },                // BuffID: 24
-			{ BuffID.Confused, short.MaxValue },    // BuffID: 31 Brain of Confusion Internal Item ID: 3223
+			{ BuffID.Confused, short.MaxValue },    // BuffID: 31 Brain of Confusion Internal Item AccountId: 3223
 			{ BuffID.CursedInferno, 420 },          // BuffID: 39
 			{ BuffID.Frostburn, 900 },              // BuffID: 44
 			{ BuffID.Ichor, 1200 },                 // BuffID: 69
@@ -2872,7 +2872,7 @@ namespace TShockAPI
 			{ BuffID.BoneJavelin, 900 },            // BuffID: 169
 			{ BuffID.StardustMinionBleed, 900 },    // BuffID: 183
 			{ BuffID.DryadsWardDebuff, 120 },       // BuffID: 186
-			{ BuffID.Daybreak, 300 },               // BuffID: 189 Solar Eruption Item ID: 3473, Daybreak Item ID: 3543
+			{ BuffID.Daybreak, 300 },               // BuffID: 189 Solar Eruption Item AccountId: 3473, Daybreak Item AccountId: 3543
 			{ BuffID.BetsysCurse, 600 },            // BuffID: 203
 			{ BuffID.Oiled, 540 },                  // BuffID: 204
 			{ BuffID.BlandWhipEnemyDebuff, 240  },  // BuffID: 307

@@ -162,6 +162,13 @@ namespace TShockAPI
 			TShock.Log.Info(GetString("Broadcast: {0}: {1}", Main.player[ply].name, msg));
 		}
 
+		public bool IsCommand(string text)
+		{
+			return (text.StartsWith(TShock.Config.Settings.CommandSpecifier) ||
+			        text.StartsWith(TShock.Config.Settings.CommandSilentSpecifier)) &&
+			       !string.IsNullOrWhiteSpace(text.Substring(1));
+		}
+
 		/// <summary>
 		/// Sends message to all players with 'logs' permission.
 		/// </summary>
@@ -245,9 +252,9 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gets a list of items by ID, Name or Tag.
+		/// Gets a list of items by AccountId, Name or Tag.
 		/// </summary>
-		/// <param name="text">Item ID, Name or Tag.</param>
+		/// <param name="text">Item AccountId, Name or Tag.</param>
 		/// <returns>A list of matching items.</returns>
 		public List<Item> GetItemByIdOrName(string text)
 		{
@@ -265,9 +272,9 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gets an item by ID
+		/// Gets an item by AccountId
 		/// </summary>
-		/// <param name="id">ID</param>
+		/// <param name="id">AccountId</param>
 		/// <returns>Item</returns>
 		public Item GetItemById(int id)
 		{
@@ -347,7 +354,7 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gets an NPC by ID or Name
+		/// Gets an NPC by AccountId or Name
 		/// </summary>
 		/// <param name="idOrName"></param>
 		/// <returns>List of NPCs</returns>
@@ -364,9 +371,9 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gets an NPC by ID
+		/// Gets an NPC by AccountId
 		/// </summary>
-		/// <param name="id">ID</param>
+		/// <param name="id">AccountId</param>
 		/// <returns>NPC</returns>
 		public NPC GetNPCById(int id)
 		{
@@ -428,7 +435,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Gets a buff name by id
 		/// </summary>
-		/// <param name="id">ID</param>
+		/// <param name="id">AccountId</param>
 		/// <returns>name</returns>
 		public string GetBuffName(int id)
 		{
@@ -438,7 +445,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Gets the description of a buff
 		/// </summary>
-		/// <param name="id">ID</param>
+		/// <param name="id">AccountId</param>
 		/// <returns>description</returns>
 		public string GetBuffDescription(int id)
 		{
@@ -498,7 +505,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Gets a prefix based on its id
 		/// </summary>
-		/// <param name="id">ID</param>
+		/// <param name="id">AccountId</param>
 		/// <returns>Prefix name</returns>
 		public string GetPrefixById(int id)
 		{
@@ -556,9 +563,9 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gets a prefix by ID or name
+		/// Gets a prefix by AccountId or name
 		/// </summary>
-		/// <param name="idOrName">ID or name</param>
+		/// <param name="idOrName">AccountId or name</param>
 		/// <returns>List of prefix IDs</returns>
 		public List<int> GetPrefixByIdOrName(string idOrName)
 		{
@@ -772,7 +779,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="identity">identity</param>
 		/// <param name="owner">owner</param>
-		/// <returns>projectile ID</returns>
+		/// <returns>projectile AccountId</returns>
 		public int SearchProjectile(short identity, int owner)
 		{
 			for (int i = 0; i < Main.maxProjectiles; i++)

@@ -494,7 +494,7 @@ namespace TShockAPI
 			public int Y { get; set; }
 
 			/// <summary>
-			/// The Tile ID being edited.
+			/// The Tile AccountId being edited.
 			/// </summary>
 			public short EditData { get; set; }
 
@@ -653,7 +653,7 @@ namespace TShockAPI
 		public class ItemDropEventArgs : GetDataHandledEventArgs
 		{
 			/// <summary>
-			/// ID of the item.
+			/// AccountId of the item.
 			/// If below 400 and NetID(Type) is 0 Then Set Null. If ItemID is 400 Then New Item
 			/// </summary>
 			public short ID { get; set; }
@@ -899,7 +899,7 @@ namespace TShockAPI
 		public class TogglePvpEventArgs : GetDataHandledEventArgs
 		{
 			/// <summary>
-			/// The Terraria player ID of the player
+			/// The Terraria player AccountId of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
 
@@ -1208,12 +1208,12 @@ namespace TShockAPI
 		public class NpcTalkEventArgs : GetDataHandledEventArgs
 		{
 			/// <summary>
-			/// The Terraria ID of the player talking to the NPC
+			/// The Terraria AccountId of the player talking to the NPC
 			/// </summary>
 			public byte PlayerId { get; set; }
 
 			/// <summary>
-			/// The NPC ID of the NPC the player is talking to
+			/// The NPC AccountId of the NPC the player is talking to
 			/// </summary>
 			public short NPCTalkTarget { get; set; }
 		}
@@ -1303,7 +1303,7 @@ namespace TShockAPI
 		public class PlayerTeamEventArgs : GetDataHandledEventArgs
 		{
 			/// <summary>
-			/// The Terraria player ID of the player
+			/// The Terraria player AccountId of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
 
@@ -1551,7 +1551,7 @@ namespace TShockAPI
 		public class NPCAddBuffEventArgs : GetDataHandledEventArgs
 		{
 			/// <summary>
-			/// The ID of the npc
+			/// The AccountId of the npc
 			/// </summary>
 			public short ID { get; set; }
 
@@ -2326,7 +2326,7 @@ namespace TShockAPI
 			public byte PlayerIndex { get; set; }
 
 			/// <summary>
-			/// The ID of the emoji, that is being received.
+			/// The AccountId of the emoji, that is being received.
 			/// </summary>
 			public byte EmojiID { get; set; }
 		}
@@ -2363,7 +2363,7 @@ namespace TShockAPI
 			public byte PlayerIndex { get; set; }
 
 			/// <summary>
-			/// The ID of the TileEntity that is being modified.
+			/// The AccountId of the TileEntity that is being modified.
 			/// </summary>
 			public int TileEntityID { get; set; }
 
@@ -2619,7 +2619,7 @@ namespace TShockAPI
 			public short TileY { get; set; }
 
 			/// <summary>
-			/// The Item ID that is being placed in the plate.
+			/// The Item AccountId that is being placed in the plate.
 			/// </summary>
 			public short ItemID { get; set; }
 
@@ -2913,7 +2913,7 @@ namespace TShockAPI
 					if (!GroupManager.AssertGroupValid(args.Player, group, true))
 						return true;
 
-					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Group = group;
 					args.Player.tempGroup = null;
@@ -3469,7 +3469,7 @@ namespace TShockAPI
 
 		private static async Task<bool> HandleChestActive(GetDataHandlerArgs args)
 		{
-			//chest ID
+			//chest AccountId
 			var id = args.Data.ReadInt16();
 			//chest x
 			var x = args.Data.ReadInt16();
@@ -3545,7 +3545,7 @@ namespace TShockAPI
 				if (account.VerifyPassword(password))
 				{
 					args.Player.RequiresPassword = false;
-					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
 
 					if (args.Player.State == 1)
 						args.Player.State = 2;
@@ -4475,7 +4475,7 @@ namespace TShockAPI
 			if (npcIndex < 0 || npcIndex >= Main.npc.Length)
 			{
 				TShock.Log.ConsoleDebug(GetString(
-					"GetDataHandlers / HandleSyncExtraValue rejected npc id out of bounds check - NPC ID: {0}",
+					"GetDataHandlers / HandleSyncExtraValue rejected npc id out of bounds check - NPC AccountId: {0}",
 					npcIndex));
 				return true;
 			}
@@ -4484,7 +4484,7 @@ namespace TShockAPI
 			if (npc == null)
 			{
 				TShock.Log.ConsoleDebug(
-					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC ID: {0}", npcIndex));
+					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC AccountId: {0}", npcIndex));
 				return true;
 			}
 
@@ -4718,7 +4718,7 @@ namespace TShockAPI
 
 			if (args.TPlayer.difficulty == 2 && Main.ServerSideCharacter && args.Player.IsLoggedIn)
 			{
-				if (await CharacterManager.RemovePlayer(args.Player.Account.ID))
+				if (await CharacterManager.RemovePlayer(args.Player.Account.AccountId))
 				{
 					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerKillMeV2 ssc delete {0} {1}",
 						args.Player.Name, args.TPlayer.difficulty));
@@ -5149,7 +5149,7 @@ namespace TShockAPI
 			public int Index { get; set; }
 
 			/// <summary>
-			/// Projectile's type ID
+			/// Projectile's type AccountId
 			/// </summary>
 			public short Type { get; set; }
 

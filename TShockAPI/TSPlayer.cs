@@ -77,11 +77,11 @@ namespace TShockAPI
 		public static readonly TSPlayer All = new TSPlayer("All");
 
 		/// <summary>
-		/// Finds a TSPlayer based on name or ID.
+		/// Finds a TSPlayer based on name or AccountId.
 		/// If the string comes with tsi: or tsn:, we'll only return a list with one element,
-		/// either the player with the matching ID or name, respectively.
+		/// either the player with the matching AccountId or name, respectively.
 		/// </summary>
-		/// <param name="plr">Player name or ID</param>
+		/// <param name="plr">Player name or AccountId</param>
 		/// <returns>A list of matching players</returns>
 		public static List<TSPlayer> FindByNameOrID(string search)
 		{
@@ -1544,7 +1544,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Gives an item to the player. Includes banned item spawn prevention to check if the player can spawn the item.
 		/// </summary>
-		/// <param name="type">The item ID.</param>
+		/// <param name="type">The item AccountId.</param>
 		/// <param name="name">The item name.</param>
 		/// <param name="stack">The item stack.</param>
 		/// <param name="prefix">The item prefix.</param>
@@ -1562,7 +1562,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Gives an item to the player.
 		/// </summary>
-		/// <param name="type">The item ID.</param>
+		/// <param name="type">The item AccountId.</param>
 		/// <param name="stack">The item stack.</param>
 		/// <param name="prefix">The item prefix.</param>
 		public virtual void GiveItem(int type, int stack, int prefix = 0)
@@ -1936,7 +1936,7 @@ namespace TShockAPI
 		private DateTime LastDisableNotification = DateTime.UtcNow;
 
 		/// <summary>
-		/// Represents the ID of the chest that the player is viewing.
+		/// Represents the AccountId of the chest that the player is viewing.
 		/// </summary>
 		public int ActiveChest = -1;
 
@@ -2206,7 +2206,7 @@ namespace TShockAPI
 		/// <returns>True if the player has permission to use the banned projectile.</returns>
 		public async Task<bool> HasPermission(ProjectileBan bannedProj)
 		{
-			return await ProjectileManager.ProjectileIsBanned(bannedProj.ID, this);
+			return await ProjectileManager.ProjectileIsBanned(bannedProj.Type, this);
 		}
 		/// <summary>
 		/// Checks to see if a player has permission to use the specific banned tile.

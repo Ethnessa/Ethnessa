@@ -84,7 +84,7 @@ namespace MaxMind
 		                                                	"FK", "FM", "FO", "FR",
 		                                                	"FX", "GA", "GB", "GD", "GE", "GF", "GH", "GI", "GL", "GM", "GN",
 		                                                	"GP", "GQ", "GR", "GS",
-		                                                	"GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "ID",
+		                                                	"GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "AccountId",
 		                                                	"IE", "IL", "IN", "IO",
 		                                                	"IQ", "IR", "IS", "IT", "JM", "JO", "JP", "KE", "KG", "KH", "KI",
 		                                                	"KM", "KN", "KP", "KR",

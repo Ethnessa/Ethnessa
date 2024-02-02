@@ -126,7 +126,7 @@ namespace TShockAPI
 		private int _stack;
 
 		/// <summary>
-		/// Gets the net ID.
+		/// Gets the net AccountId.
 		/// </summary>
 		public int NetId
 		{
@@ -152,9 +152,9 @@ namespace TShockAPI
 		/// <summary>
 		/// Creates a new <see cref="NetItem"/>.
 		/// </summary>
-		/// <param name="netId">The net ID.</param>
+		/// <param name="netId">The net AccountId.</param>
 		/// <param name="stack">The stack.</param>
-		/// <param name="prefixId">The prefix ID.</param>
+		/// <param name="prefixId">The prefix AccountId.</param>
 		public NetItem(int netId, int stack, byte prefixId)
 		{
 			_netId = netId;

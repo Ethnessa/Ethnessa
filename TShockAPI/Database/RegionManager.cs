@@ -72,9 +72,9 @@ namespace TShockAPI.Database
 		}
 
 		/// <summary>
-		/// Deletes the region from this world with a given ID.
+		/// Deletes the region from this world with a given AccountId.
 		/// </summary>
-		/// <param name="id">The ID of the region to delete.</param>
+		/// <param name="id">The AccountId of the region to delete.</param>
 		/// <returns>Whether the region was successfully deleted.</returns>
 		public static async Task<bool> DeleteRegion(int id)
 		{
@@ -130,9 +130,9 @@ namespace TShockAPI.Database
 		}
 
 		/// <summary>
-		/// Sets the protected state of the region with a given ID.
+		/// Sets the protected state of the region with a given AccountId.
 		/// </summary>
-		/// <param name="id">The ID of the region to change.</param>
+		/// <param name="id">The AccountId of the region to change.</param>
 		/// <param name="state">New protected state of the region.</param>
 		/// <returns>Whether the region's state was successfully changed.</returns>
 		public static async Task<bool> SetRegionState(int id, bool state)
@@ -339,7 +339,7 @@ namespace TShockAPI.Database
 			Region r = await GetRegionByName(regionName);
 			if (r == null) return false;
 
-			if (!r.RemoveID((await UserAccountManager.GetUserAccountByName(userName))?.ID ?? 0))
+			if (!r.RemoveID((await UserAccountManager.GetUserAccountByName(userName))?.AccountId ?? 0))
 			{
 				return false;
 			}
@@ -359,7 +359,7 @@ namespace TShockAPI.Database
 			try
 			{
 				Region region = await GetRegionByName(regionName);
-				var userId = (await UserAccountManager.GetUserAccountByName(userName))?.ID;
+				var userId = (await UserAccountManager.GetUserAccountByName(userName))?.AccountId;
 
 				if (userId is null)
 					return false;
@@ -441,10 +441,10 @@ namespace TShockAPI.Database
 		}
 
 		/// <summary>
-		/// Returns a region with the given ID
+		/// Returns a region with the given AccountId
 		/// </summary>
-		/// <param name="id">Region ID</param>
-		/// <returns>The region with the given ID, or null if not found</returns>
+		/// <param name="id">Region AccountId</param>
+		/// <returns>The region with the given AccountId, or null if not found</returns>
 		public static async Task<Region?> GetRegionByID(int id)
 		{
 			return await DB.Find<Region>().Match(x => x.ID == id && x.WorldID == Main.worldID.ToString())
@@ -641,7 +641,7 @@ namespace TShockAPI.Database
 				return false;
 			}
 
-			return await ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.ID) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
+			return await ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.AccountId) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
 		}
 
 		/// <summary>
@@ -687,7 +687,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Removes a user's access to the region
 		/// </summary>
-		/// <param name="id">User ID to remove</param>
+		/// <param name="id">User AccountId to remove</param>
 		/// <returns>true if the user was found and removed from the region's allowed users</returns>
 		public bool RemoveID(int id)
 		{

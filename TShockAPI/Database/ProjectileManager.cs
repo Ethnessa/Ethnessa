@@ -45,7 +45,7 @@ namespace TShockAPI.Database
 				return;
 			try
 			{
-				await DB.DeleteAsync<ProjectileBan>(x => x.ID == id);
+				await DB.DeleteAsync<ProjectileBan>(x => x.Type == id);
 			}
 			catch (Exception ex)
 			{
@@ -55,7 +55,7 @@ namespace TShockAPI.Database
 
 		public static async Task<bool> ProjectileIsBanned(short id)
 		{
-			return await DB.CountAsync<ProjectileBan>(x => x.ID == id) > 0;
+			return await DB.CountAsync<ProjectileBan>(x => x.Type == id) > 0;
 		}
 
 		public static async Task<bool> ProjectileIsBanned(short id, TSPlayer ply)
@@ -112,32 +112,32 @@ namespace TShockAPI.Database
 
 		public static async Task<ProjectileBan?> GetBanById(short id)
 		{
-			return await DB.Find<ProjectileBan>().Match(x => x.ID == id)
+			return await DB.Find<ProjectileBan>().Match(x => x.Type == id)
 				.ExecuteFirstAsync();
 		}
 	}
 
 	public class ProjectileBan : Entity, IEquatable<ProjectileBan>
 	{
-		public short ID { get; set; }
+		public short Type { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
-		public ProjectileBan(short id)
+		public ProjectileBan(short type)
 			: this()
 		{
-			ID = id;
+			Type = type;
 			AllowedGroups = new List<string>();
 		}
 
 		public ProjectileBan()
 		{
-			ID = 0;
+			Type = 0;
 			AllowedGroups = new List<string>();
 		}
 
 		public bool Equals(ProjectileBan other)
 		{
-			return ID == other.ID;
+			return Type == other.Type;
 		}
 
 		public async Task<bool> HasPermissionToCreateProjectile(TSPlayer ply)
@@ -176,7 +176,7 @@ namespace TShockAPI.Database
 
 		public override string ToString()
 		{
-			return ID + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
+			return Type + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
 		}
 	}
 }

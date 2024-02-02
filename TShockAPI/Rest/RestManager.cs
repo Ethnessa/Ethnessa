@@ -485,7 +485,7 @@ namespace TShockAPI
 		{
 			return new RestObject() { { "users", (await UserAccountManager.GetUserAccounts()).Select(p => new Dictionary<string,object>(){
 				{"name", p.Name},
-				{"id", p.ID},
+				{"id", p.AccountId},
 				{"group", p.Group},
 			}) } };
 		}
@@ -512,7 +512,7 @@ namespace TShockAPI
 				return RestMissingParam("password");
 
 			// NOTE: ip can be blank
-			UserAccount account = new UserAccount(username, "", "", group, "", DateTime.UtcNow, "");
+			UserAccount account = new UserAccount(username, "", "", group, DateTime.Now, DateTime.UtcNow, "");
 			try
 			{
 				account.CreateBCryptHash(password);
@@ -611,7 +611,7 @@ namespace TShockAPI
 				return ret;
 
 			UserAccount account = await UserAccountManager.GetUserAccountByName(args.Parameters["user"]);
-			return new RestObject() { { "group", account.Group }, { "id", account.ID.ToString() }, { "name", account.Name } };
+			return new RestObject() { { "group", account.Group }, { "id", account.AccountId.ToString() }, { "name", account.Name } };
 		}
 
 		#endregion

@@ -71,7 +71,7 @@ namespace TShockAPI.Database
 
 			try
 			{
-				SacrificedItem item = new SacrificedItem(Main.worldID, player.Account.ID, itemId, amount);
+				SacrificedItem item = new SacrificedItem(Main.worldID, player.Account.AccountId, itemId, amount);
 				await item.SaveAsync();
 				itemsSacrificed[itemId] += amount;
 

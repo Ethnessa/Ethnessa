@@ -18,7 +18,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		public byte UnknownField { get; set; }
 		/// <summary>
-		/// ID of the item being sacrificed
+		/// AccountId of the item being sacrificed
 		/// </summary>
 		public ushort ItemId { get; set; }
 		/// <summary>

@@ -228,10 +228,18 @@ namespace TShockAPI
 				AllowServer = false,
 				HelpText = GetString("Used to authenticate as superadmin when first setting up TShock.")
 			});*/
-			add(new Command(Permissions.user, async(x) => ManageUsers(x), "user")
+			add(new Command(Permissions.user, async(x) => await ManageUsers(x), "user")
 			{
 				DoLog = false,
 				HelpText = GetString("Manages user accounts.")
+			});
+			add(new Command(Permissions.maintenance, Off, "off", "exit", "stop")
+			{
+				HelpText = GetString("Shuts down the server while saving.")
+			});
+			add(new Command(async(x) => await Help(x), "help")
+			{
+				HelpText = GetString("Lists commands or gives help on them.")
 			});
 
 			#region Account Commands
@@ -353,10 +361,7 @@ namespace TShockAPI
 			{
 				HelpText = GetString("Checks for TShock updates.")
 			});
-			add(new Command(Permissions.maintenance, Off, "off", "exit", "stop")
-			{
-				HelpText = GetString("Shuts down the server while saving.")
-			});
+
 			add(new Command(Permissions.maintenance, OffNoSave, "off-nosave", "exit-nosave", "stop-nosave")
 			{
 				HelpText = GetString("Shuts down the server without saving.")
@@ -610,10 +615,7 @@ namespace TShockAPI
 			{
 				HelpText = GetString("Shows a command's aliases.")
 			});
-			add(new Command(Help, "help")
-			{
-				HelpText = GetString("Lists commands or gives help on them.")
-			});
+
 			add(new Command(Motd, "motd")
 			{
 				HelpText = GetString("Shows the message of the day.")
@@ -877,7 +879,7 @@ namespace TShockAPI
 						return;
 					}
 
-					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Group = group;
 					args.Player.tempGroup = null;
@@ -907,9 +909,9 @@ namespace TShockAPI
 					TShock.Log.ConsoleInfo(GetString("{0} authenticated successfully as user: {1}.", args.Player.Name, account.Name));
 					if ((args.Player.LoginHarassed) && (TShock.Config.Settings.RememberLeavePos))
 					{
-						if (await RememberedPosManager.GetLeavePos(args.Player.Account.ID) != Vector2.Zero)
+						if (await RememberedPosManager.GetLeavePos(args.Player.Account.AccountId) != Vector2.Zero)
 						{
-							var pos = await RememberedPosManager.GetLeavePos(args.Player.Account.ID);
+							var pos = await RememberedPosManager.GetLeavePos(args.Player.Account.AccountId);
 							if (pos is null)
 								return;
 							args.Player.Teleport((int)pos.Value.X * 16, (int)pos.Value.Y * 16);
@@ -1236,7 +1238,7 @@ namespace TShockAPI
 			args.Player.SendInfoMessage(GetString("Information about the currently running world"));
 			args.Player.SendInfoMessage(GetString($"Name: {(TShock.Config.Settings.UseServerName ? TShock.Config.Settings.ServerName : Main.worldName)}"));
 			args.Player.SendInfoMessage(GetString("Size: {0}x{1}", Main.maxTilesX, Main.maxTilesY));
-			args.Player.SendInfoMessage(GetString($"ID: {Main.worldID}"));
+			args.Player.SendInfoMessage(GetString($"AccountId: {Main.worldID}"));
 			args.Player.SendInfoMessage(GetString($"Seed: {WorldGen.currentWorldSeed}"));
 			args.Player.SendInfoMessage(GetString($"Mode: {Main.GameMode}"));
 			args.Player.SendInfoMessage(GetString($"Path: {Main.worldPathName}"));
@@ -1294,7 +1296,7 @@ namespace TShockAPI
 					{
 						List<string> KnownIps = JsonConvert.DeserializeObject<List<string>>(account.KnownIps?.ToString() ?? string.Empty);
 						string ip = KnownIps?[KnownIps.Count - 1] ?? GetString("N/A");
-						DateTime Registered = DateTime.Parse(account.Registered).ToLocalTime();
+						DateTime Registered = account.Registered;
 
 						args.Player.SendSuccessMessage(GetString("{0}'s group is {1}.", account.Name, account.Group));
 						args.Player.SendSuccessMessage(GetString("{0}'s last known IP is {1}.", account.Name, ip));
@@ -1350,12 +1352,12 @@ namespace TShockAPI
 			//						Duration is in the format 0d0h0m0s. Any part can be ignored. E.g., 1s is a valid ban time, as is 1d1s, etc. If no duration is specified, ban is permanent
 			//						Valid flags: -a (ban account name), -u (ban UUID), -n (ban character name), -ip (ban IP address), -e (exact, ban the identifier provided as 'target')
 			//						Unless -e is passed to the command, <target> is assumed to be a player or player index.
-			// ban del <ban ID>
-			//						Target is expected to be a ban Unique ID
+			// ban del <ban AccountId>
+			//						Target is expected to be a ban Unique AccountId
 			// ban list [page]
 			//						Displays a paginated list of bans
-			// ban details <ban ID>
-			//						Target is expected to be a ban Unique ID
+			// ban details <ban AccountId>
+			//						Target is expected to be a ban Unique AccountId
 			//ban help [command]
 			//						Provides extended help on specific ban commands
 
@@ -1371,9 +1373,9 @@ namespace TShockAPI
 				args.Player.SendMessage(GetString("TShock Ban Help"), Color.White);
 				args.Player.SendMessage(GetString("Available Ban commands:"), Color.White);
 				args.Player.SendMessage(GetString($"ban {"add".Color(Utils.RedHighlight)} <Target> [Flags]"), Color.White);
-				args.Player.SendMessage(GetString($"ban {"del".Color(Utils.RedHighlight)} <Ban ID>"), Color.White);
+				args.Player.SendMessage(GetString($"ban {"del".Color(Utils.RedHighlight)} <Ban AccountId>"), Color.White);
 				args.Player.SendMessage(GetString($"ban {"list".Color(Utils.RedHighlight)}"), Color.White);
-				args.Player.SendMessage(GetString($"ban {"details".Color(Utils.RedHighlight)} <Ban ID>"), Color.White);
+				args.Player.SendMessage(GetString($"ban {"details".Color(Utils.RedHighlight)} <Ban AccountId>"), Color.White);
 				args.Player.SendMessage(GetString($"Quick usage: {"ban add".Color(Utils.BoldHighlight)} {args.Player.Name.Color(Utils.RedHighlight)} \"Griefing\""), Color.White);
 				args.Player.SendMessage(GetString($"For more info, use {"ban help".Color(Utils.BoldHighlight)} {"command".Color(Utils.RedHighlight)} or {"ban help".Color(Utils.BoldHighlight)} {"examples".Color(Utils.RedHighlight)}"), Color.White);
 			}
@@ -1452,7 +1454,7 @@ namespace TShockAPI
 						args.Player.SendMessage(GetString($"- Ban an online player by index (Useful for hard to type names)"), Color.White);
 						args.Player.SendMessage(GetString($"   {Specifier}{"who".Color(Utils.BoldHighlight)} {"-i".Color(Utils.GreenHighlight)} (Find the player index for the target)"), Color.White);
 						args.Player.SendMessage(GetString($"   {Specifier}{"ban add".Color(Utils.BoldHighlight)} {"tsi:".Color(Utils.RedHighlight)}{args.Player.Index.Color(Utils.RedHighlight)} {"\"Trolling\"".Color(Utils.BoldHighlight)} {"-a -u -ip".Color(Utils.GreenHighlight)} (Permanently bans the online player by Account, UUID, and IP)"), Color.White);
-						// Ban by account ID when?
+						// Ban by account AccountId when?
 						break;
 
 					default:
@@ -2068,6 +2070,63 @@ namespace TShockAPI
 			}
 		}
 
+		private static async Task Help(CommandArgs args)
+		{
+			if (args.Parameters.Count > 1)
+			{
+				args.Player.SendErrorMessage(GetString("Invalid syntax. Proper syntax: {0}help <command/page>", Specifier));
+				return;
+			}
+
+			int pageNumber;
+			if (args.Parameters.Count == 0 || int.TryParse(args.Parameters[0], out pageNumber))
+			{
+				if (!PaginationTools.TryParsePageNumber(args.Parameters, 0, args.Player, out pageNumber))
+				{
+					return;
+				}
+
+				IEnumerable<string> cmdNames = ChatCommands.Where(cmd => cmd.CanRun(args.Player).GetAwaiter().GetResult()).Select(cmd => Specifier + cmd.Name);
+
+				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(cmdNames),
+					new PaginationTools.Settings
+					{
+						HeaderFormat = GetString("Commands ({{0}}/{{1}}):"),
+						FooterFormat = GetString("Type {0}help {{0}} for more.", Specifier)
+					});
+			}
+			else
+			{
+				string commandName = args.Parameters[0].ToLower();
+				if (commandName.StartsWith(Specifier))
+				{
+					commandName = commandName.Substring(1);
+				}
+
+				Command command = ChatCommands.Find(c => c.Names.Contains(commandName));
+				if (command == null)
+				{
+					args.Player.SendErrorMessage(GetString("Invalid command."));
+					return;
+				}
+				if (!await command.CanRun(args.Player))
+				{
+					args.Player.SendErrorMessage(GetString("You do not have access to this command."));
+					return;
+				}
+
+				args.Player.SendSuccessMessage(GetString("{0}{1} help: ", Specifier, command.Name));
+				if (command.HelpDesc == null)
+				{
+					args.Player.SendInfoMessage(command.HelpText);
+					return;
+				}
+				foreach (string line in command.HelpDesc)
+				{
+					args.Player.SendInfoMessage(line);
+				}
+			}
+		}
 		private static void ManageRest(CommandArgs args)
 		{
 			string subCommand = "help";
@@ -2874,7 +2933,7 @@ namespace TShockAPI
 			else
 			{
 				var npc = npcs[0];
-				if (npc.type >= 1 && npc.type < Terraria.ID.NPCID.Count && npc.type != 113)
+				if (npc.type >= 1 && npc.type < Terraria.AccountId.NPCID.Count && npc.type != 113)
 				{
 					TSPlayer.Server.SpawnNPC(npc.netID, npc.FullName, amount, args.Player.TileX, args.Player.TileY, 50, 20);
 					if (args.Silent)
@@ -4039,13 +4098,13 @@ namespace TShockAPI
 							return;
 						}
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.ID.ProjectileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.AccountId.ProjectileID.Count)
 						{
 							TShock.ProjectileBans.AddNewBan(id);
 							args.Player.SendSuccessMessage(GetString("Banned projectile {0}.", id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid projectile ID!"));
+							args.Player.SendErrorMessage(GetString("Invalid projectile AccountId!"));
 					}
 					#endregion
 					return;
@@ -4059,7 +4118,7 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.ID.ProjectileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.AccountId.ProjectileID.Count)
 						{
 							if (!TShock.Groups.GroupExists(args.Parameters[2]))
 							{
@@ -4082,7 +4141,7 @@ namespace TShockAPI
 								args.Player.SendWarningMessage(GetString("{0} is already allowed to use projectile {1}.", args.Parameters[2], id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid projectile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid projectile AccountId."));
 					}
 					#endregion
 					return;
@@ -4096,14 +4155,14 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.ID.ProjectileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.AccountId.ProjectileID.Count)
 						{
 							TShock.ProjectileBans.RemoveBan(id);
 							args.Player.SendSuccessMessage(GetString("Unbanned projectile {0}.", id));
 							return;
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid projectile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid projectile AccountId."));
 					}
 					#endregion
 					return;
@@ -4117,7 +4176,7 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.ID.ProjectileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id > 0 && id < Terraria.AccountId.ProjectileID.Count)
 						{
 							if (!TShock.Groups.GroupExists(args.Parameters[2]))
 							{
@@ -4141,7 +4200,7 @@ namespace TShockAPI
 								args.Player.SendWarningMessage(GetString("{0} is already prevented from using projectile {1}.", args.Parameters[2], id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid projectile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid projectile AccountId."));
 					}
 					#endregion
 					return;
@@ -4154,10 +4213,10 @@ namespace TShockAPI
 
 						var lines = new List<string>
 						{
-							GetString("add <projectile ID> - Adds a projectile ban."),
-							GetString("allow <projectile ID> <group> - Allows a group to use a projectile."),
-							GetString("del <projectile ID> - Deletes an projectile ban."),
-							GetString("disallow <projectile ID> <group> - Disallows a group from using a projectile."),
+							GetString("add <projectile AccountId> - Adds a projectile ban."),
+							GetString("allow <projectile AccountId> <group> - Allows a group to use a projectile."),
+							GetString("del <projectile AccountId> - Deletes an projectile ban."),
+							GetString("disallow <projectile AccountId> <group> - Disallows a group from using a projectile."),
 							GetString("list [page] - Lists all projectile bans.")
 						};
 
@@ -4178,7 +4237,7 @@ namespace TShockAPI
 						if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
 							return;
 						IEnumerable<Int16> projectileIds = from projectileBan in TShock.ProjectileBans.ProjectileBans
-														   select projectileBan.ID;
+														   select projectileBan.AccountId;
 						PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(projectileIds),
 							new PaginationTools.Settings
 							{
@@ -4215,13 +4274,13 @@ namespace TShockAPI
 							return;
 						}
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.ID.TileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.AccountId.TileID.Count)
 						{
 							TShock.TileBans.AddNewBan(id);
 							args.Player.SendSuccessMessage(GetString("Banned tile {0}.", id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid tile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid tile AccountId."));
 					}
 					#endregion
 					return;
@@ -4235,7 +4294,7 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.ID.TileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.AccountId.TileID.Count)
 						{
 							if (!TShock.Groups.GroupExists(args.Parameters[2]))
 							{
@@ -4258,7 +4317,7 @@ namespace TShockAPI
 								args.Player.SendWarningMessage(GetString("{0} is already allowed to place tile {1}.", args.Parameters[2], id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid tile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid tile AccountId."));
 					}
 					#endregion
 					return;
@@ -4272,14 +4331,14 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.ID.TileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.AccountId.TileID.Count)
 						{
 							TShock.TileBans.RemoveBan(id);
 							args.Player.SendSuccessMessage(GetString("Unbanned tile {0}.", id));
 							return;
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid tile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid tile AccountId."));
 					}
 					#endregion
 					return;
@@ -4293,7 +4352,7 @@ namespace TShockAPI
 						}
 
 						short id;
-						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.ID.TileID.Count)
+						if (Int16.TryParse(args.Parameters[1], out id) && id >= 0 && id < Terraria.AccountId.TileID.Count)
 						{
 							if (!TShock.Groups.GroupExists(args.Parameters[2]))
 							{
@@ -4317,7 +4376,7 @@ namespace TShockAPI
 								args.Player.SendWarningMessage(GetString("{0} is already prevented from placing tile {1}.", args.Parameters[2], id));
 						}
 						else
-							args.Player.SendErrorMessage(GetString("Invalid tile ID."));
+							args.Player.SendErrorMessage(GetString("Invalid tile AccountId."));
 					}
 					#endregion
 					return;
@@ -4330,10 +4389,10 @@ namespace TShockAPI
 
 						var lines = new List<string>
 						{
-							GetString("add <tile ID> - Adds a tile ban."),
-							GetString("allow <tile ID> <group> - Allows a group to place a tile."),
-							GetString("del <tile ID> - Deletes a tile ban."),
-							GetString("disallow <tile ID> <group> - Disallows a group from place a tile."),
+							GetString("add <tile AccountId> - Adds a tile ban."),
+							GetString("allow <tile AccountId> <group> - Allows a group to place a tile."),
+							GetString("del <tile AccountId> - Deletes a tile ban."),
+							GetString("disallow <tile AccountId> <group> - Disallows a group from place a tile."),
 							GetString("list [page] - Lists all tile bans.")
 						};
 
@@ -4354,7 +4413,7 @@ namespace TShockAPI
 						if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
 							return;
 						IEnumerable<Int16> tileIds = from tileBan in TShock.TileBans.TileBans
-													 select tileBan.ID;
+													 select tileBan.AccountId;
 						PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(tileIds),
 							new PaginationTools.Settings
 							{
@@ -4966,7 +5025,7 @@ namespace TShockAPI
 								if (account != null)
 									return account.Name;
 
-								return string.Concat("{ID: ", userId, "}");
+								return string.Concat("{AccountId: ", userId, "}");
 							});
 							List<string> extraLines = PaginationTools.BuildLinesFromTerms(sharedUsersSelector.Distinct());
 							extraLines[0] = GetString("Shared with: ") + extraLines[0];
@@ -5242,65 +5301,7 @@ namespace TShockAPI
 
 		#region General Commands
 
-		private static void Help(CommandArgs args)
-		{
-			if (args.Parameters.Count > 1)
-			{
-				args.Player.SendErrorMessage(GetString("Invalid syntax. Proper syntax: {0}help <command/page>", Specifier));
-				return;
-			}
 
-			int pageNumber;
-			if (args.Parameters.Count == 0 || int.TryParse(args.Parameters[0], out pageNumber))
-			{
-				if (!PaginationTools.TryParsePageNumber(args.Parameters, 0, args.Player, out pageNumber))
-				{
-					return;
-				}
-
-				IEnumerable<string> cmdNames = from cmd in ChatCommands
-											   where cmd.CanRun(args.Player) && (cmd.Name != "setup" || TShock.SetupToken != 0)
-											   select Specifier + cmd.Name;
-
-				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(cmdNames),
-					new PaginationTools.Settings
-					{
-						HeaderFormat = GetString("Commands ({{0}}/{{1}}):"),
-						FooterFormat = GetString("Type {0}help {{0}} for more.", Specifier)
-					});
-			}
-			else
-			{
-				string commandName = args.Parameters[0].ToLower();
-				if (commandName.StartsWith(Specifier))
-				{
-					commandName = commandName.Substring(1);
-				}
-
-				Command command = ChatCommands.Find(c => c.Names.Contains(commandName));
-				if (command == null)
-				{
-					args.Player.SendErrorMessage(GetString("Invalid command."));
-					return;
-				}
-				if (!command.CanRun(args.Player))
-				{
-					args.Player.SendErrorMessage(GetString("You do not have access to this command."));
-					return;
-				}
-
-				args.Player.SendSuccessMessage(GetString("{0}{1} help: ", Specifier, command.Name));
-				if (command.HelpDesc == null)
-				{
-					args.Player.SendInfoMessage(command.HelpText);
-					return;
-				}
-				foreach (string line in command.HelpDesc)
-				{
-					args.Player.SendInfoMessage(line);
-				}
-			}
-		}
 
 		private static void GetVersion(CommandArgs args)
 		{
@@ -5359,7 +5360,7 @@ namespace TShockAPI
 				{
 					if (displayIdsRequested)
 						if (ply.Account != null)
-							players.Add(GetString($"{ply.Name} (Index: {ply.Index}, Account ID: {ply.Account.ID})"));
+							players.Add(GetString($"{ply.Name} (Index: {ply.Index}, Account AccountId: {ply.Account.AccountId})"));
 						else
 							players.Add(GetString($"{ply.Name} (Index: {ply.Index})"));
 					else
@@ -6016,9 +6017,9 @@ namespace TShockAPI
 			if (args.Parameters.Count > 1)
 			{
 				user.SendMessage(GetString("Butcher Syntax and Example"), Color.White);
-				user.SendMessage(GetString($"{"butcher".Color(Utils.BoldHighlight)} [{"NPC name".Color(Utils.RedHighlight)}|{"ID".Color(Utils.RedHighlight)}]"), Color.White);
+				user.SendMessage(GetString($"{"butcher".Color(Utils.BoldHighlight)} [{"NPC name".Color(Utils.RedHighlight)}|{"AccountId".Color(Utils.RedHighlight)}]"), Color.White);
 				user.SendMessage(GetString($"Example usage: {"butcher".Color(Utils.BoldHighlight)} {"pigron".Color(Utils.RedHighlight)}"), Color.White);
-				user.SendMessage(GetString("All alive NPCs (excluding town NPCs) on the server will be killed if you do not input a name or ID."), Color.White);
+				user.SendMessage(GetString("All alive NPCs (excluding town NPCs) on the server will be killed if you do not input a name or AccountId."), Color.White);
 				user.SendMessage(GetString($"To get rid of NPCs without making them drop items, use the {"clear".Color(Utils.BoldHighlight)} command instead."), Color.White);
 				user.SendMessage(GetString($"To execute this command silently, use {SilentSpecifier.Color(Utils.GreenHighlight)} instead of {Specifier.Color(Utils.RedHighlight)}"), Color.White);
 				return;
@@ -6100,7 +6101,7 @@ namespace TShockAPI
 			{
 				item = matchedItems[0];
 			}
-			if (item.type < 1 && item.type >= Terraria.ID.ItemID.Count)
+			if (item.type < 1 && item.type >= Terraria.AccountId.ItemID.Count)
 			{
 				args.Player.SendErrorMessage(GetString("The item type {0} is invalid.", itemNameOrId));
 				return;
@@ -6263,7 +6264,7 @@ namespace TShockAPI
 						prefix = prefixIds[0];
 				}
 
-				if (item.type >= 1 && item.type < Terraria.ID.ItemID.Count)
+				if (item.type >= 1 && item.type < Terraria.AccountId.ItemID.Count)
 				{
 					var players = TSPlayer.FindByNameOrID(plStr);
 					if (players.Count == 0)
@@ -6368,12 +6369,12 @@ namespace TShockAPI
 
 		private static void Buff(CommandArgs args)
 		{
-			// buff <"buff name|ID"> [duration]
+			// buff <"buff name|AccountId"> [duration]
 			var user = args.Player;
 			if (args.Parameters.Count < 1 || args.Parameters.Count > 2)
 			{
 				user.SendMessage(GetString("Buff Syntax and Example"), Color.White);
-				user.SendMessage(GetString($"{"buff".Color(Utils.BoldHighlight)} <\"{"buff name".Color(Utils.RedHighlight)}|{"ID".Color(Utils.RedHighlight)}\"> [{"duration".Color(Utils.GreenHighlight)}]"), Color.White);
+				user.SendMessage(GetString($"{"buff".Color(Utils.BoldHighlight)} <\"{"buff name".Color(Utils.RedHighlight)}|{"AccountId".Color(Utils.RedHighlight)}\"> [{"duration".Color(Utils.GreenHighlight)}]"), Color.White);
 				user.SendMessage(GetString($"Example usage: {"buff".Color(Utils.BoldHighlight)} \"{"obsidian skin".Color(Utils.RedHighlight)}\" {"-1".Color(Utils.GreenHighlight)}"), Color.White);
 				user.SendMessage(GetString($"If you don't specify the duration, it will default to {"60".Color(Utils.GreenHighlight)} seconds."), Color.White);
 				user.SendMessage(GetString($"If you put {"-1".Color(Utils.GreenHighlight)} as the duration, it will use the max possible time of 415 days."), Color.White);
@@ -6405,7 +6406,7 @@ namespace TShockAPI
 			if (args.Parameters.Count == 2)
 				int.TryParse(args.Parameters[1], out time);
 
-			if (id > 0 && id < Terraria.ID.BuffID.Count)
+			if (id > 0 && id < Terraria.AccountId.BuffID.Count)
 			{
 				// Max possible buff duration as of Terraria 1.4.2.3 is 35791393 seconds (415 days).
 				if (time < 0 || time > timeLimit)
@@ -6414,7 +6415,7 @@ namespace TShockAPI
 				user.SendSuccessMessage(GetString($"You buffed yourself with {TShock.Utils.GetBuffName(id)} ({TShock.Utils.GetBuffDescription(id)}) for {time} seconds."));
 			}
 			else
-				user.SendErrorMessage(GetString($"\"{id}\" is not a valid buff ID!"));
+				user.SendErrorMessage(GetString($"\"{id}\" is not a valid buff AccountId!"));
 		}
 
 		private static void GBuff(CommandArgs args)
@@ -6423,7 +6424,7 @@ namespace TShockAPI
 			if (args.Parameters.Count < 2 || args.Parameters.Count > 3)
 			{
 				user.SendMessage(GetString("Give Buff Syntax and Example"), Color.White);
-				user.SendMessage(GetString($"{"gbuff".Color(Utils.BoldHighlight)} <{"player".Color(Utils.RedHighlight)}> <{"buff name".Color(Utils.PinkHighlight)}|{"ID".Color(Utils.PinkHighlight)}> [{"seconds".Color(Utils.GreenHighlight)}]"), Color.White);
+				user.SendMessage(GetString($"{"gbuff".Color(Utils.BoldHighlight)} <{"player".Color(Utils.RedHighlight)}> <{"buff name".Color(Utils.PinkHighlight)}|{"AccountId".Color(Utils.PinkHighlight)}> [{"seconds".Color(Utils.GreenHighlight)}]"), Color.White);
 				user.SendMessage(GetString($"Example usage: {"gbuff".Color(Utils.BoldHighlight)} {user.Name.Color(Utils.RedHighlight)} {"regen".Color(Utils.PinkHighlight)} {"-1".Color(Utils.GreenHighlight)}"), Color.White);
 				user.SendMessage(GetString($"To buff a player without them knowing, use {SilentSpecifier.Color(Utils.RedHighlight)} instead of {Specifier.Color(Utils.GreenHighlight)}"), Color.White);
 				return;
@@ -6461,7 +6462,7 @@ namespace TShockAPI
 				}
 				if (args.Parameters.Count == 3)
 					int.TryParse(args.Parameters[2], out time);
-				if (id > 0 && id < Terraria.ID.BuffID.Count)
+				if (id > 0 && id < Terraria.AccountId.BuffID.Count)
 				{
 					var target = foundplr[0];
 					if (time < 0 || time > timeLimit)
@@ -6475,7 +6476,7 @@ namespace TShockAPI
 						target.SendSuccessMessage(GetString($"{user.Name} has buffed you with {TShock.Utils.GetBuffName(id)} ({TShock.Utils.GetBuffDescription(id)}) for {time} seconds!"));
 				}
 				else
-					user.SendErrorMessage(GetString("Invalid buff ID!"));
+					user.SendErrorMessage(GetString("Invalid buff AccountId!"));
 			}
 		}
 

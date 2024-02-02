@@ -50,7 +50,7 @@ namespace TShockAPI.Database
 				PlayerData initialData = new()
 				{
 					inventory = items.ToArray(),
-					UserId = account.ID,
+					UserId = account.AccountId,
 					health = tsSettings.StartingHealth,
 					maxHealth = tsSettings.StartingHealth,
 					mana = tsSettings.StartingMana,
@@ -108,7 +108,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Removes a player's data from the tsCharacter database table
 		/// </summary>
-		/// <param name="userid">User ID of the player</param>
+		/// <param name="userid">User AccountId of the player</param>
 		/// <returns>true if removed successfully</returns>
 		public static async Task<bool> RemovePlayer(int userid)
 		{
@@ -152,8 +152,8 @@ namespace TShockAPI.Database
 				return true;
 			}
 
-			await RemovePlayer(player.Account.ID);
-			playerData.UserId = player.Account.ID;
+			await RemovePlayer(player.Account.AccountId);
+			playerData.UserId = player.Account.AccountId;
 			await playerData.SaveAsync();
 
 			return true;

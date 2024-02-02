@@ -43,6 +43,7 @@ using TShockAPI.Localization;
 using TShockAPI.Configuration;
 using Terraria.GameContent.Creative;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Entities;
@@ -403,13 +404,13 @@ namespace TShockAPI
 
 				Log.ConsoleInfo(GetString("TShock {0} ({1}) now running.", Version, VersionCodename));
 
-				ServerApi.Hooks.GamePostInitialize.Register(this, async(x) => await OnPostInit(x));
-				ServerApi.Hooks.GameUpdate.Register(this, async(x) => await OnUpdate(x));
+				ServerApi.Hooks.GamePostInitialize.Register(this, async (x) => await OnPostInit(x));
+				ServerApi.Hooks.GameUpdate.Register(this, async (x) => await OnUpdate(x));
 				ServerApi.Hooks.GameHardmodeTileUpdate.Register(this, OnHardUpdate);
 				ServerApi.Hooks.GameStatueSpawn.Register(this, OnStatueSpawn);
 				ServerApi.Hooks.ServerConnect.Register(this, OnConnect);
-				ServerApi.Hooks.ServerJoin.Register(this, async(x) => await OnJoin(x));
-				ServerApi.Hooks.ServerLeave.Register(this, async(x) => await OnLeave(x));
+				ServerApi.Hooks.ServerJoin.Register(this, async (x) => await OnJoin(x));
+				ServerApi.Hooks.ServerLeave.Register(this, async (x) => await OnLeave(x));
 				ServerApi.Hooks.ServerChat.Register(this, async (x) => await OnChat(x));
 				ServerApi.Hooks.ServerCommand.Register(this, ServerHooks_OnCommand);
 				ServerApi.Hooks.NetGetData.Register(this, OnGetData);
@@ -422,7 +423,7 @@ namespace TShockAPI
 				ServerApi.Hooks.WorldChristmasCheck.Register(this, OnXmasCheck);
 				ServerApi.Hooks.WorldHalloweenCheck.Register(this, OnHalloweenCheck);
 				ServerApi.Hooks.NetNameCollision.Register(this, NetHooks_NameCollision);
-				ServerApi.Hooks.ItemForceIntoChest.Register(this, async(x) => await OnItemForceIntoChest(x));
+				ServerApi.Hooks.ItemForceIntoChest.Register(this, async (x) => await OnItemForceIntoChest(x));
 				ServerApi.Hooks.WorldGrassSpread.Register(this, OnWorldGrassSpread);
 				Hooks.PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
 				Hooks.PlayerHooks.PlayerPostLogin += OnPlayerLogin;
@@ -598,7 +599,7 @@ namespace TShockAPI
 		/// <param name="args">args - The AccountDeleteEventArgs object.</param>
 		private async void OnAccountDelete(Hooks.AccountDeleteEventArgs args)
 		{
-			await CharacterManager.RemovePlayer(args.Account.ID);
+			await CharacterManager.RemovePlayer(args.Account.AccountId);
 		}
 
 		/// <summary>OnAccountCreate - Internal hook fired on account creation.</summary>
@@ -1036,7 +1037,8 @@ namespace TShockAPI
 			}
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
-			if (File.Exists(Path.Combine(SavePath, "setup.lock")) || ((await UserAccountManager.GetUserAccounts())?.Count() > 0))
+			if (File.Exists(Path.Combine(SavePath, "setup.lock")) ||
+			    ((await UserAccountManager.GetUserAccounts())?.Count() > 0))
 			{
 				SetupToken = 0;
 
@@ -1213,11 +1215,12 @@ namespace TShockAPI
 					{
 						if (player.RPPending == 1)
 						{
-							var pos = await RememberedPosManager.GetLeavePos(player.Account.ID);
+							var pos = await RememberedPosManager.GetLeavePos(player.Account.AccountId);
 							if (pos is null)
 							{
 								return;
 							}
+
 							player.Teleport(pos.Value.X * 16, pos.Value.Y * 16);
 							player.RPPending = 0;
 						}
@@ -1478,7 +1481,8 @@ namespace TShockAPI
 
 				if (Config.Settings.RememberLeavePos && !tsplr.LoginHarassed)
 				{
-					await RememberedPosManager.InsertLeavePos(tsplr.Account.ID, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));
+					await RememberedPosManager.InsertLeavePos(tsplr.Account.AccountId, (int)(tsplr.X / 16),
+						(int)(tsplr.Y / 16));
 				}
 
 				if (tsplr.tempGroupTimer != null)
@@ -1506,11 +1510,9 @@ namespace TShockAPI
 		/// <param name="args">args - The ServerChatEventArgs object.</param>
 		private async Task OnChat(ServerChatEventArgs args)
 		{
-			if (args.Handled)
-				return;
+			var player = Players.ElementAtOrDefault(args.Who);
 
-			var tsplr = Players[args.Who];
-			if (tsplr == null)
+			if (args.Handled || player == default)
 			{
 				args.Handled = true;
 				return;
@@ -1518,46 +1520,44 @@ namespace TShockAPI
 
 			if (args.Text.Length > 500)
 			{
-				tsplr.Kick(GetString("Crash attempt via long chat packet."), true);
+				await player.Kick(GetString("Crash attempt via long chat packet."), true);
 				args.Handled = true;
 				return;
 			}
 
 			string text = args.Text;
 
+			/* OLD TSHOCK NOTE FOR THIS SECTION */
 			// Terraria now has chat commands on the client side.
 			// These commands remove the commands prefix (e.g. /me /playing) and send the command id instead
 			// In order for us to keep legacy code we must reverse this and get the prefix using the command id
-			foreach (var item in Terraria.UI.Chat.ChatManager.Commands._localizedCommands)
-			{
-				if (item.Value._name == args.CommandId._name)
-				{
-					if (!String.IsNullOrEmpty(text))
-					{
-						text = item.Key.Value + ' ' + text;
-					}
-					else
-					{
-						text = item.Key.Value;
-					}
+			// TODO: Figure out how we can retrieve command prefix this without any of this code
 
-					break;
-				}
+			// Use LINQ to find the first matching command, if any
+			var matchingCommand = Terraria.UI.Chat.ChatManager.Commands._localizedCommands
+				.FirstOrDefault(item => item.Value._name == args.CommandId._name);
+
+			// Check if a matching command was found
+			if (matchingCommand.Key != null)
+			{
+				// Prepend the command key to 'text', adding a space if 'text' is not empty
+				text = matchingCommand.Key.Value + (string.IsNullOrEmpty(text) ? "" : $" {text}");
 			}
 
-			if ((text.StartsWith(Config.Settings.CommandSpecifier) ||
-			     text.StartsWith(Config.Settings.CommandSilentSpecifier))
-			    && !string.IsNullOrWhiteSpace(text.Substring(1)))
+			// Check if the text starts with the command specifier or the silent command specifier
+			if (Utils.IsCommand(text))
 			{
 				try
 				{
 					args.Handled = true;
-					if (!await Commands.HandleCommand(tsplr, text))
+
+					// Handle the command
+					if (!await Commands.HandleCommand(player, text))
 					{
 						// This is required in case anyone makes HandleCommand return false again
-						tsplr.SendErrorMessage(
+						player.SendErrorMessage(
 							GetString("Unable to parse command. Please contact an administrator for assistance."));
-						Log.ConsoleError(GetString("Unable to parse command '{0}' from player {1}."), text, tsplr.Name);
+						Log.ConsoleError(GetString("Unable to parse command '{0}' from player {1}."), text, player.Name);
 					}
 				}
 				catch (Exception ex)
@@ -1566,80 +1566,53 @@ namespace TShockAPI
 					Log.Error(ex.ToString());
 				}
 			}
-			else
+			else // player is sending a chat message
 			{
-				if (!await tsplr.HasPermission(Permissions.canchat))
+				var canPlayerChat = await player.HasPermission(Permissions.canchat);
+				if (!canPlayerChat) // do they even have perms?
 				{
 					args.Handled = true;
+					player.SendMessage("You do not have permission to chat.", Color.IndianRed);
+					return;
 				}
-				else if (tsplr.mute)
+
+				if (player.mute) // are they muted ?
 				{
-					tsplr.SendErrorMessage(GetString("You are muted!"));
 					args.Handled = true;
+					player.SendErrorMessage(GetString("You are muted!"));
+					return;
 				}
-				else if (!TShock.Config.Settings.EnableChatAboveHeads)
+
+				if (TShock.Config.Settings.EnableChatAboveHeads) // if chat above heads is enabled
 				{
-					text = String.Format(Config.Settings.ChatFormat, tsplr.Group.Name, tsplr.Group.Prefix, tsplr.Name,
-						tsplr.Group.Suffix,
-						args.Text);
+					var terrariaPlayer = player.TPlayer;
+					string playerName = terrariaPlayer.name;
 
-					//Invoke the PlayerChat hook. If this hook event is handled then we need to prevent sending the chat message
-					bool cancelChat = PlayerHooks.OnPlayerChat(tsplr, args.Text, ref text);
+					// IMPLEMENT THIS LATER
+					// NOT SURE HOW TO DO THIS YET
+					// ALSO, NOT SURE IF WE EVEN NEED THIS
 					args.Handled = true;
-
-					if (cancelChat)
-					{
-						return;
-					}
-
-					Utils.Broadcast(text, tsplr.Group.R, tsplr.Group.G, tsplr.Group.B);
+					return;
 				}
-				else
+
+				// user has perms, isn't muted, and chat above heads is disabled
+				// so we can just send the message
+
+				// format the chat message
+				text = string.Format(Config.Settings.ChatFormat, player.Group.Name, player.Group.Prefix, player.Name,
+					player.Group.Suffix,
+					args.Text);
+
+				// Invoke the PlayerChat hook. If this hook event handled then we need to prevent sending the chat message
+				args.Handled = true;
+				bool cancelChat = PlayerHooks.OnPlayerChat(player, args.Text, ref text);
+
+				if (cancelChat)
 				{
-					Player ply = Main.player[args.Who];
-					string name = ply.name;
-					ply.name = String.Format(Config.Settings.ChatAboveHeadsFormat, tsplr.Group.Name, tsplr.Group.Prefix,
-						tsplr.Name, tsplr.Group.Suffix);
-					//Update the player's name to format text nicely. This needs to be done because Terraria automatically formats messages against our will
-					NetMessage.SendData((int)PacketTypes.PlayerInfo, -1, -1, NetworkText.FromLiteral(ply.name),
-						args.Who, 0, 0, 0, 0);
-
-					//Give that poor player their name back :'c
-					ply.name = name;
-
-					bool cancelChat = PlayerHooks.OnPlayerChat(tsplr, args.Text, ref text);
-					if (cancelChat)
-					{
-						args.Handled = true;
-						return;
-					}
-
-					//This netpacket is used to send chat text from the server to clients, in this case on behalf of a client
-					Terraria.Net.NetPacket packet =
-						Terraria.GameContent.NetModules.NetTextModule.SerializeServerMessage(
-							NetworkText.FromLiteral(text), new Color(tsplr.Group.R, tsplr.Group.G, tsplr.Group.B),
-							(byte)args.Who
-						);
-					//Broadcast to everyone except the player who sent the message.
-					//This is so that we can send them the same nicely formatted message that everyone else gets
-					Terraria.Net.NetManager.Instance.Broadcast(packet, args.Who);
-
-					//Reset their name
-					NetMessage.SendData((int)PacketTypes.PlayerInfo, -1, -1, NetworkText.FromLiteral(name), args.Who, 0,
-						0, 0, 0);
-
-					string msg = String.Format("<{0}> {1}",
-						String.Format(Config.Settings.ChatAboveHeadsFormat, tsplr.Group.Name, tsplr.Group.Prefix,
-							tsplr.Name, tsplr.Group.Suffix),
-						text
-					);
-
-					//Send the original sender their nicely formatted message, and do all the loggy things
-					tsplr.SendMessage(msg, tsplr.Group.R, tsplr.Group.G, tsplr.Group.B);
-					TSPlayer.Server.SendMessage(msg, tsplr.Group.R, tsplr.Group.G, tsplr.Group.B);
-					Log.Info("Broadcast: {0}", msg);
-					args.Handled = true;
+					return;
 				}
+
+				Utils.Broadcast(text, player.Group.R, player.Group.G, player.Group.B);
 			}
 		}
 
@@ -1789,7 +1762,8 @@ namespace TShockAPI
 			player.LastNetPosition = new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
 
 			if (Config.Settings.RememberLeavePos &&
-			    (await RememberedPosManager.GetLeavePos(player.Account.ID) != Vector2.Zero) && !player.LoginHarassed)
+			    (await RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
+			    !player.LoginHarassed)
 			{
 				player.RPPending = 3;
 				player.SendInfoMessage(GetString("You will be teleported to your last known location..."));

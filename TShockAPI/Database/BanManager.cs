@@ -97,7 +97,7 @@ namespace TShockAPI.Database
 		}
 
 		/// <summary>
-		/// Retrieves a single ban from a ban's ID
+		/// Retrieves a single ban from a ban's AccountId
 		/// </summary>
 		/// <param name="id">The ban identifier</param>
 		/// <returns>The requested ban</returns>
@@ -173,7 +173,7 @@ namespace TShockAPI.Database
 
 			await ban.SaveAsync();
 
-			TShock.Log.Info("A new ban has been created, ID:  " + ban.BanId);
+			TShock.Log.Info("A new ban has been created, AccountId:  " + ban.BanId);
 			OnBanAdd?.Invoke(ban);
 			return ban;
 		}
@@ -181,7 +181,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Remove a ban from the database
 		/// </summary>
-		/// <param name="value">An account name, ban ID, Ip Address, or Uuid</param>
+		/// <param name="value">An account name, ban AccountId, Ip Address, or Uuid</param>
 		/// <returns>True if the ban was found and removed</returns>
 		public static async Task<bool> RemoveBan(string value)
 		{
@@ -309,7 +309,7 @@ namespace TShockAPI.Database
 	public class Ban : MongoDB.Entities.Entity
 	{
 		/// <summary>
-		/// A unique ID assigned to this ban
+		/// A unique AccountId assigned to this ban
 		/// </summary>
 		public int BanId { get; set; }
 

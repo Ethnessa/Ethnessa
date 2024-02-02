@@ -6,31 +6,31 @@ using MongoDB.Entities;
 namespace TShockAPI.Database.Models;
 
 /// <summary>A database user account.</summary>
-public class UserAccount : Entity, IEquatable<UserAccount>
+public class UserAccount : Entity
 {
-	/// <summary>The database ID of the user account.</summary>
-	public int ID { get; set; }
+	/// <summary>The database AccountId of the user account.</summary>
+	public int AccountId { get; set; }
 
 	/// <summary>The user's name.</summary>
-	public string Name { get; set; }
+	public string Name { get; set; } = "";
 
 	/// <summary>The hashed password for the user account.</summary>
-	public string Password { get; internal set; }
+	public string Password { get; set; } = "";
 
 	/// <summary>The user's saved Universally Unique Identifier token.</summary>
-	public string UUID { get; set; }
+	public string UUID { get; set; } = "";
 
 	/// <summary>The group object that the user account is a part of.</summary>
-	public string Group { get; set; }
+	public string Group { get; set; } = "default";
 
 	/// <summary>The unix epoch corresponding to the registration date of the user account.</summary>
-	public string Registered { get; set; }
+	public DateTime Registered { get; set; } = DateTime.Now;
 
 	/// <summary>The unix epoch corresponding to the last access date of the user account.</summary>
-	public DateTime LastAccessed { get; set; }
+	public DateTime LastAccessed { get; set; } = DateTime.Now;
 
 	/// <summary>A JSON serialized list of known IP addresses for a user account.</summary>
-	public string KnownIps { get; set; }
+	public string KnownIps { get; set; } = "";
 
 	/// <summary>Constructor for the user account object, assuming you define everything yourself.</summary>
 	/// <param name="name">The user's name.</param>
@@ -41,7 +41,7 @@ public class UserAccount : Entity, IEquatable<UserAccount>
 	/// <param name="last">The unix epoch for the last access date.</param>
 	/// <param name="known">The known IPs for the user account, serialized as a JSON object</param>
 	/// <returns>A completed user account object.</returns>
-	public UserAccount(string name, string pass, string uuid, string group, string registered, DateTime last,
+	public UserAccount(string name, string pass, string uuid, string group, DateTime registered, DateTime last,
 		string known)
 	{
 		Name = name;
@@ -53,18 +53,7 @@ public class UserAccount : Entity, IEquatable<UserAccount>
 		KnownIps = known;
 	}
 
-	/// <summary>Default constructor for a user account object; holds no data.</summary>
-	/// <returns>A user account object.</returns>
-	public UserAccount()
-	{
-		Name = "";
-		Password = "";
-		UUID = "";
-		Group = "";
-		Registered = "";
-		LastAccessed = DateTime.UtcNow;
-		KnownIps = "";
-	}
+	public UserAccount(){}
 
 	/// <summary>
 	/// Verifies if a password matches the one stored in the database.
@@ -87,7 +76,7 @@ public class UserAccount : Entity, IEquatable<UserAccount>
 		}
 		catch (SaltParseException)
 		{
-			TShock.Log.ConsoleError(GetString($"Unable to verify the password hash for user {Name} ({ID})"));
+			TShock.Log.ConsoleError(GetString($"Unable to verify the password hash for user {Name} ({AccountId})"));
 			return false;
 		}
 
@@ -171,7 +160,7 @@ public class UserAccount : Entity, IEquatable<UserAccount>
 	{
 		if (ReferenceEquals(null, other)) return false;
 		if (ReferenceEquals(this, other)) return true;
-		return ID == other.ID && string.Equals(Name, other.Name);
+		return AccountId == other.AccountId && string.Equals(Name, other.Name);
 	}
 
 	/// <summary>Indicates whether the current <see cref="UserAccount"/> is equal to another object.</summary>
@@ -191,7 +180,7 @@ public class UserAccount : Entity, IEquatable<UserAccount>
 	{
 		unchecked
 		{
-			return (ID * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+			return (AccountId * 397) ^ (Name != null ? Name.GetHashCode() : 0);
 		}
 	}
 

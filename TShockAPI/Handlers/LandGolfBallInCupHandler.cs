@@ -89,7 +89,7 @@ namespace TShockAPI.Handlers
 		{
 			if (args.PlayerIndex != args.Player.Index)
 			{
-				TShock.Log.ConsoleDebug(GetString($"LandGolfBallInCupHandler: Packet rejected for ID spoofing. Expected {args.Player.Index}, received {args.PlayerIndex} from {args.Player.Name}."));
+				TShock.Log.ConsoleDebug(GetString($"LandGolfBallInCupHandler: Packet rejected for AccountId spoofing. Expected {args.Player.Index}, received {args.PlayerIndex} from {args.Player.Name}."));
 				args.Handled = true;
 				return;
 			}
@@ -111,7 +111,7 @@ namespace TShockAPI.Handlers
 
 			if (!GolfBallProjectileIDs.Contains(args.ProjectileType))
 			{
-				TShock.Log.ConsoleDebug(GetString($"LandGolfBallInCupHandler: Invalid golf ball projectile ID {args.ProjectileType}! - From {args.Player.Name}"));
+				TShock.Log.ConsoleDebug(GetString($"LandGolfBallInCupHandler: Invalid golf ball projectile AccountId {args.ProjectileType}! - From {args.Player.Name}"));
 				args.Handled = true;
 				return;
 			}
