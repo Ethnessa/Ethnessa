@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
 using TShockAPI;
@@ -23,6 +24,7 @@ using Terraria.Localization;
 using Terraria.GameContent.NetModules;
 using Terraria.Net;
 using Terraria.ID;
+using TShockAPI.Database;
 
 namespace TShockAPI
 {
@@ -258,7 +260,7 @@ namespace TShockAPI
 		/// Restores a player's character to the state stored in the database
 		/// </summary>
 		/// <param name="player"></param>
-		public void RestoreCharacter(TSPlayer player)
+		public async Task RestoreCharacter(TSPlayer player)
 		{
 			// Start ignoring SSC-related packets! This is critical so that we don't send or receive dirty data!
 			player.IgnoreSSCPackets = true;
@@ -697,7 +699,7 @@ namespace TShockAPI
 
 			if (Main.GameModeInfo.IsJourneyMode)
 			{
-				var sacrificedItems = TShock.ResearchDatastore.GetSacrificedItems();
+				var sacrificedItems = await ResearchDatastore.GetSacrificedItems();
 				for(int i = 0; i < ItemID.Count; i++)
 				{
 					var amount = 0;

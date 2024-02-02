@@ -270,7 +270,7 @@ namespace TShockAPI
 
 		/// <summary>Initialize - Called by the TerrariaServerAPI during initialization.</summary>
 		[SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
-		public override async Task Initialize()
+		public override async void Initialize()
 		{
 			string logFilename;
 
@@ -403,18 +403,18 @@ namespace TShockAPI
 
 				Log.ConsoleInfo(GetString("TShock {0} ({1}) now running.", Version, VersionCodename));
 
-				ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit);
-				ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
+				ServerApi.Hooks.GamePostInitialize.Register(this, async(x) => await OnPostInit(x));
+				ServerApi.Hooks.GameUpdate.Register(this, async(x) => await OnUpdate(x));
 				ServerApi.Hooks.GameHardmodeTileUpdate.Register(this, OnHardUpdate);
 				ServerApi.Hooks.GameStatueSpawn.Register(this, OnStatueSpawn);
 				ServerApi.Hooks.ServerConnect.Register(this, OnConnect);
-				ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
-				ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
-				ServerApi.Hooks.ServerChat.Register(this, OnChat);
+				ServerApi.Hooks.ServerJoin.Register(this, async(x) => await OnJoin(x));
+				ServerApi.Hooks.ServerLeave.Register(this, async(x) => await OnLeave(x));
+				ServerApi.Hooks.ServerChat.Register(this, async (x) => await OnChat(x));
 				ServerApi.Hooks.ServerCommand.Register(this, ServerHooks_OnCommand);
 				ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Register(this, NetHooks_SendData);
-				ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
+				ServerApi.Hooks.NetGreetPlayer.Register(this, async (x) => await OnGreetPlayer(x));
 				ServerApi.Hooks.NpcStrike.Register(this, NpcHooks_OnStrikeNpc);
 				ServerApi.Hooks.ProjectileSetDefaults.Register(this, OnProjectileSetDefaults);
 				ServerApi.Hooks.WorldStartHardMode.Register(this, OnStartHardMode);
@@ -422,7 +422,7 @@ namespace TShockAPI
 				ServerApi.Hooks.WorldChristmasCheck.Register(this, OnXmasCheck);
 				ServerApi.Hooks.WorldHalloweenCheck.Register(this, OnHalloweenCheck);
 				ServerApi.Hooks.NetNameCollision.Register(this, NetHooks_NameCollision);
-				ServerApi.Hooks.ItemForceIntoChest.Register(this, OnItemForceIntoChest);
+				ServerApi.Hooks.ItemForceIntoChest.Register(this, async(x) => await OnItemForceIntoChest(x));
 				ServerApi.Hooks.WorldGrassSpread.Register(this, OnWorldGrassSpread);
 				Hooks.PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
 				Hooks.PlayerHooks.PlayerPostLogin += OnPlayerLogin;
@@ -520,18 +520,21 @@ namespace TShockAPI
 
 				ModuleManager.Dispose();
 
-				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
-				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
+				// TODO: Deregister the commented events
+				// commenting these out to allow testing sooner
+
+				/*ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
+				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);*/
 				ServerApi.Hooks.GameHardmodeTileUpdate.Deregister(this, OnHardUpdate);
 				ServerApi.Hooks.GameStatueSpawn.Deregister(this, OnStatueSpawn);
 				ServerApi.Hooks.ServerConnect.Deregister(this, OnConnect);
-				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
+				/*ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
-				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
+				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);*/
 				ServerApi.Hooks.ServerCommand.Deregister(this, ServerHooks_OnCommand);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Deregister(this, NetHooks_SendData);
-				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
+				//ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
 				ServerApi.Hooks.NpcStrike.Deregister(this, NpcHooks_OnStrikeNpc);
 				ServerApi.Hooks.ProjectileSetDefaults.Deregister(this, OnProjectileSetDefaults);
 				ServerApi.Hooks.WorldStartHardMode.Deregister(this, OnStartHardMode);
@@ -539,7 +542,7 @@ namespace TShockAPI
 				ServerApi.Hooks.WorldChristmasCheck.Deregister(this, OnXmasCheck);
 				ServerApi.Hooks.WorldHalloweenCheck.Deregister(this, OnHalloweenCheck);
 				ServerApi.Hooks.NetNameCollision.Deregister(this, NetHooks_NameCollision);
-				ServerApi.Hooks.ItemForceIntoChest.Deregister(this, OnItemForceIntoChest);
+				//ServerApi.Hooks.ItemForceIntoChest.Deregister(this, OnItemForceIntoChest);
 				ServerApi.Hooks.WorldGrassSpread.Deregister(this, OnWorldGrassSpread);
 				TShockAPI.Hooks.PlayerHooks.PlayerPostLogin -= OnPlayerLogin;
 
@@ -559,7 +562,7 @@ namespace TShockAPI
 
 		/// <summary>OnPlayerLogin - Fires the PlayerLogin hook to listening plugins.</summary>
 		/// <param name="args">args - The PlayerPostLoginEventArgs object.</param>
-		private void OnPlayerLogin(PlayerPostLoginEventArgs args)
+		private async void OnPlayerLogin(PlayerPostLoginEventArgs args)
 		{
 			List<String> KnownIps = new List<string>();
 			if (!string.IsNullOrWhiteSpace(args.Player.Account.KnownIps))
@@ -586,23 +589,23 @@ namespace TShockAPI
 			}
 
 			args.Player.Account.KnownIps = JsonConvert.SerializeObject(KnownIps, Formatting.Indented);
-			UserAccounts.UpdateLogin(args.Player.Account);
+			await UserAccountManager.UpdateLogin(args.Player.Account);
 
-			Bans.IsPlayerBanned(args.Player);
+			await BanManager.IsPlayerBanned(args.Player);
 		}
 
 		/// <summary>OnAccountDelete - Internal hook fired on account delete.</summary>
 		/// <param name="args">args - The AccountDeleteEventArgs object.</param>
-		private void OnAccountDelete(Hooks.AccountDeleteEventArgs args)
+		private async void OnAccountDelete(Hooks.AccountDeleteEventArgs args)
 		{
-			CharacterDB.RemovePlayer(args.Account.ID);
+			await CharacterManager.RemovePlayer(args.Account.ID);
 		}
 
 		/// <summary>OnAccountCreate - Internal hook fired on account creation.</summary>
 		/// <param name="args">args - The AccountCreateEventArgs object.</param>
-		private void OnAccountCreate(Hooks.AccountCreateEventArgs args)
+		private async void OnAccountCreate(Hooks.AccountCreateEventArgs args)
 		{
-			CharacterDB.SeedInitialData(UserAccounts.GetUserAccount(args.Account));
+			await CharacterManager.SeedInitialData(await UserAccountManager.GetUserAccount(args.Account));
 		}
 
 		/// <summary>OnPlayerPreLogin - Internal hook fired when on player pre login.</summary>
@@ -648,7 +651,7 @@ namespace TShockAPI
 
 		/// <summary>OnItemForceIntoChest - Internal hook fired when a player quick stacks items into a chest.</summary>
 		/// <param name="args">The <see cref="ForceItemIntoChestEventArgs"/> object.</param>
-		private void OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
+		private async Task OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
 		{
 			if (args.Handled)
 			{
@@ -673,7 +676,7 @@ namespace TShockAPI
 				// After checking for protected regions, no further range checking is necessarily because the client packet only specifies the
 				// inventory slot to quick stack. The vanilla Terraria server itself determines what chests are close enough to the player.
 				if (Config.Settings.RegionProtectChests &&
-				    !Regions.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
+				    !await RegionManager.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
 				{
 					args.Handled = true;
 					return;
@@ -976,7 +979,7 @@ namespace TShockAPI
 
 		/// <summary>OnPostInit - Fired when the server loads a map, to perform world specific operations.</summary>
 		/// <param name="args">args - The EventArgs object.</param>
-		private void OnPostInit(EventArgs args)
+		private async Task OnPostInit(EventArgs args)
 		{
 			Utils.SetConsoleTitle(false);
 
@@ -1033,7 +1036,7 @@ namespace TShockAPI
 			}
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
-			if (File.Exists(Path.Combine(SavePath, "setup.lock")) || (UserAccounts.GetUserAccounts().Count() > 0))
+			if (File.Exists(Path.Combine(SavePath, "setup.lock")) || ((await UserAccountManager.GetUserAccounts())?.Count() > 0))
 			{
 				SetupToken = 0;
 
@@ -1077,9 +1080,6 @@ namespace TShockAPI
 				Console.ResetColor();
 			}
 
-			Regions.Reload();
-			Warps.ReloadWarps();
-
 			Utils.ComputeMaxStyles();
 			Utils.FixChestStacks();
 
@@ -1099,7 +1099,7 @@ namespace TShockAPI
 
 		/// <summary>OnUpdate - Called when ever the server ticks.</summary>
 		/// <param name="args">args - EventArgs args</param>
-		private void OnUpdate(EventArgs args)
+		private async Task OnUpdate(EventArgs args)
 		{
 			// This forces Terraria to actually continue to update
 			// even if there are no clients connected
@@ -1125,7 +1125,7 @@ namespace TShockAPI
 					// prevent null point exceptions
 					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
 					{
-						CharacterDB.InsertPlayerData(player);
+						CharacterManager.InsertPlayerData(player);
 					}
 				}
 
@@ -1134,7 +1134,7 @@ namespace TShockAPI
 		}
 
 		/// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
-		private void OnSecondUpdate()
+		private async Task OnSecondUpdate()
 		{
 			DisableFlags flags = Config.Settings.DisableSecondUpdateLogs
 				? DisableFlags.WriteToConsole
@@ -1213,8 +1213,12 @@ namespace TShockAPI
 					{
 						if (player.RPPending == 1)
 						{
-							var pos = RememberedPos.GetLeavePos(player.Name, player.IP);
-							player.Teleport(pos.X * 16, pos.Y * 16);
+							var pos = await RememberedPosManager.GetLeavePos(player.Account.ID);
+							if (pos is null)
+							{
+								return;
+							}
+							player.Teleport(pos.Value.X * 16, pos.Value.Y * 16);
 							player.RPPending = 0;
 						}
 						else
@@ -1270,7 +1274,7 @@ namespace TShockAPI
 
 					if (!Main.ServerSideCharacter || (Main.ServerSideCharacter && player.IsLoggedIn))
 					{
-						if (!player.HasPermission(Permissions.ignorestackhackdetection))
+						if (!await player.HasPermission(Permissions.ignorestackhackdetection))
 						{
 							player.IsDisabledForStackDetection = player.HasHackedItemStacks(shouldWarnPlayer: true);
 						}
@@ -1403,7 +1407,7 @@ namespace TShockAPI
 
 		/// <summary>OnJoin - Internal hook called when a player joins. This is called after OnConnect.</summary>
 		/// <param name="args">args - The JoinEventArgs object.</param>
-		private void OnJoin(JoinEventArgs args)
+		private async Task OnJoin(JoinEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
@@ -1421,12 +1425,12 @@ namespace TShockAPI
 				return;
 			}
 
-			Bans.IsPlayerBanned(player);
+			await BanManager.IsPlayerBanned(player);
 		}
 
 		/// <summary>OnLeave - Called when a player leaves the server.</summary>
 		/// <param name="args">args - The LeaveEventArgs object.</param>
-		private void OnLeave(LeaveEventArgs args)
+		private async Task OnLeave(LeaveEventArgs args)
 		{
 			if (args.Who >= Players.Length || args.Who < 0)
 			{
@@ -1469,12 +1473,12 @@ namespace TShockAPI
 				    (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
 				{
 					tsplr.PlayerData.CopyCharacter(tsplr);
-					CharacterDB.InsertPlayerData(tsplr);
+					await CharacterManager.InsertPlayerData(tsplr);
 				}
 
 				if (Config.Settings.RememberLeavePos && !tsplr.LoginHarassed)
 				{
-					RememberedPos.InsertLeavePos(tsplr.Name, tsplr.IP, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));
+					await RememberedPosManager.InsertLeavePos(tsplr.Account.ID, (int)(tsplr.X / 16), (int)(tsplr.Y / 16));
 				}
 
 				if (tsplr.tempGroupTimer != null)
@@ -1500,7 +1504,7 @@ namespace TShockAPI
 
 		/// <summary>OnChat - Fired when a player chats. Used for handling chat and commands.</summary>
 		/// <param name="args">args - The ServerChatEventArgs object.</param>
-		private void OnChat(ServerChatEventArgs args)
+		private async Task OnChat(ServerChatEventArgs args)
 		{
 			if (args.Handled)
 				return;
@@ -1548,7 +1552,7 @@ namespace TShockAPI
 				try
 				{
 					args.Handled = true;
-					if (!Commands.HandleCommand(tsplr, text))
+					if (!await Commands.HandleCommand(tsplr, text))
 					{
 						// This is required in case anyone makes HandleCommand return false again
 						tsplr.SendErrorMessage(
@@ -1564,7 +1568,7 @@ namespace TShockAPI
 			}
 			else
 			{
-				if (!tsplr.HasPermission(Permissions.canchat))
+				if (!await tsplr.HasPermission(Permissions.canchat))
 				{
 					args.Handled = true;
 				}
@@ -1725,7 +1729,7 @@ namespace TShockAPI
 
 		/// <summary>OnGreetPlayer - Fired when a player is greeted by the server. Handles things like the MOTD, join messages, etc.</summary>
 		/// <param name="args">args - The GreetPlayerEventArgs object.</param>
-		private void OnGreetPlayer(GreetPlayerEventArgs args)
+		private async Task OnGreetPlayer(GreetPlayerEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
@@ -1785,7 +1789,7 @@ namespace TShockAPI
 			player.LastNetPosition = new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
 
 			if (Config.Settings.RememberLeavePos &&
-			    (RememberedPos.GetLeavePos(player.Name, player.IP) != Vector2.Zero) && !player.LoginHarassed)
+			    (await RememberedPosManager.GetLeavePos(player.Account.ID) != Vector2.Zero) && !player.LoginHarassed)
 			{
 				player.RPPending = 3;
 				player.SendInfoMessage(GetString("You will be teleported to your last known location..."));

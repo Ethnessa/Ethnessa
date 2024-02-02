@@ -150,9 +150,9 @@ namespace TShockAPI
 			Permissions = new List<string>();
 		}
 
-		public bool Run(string msg, bool silent, TSPlayer ply, List<string> parms)
+		public async Task<bool> Run(string msg, bool silent, TSPlayer ply, List<string> parms)
 		{
-			if (!CanRun(ply))
+			if (!await CanRun(ply))
 				return false;
 
 			try
@@ -168,9 +168,9 @@ namespace TShockAPI
 			return true;
 		}
 
-		public bool Run(string msg, TSPlayer ply, List<string> parms)
+		public async Task<bool> Run(string msg, TSPlayer ply, List<string> parms)
 		{
-			return Run(msg, false, ply, parms);
+			return await Run(msg, false, ply, parms);
 		}
 
 		public bool HasAlias(string name)
@@ -223,19 +223,19 @@ namespace TShockAPI
 				ChatCommands.Add(cmd);
 			};
 
-			add(new Command(SetupToken, "setup")
+			/*add(new Command(SetupToken, "setup")
 			{
 				AllowServer = false,
 				HelpText = GetString("Used to authenticate as superadmin when first setting up TShock.")
-			});
-			add(new Command(Permissions.user, ManageUsers, "user")
+			});*/
+			add(new Command(Permissions.user, async(x) => ManageUsers(x), "user")
 			{
 				DoLog = false,
 				HelpText = GetString("Manages user accounts.")
 			});
 
 			#region Account Commands
-			add(new Command(Permissions.canlogin, AttemptLogin, "login")
+			add(new Command(Permissions.canlogin, async(x) => AttemptLogin(x), "login")
 			{
 				AllowServer = false,
 				DoLog = false,
@@ -247,24 +247,24 @@ namespace TShockAPI
 				DoLog = false,
 				HelpText = GetString("Logs you out of your current account.")
 			});
-			add(new Command(Permissions.canchangepassword, PasswordUser, "password")
+			add(new Command(Permissions.canchangepassword, async(x) =>PasswordUser(x), "password")
 			{
 				AllowServer = false,
 				DoLog = false,
 				HelpText = GetString("Changes your account's password.")
 			});
-			add(new Command(Permissions.canregister, RegisterUser, "register")
+			add(new Command(Permissions.canregister, async(x)=>RegisterUser(x), "register")
 			{
 				AllowServer = false,
 				DoLog = false,
 				HelpText = GetString("Registers you an account.")
 			});
-			add(new Command(Permissions.checkaccountinfo, ViewAccountInfo, "accountinfo", "ai")
+			add(new Command(Permissions.checkaccountinfo, async(x)=>ViewAccountInfo(x), "accountinfo", "ai")
 			{
 				HelpText = GetString("Shows information about a user.")
 			});
 			#endregion
-			#region Admin Commands
+			/*#region Admin Commands
 			add(new Command(Permissions.ban, Ban, "ban")
 			{
 				HelpText = GetString("Manages player bans.")
@@ -625,12 +625,12 @@ namespace TShockAPI
 			add(new Command(Rules, "rules")
 			{
 				HelpText = GetString("Shows the server's rules.")
-			});
+			});*/
 
 			TShockCommands = new ReadOnlyCollection<Command>(tshockCommands);
 		}
 
-		public static bool HandleCommand(TSPlayer player, string text)
+		public static async Task<bool> HandleCommand(TSPlayer player, string text)
 		{
 			string cmdText = text.Remove(0, 1);
 			string cmdPrefix = text[0].ToString();
@@ -684,14 +684,14 @@ namespace TShockAPI
 			}
 			foreach (Command cmd in cmds)
 			{
-				if (!cmd.CanRun(player))
+				if (!await cmd.CanRun(player))
 				{
 					if (cmd.DoLog)
 						TShock.Utils.SendLogs(GetString("{0} tried to execute {1}{2}.", player.Name, Specifier, cmdText), Color.PaleVioletRed, player);
 					else
 						TShock.Utils.SendLogs(GetString("{0} tried to execute (args omitted) {1}{2}.", player.Name, Specifier, cmdName), Color.PaleVioletRed, player);
 					player.SendErrorMessage(GetString("You do not have access to this command."));
-					if (player.HasPermission(Permissions.su))
+					if (await player.HasPermission(Permissions.su))
 					{
 						player.SendInfoMessage(GetString("You can use '{0}sudo {0}{1}' to override this check.", Specifier, cmdText));
 					}
@@ -770,13 +770,13 @@ namespace TShockAPI
 
 		#region Account commands
 
-		private static void AttemptLogin(CommandArgs args)
+		private static async Task AttemptLogin(CommandArgs args)
 		{
 			if (args.Player.LoginAttempts > TShock.Config.Settings.MaximumLoginAttempts && (TShock.Config.Settings.MaximumLoginAttempts != -1))
 			{
 				TShock.Log.Warn(GetString("{0} ({1}) had {2} or more invalid login attempts and was kicked automatically.",
 					args.Player.IP, args.Player.Name, TShock.Config.Settings.MaximumLoginAttempts));
-				args.Player.Kick(GetString("Too many invalid login attempts."));
+				await args.Player.Kick(GetString("Too many invalid login attempts."));
 				return;
 			}
 
@@ -817,7 +817,7 @@ namespace TShockAPI
 				return;
 			}
 
-			UserAccount account = TShock.UserAccounts.GetUserAccountByName(args.Player.Name);
+			UserAccount account = await UserAccountManager.GetUserAccountByName(args.Player.Name);
 			string password = "";
 			bool usingUUID = false;
 			if (args.Parameters.Count == 0 && !TShock.Config.Settings.DisableUUIDLogin)
@@ -843,7 +843,7 @@ namespace TShockAPI
 				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Parameters[0], args.Parameters[1]))
 					return;
 
-				account = TShock.UserAccounts.GetUserAccountByName(args.Parameters[0]);
+				account = await UserAccountManager.GetUserAccountByName(args.Parameters[0]);
 				password = args.Parameters[1];
 			}
 			else
@@ -869,15 +869,15 @@ namespace TShockAPI
 						(usingUUID && account.UUID == args.Player.UUID && !TShock.Config.Settings.DisableUUIDLogin &&
 						!String.IsNullOrWhiteSpace(args.Player.UUID)))
 				{
-					var group = TShock.Groups.GetGroupByName(account.Group);
+					var group = await GroupManager.GetGroupByName(account.Group);
 
-					if (!TShock.Groups.AssertGroupValid(args.Player, group, false))
+					if (!(GroupManager.AssertGroupValid(args.Player, group, false)))
 					{
 						args.Player.SendErrorMessage(GetString("Login attempt failed - see the message above."));
 						return;
 					}
 
-					args.Player.PlayerData = TShock.CharacterDB.GetPlayerData(args.Player, account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
 
 					args.Player.Group = group;
 					args.Player.tempGroup = null;
@@ -887,19 +887,19 @@ namespace TShockAPI
 
 					if (Main.ServerSideCharacter)
 					{
-						if (args.Player.HasPermission(Permissions.bypassssc))
+						if (await args.Player.HasPermission(Permissions.bypassssc))
 						{
 							args.Player.PlayerData.CopyCharacter(args.Player);
-							TShock.CharacterDB.InsertPlayerData(args.Player);
+							await CharacterManager.InsertPlayerData(args.Player);
 						}
 						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
 					args.Player.LoginFailsBySsi = false;
 
-					if (args.Player.HasPermission(Permissions.ignorestackhackdetection))
+					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
 						args.Player.IsDisabledForStackDetection = false;
 
-					if (args.Player.HasPermission(Permissions.usebanneditem))
+					if (await args.Player.HasPermission(Permissions.usebanneditem))
 						args.Player.IsDisabledForBannedWearable = false;
 
 					args.Player.SendSuccessMessage(GetString("Authenticated as {0} successfully.", account.Name));
@@ -907,15 +907,17 @@ namespace TShockAPI
 					TShock.Log.ConsoleInfo(GetString("{0} authenticated successfully as user: {1}.", args.Player.Name, account.Name));
 					if ((args.Player.LoginHarassed) && (TShock.Config.Settings.RememberLeavePos))
 					{
-						if (TShock.RememberedPos.GetLeavePos(args.Player.Name, args.Player.IP) != Vector2.Zero)
+						if (await RememberedPosManager.GetLeavePos(args.Player.Account.ID) != Vector2.Zero)
 						{
-							Vector2 pos = TShock.RememberedPos.GetLeavePos(args.Player.Name, args.Player.IP);
-							args.Player.Teleport((int)pos.X * 16, (int)pos.Y * 16);
+							var pos = await RememberedPosManager.GetLeavePos(args.Player.Account.ID);
+							if (pos is null)
+								return;
+							args.Player.Teleport((int)pos.Value.X * 16, (int)pos.Value.Y * 16);
 						}
 						args.Player.LoginHarassed = false;
 
 					}
-					TShock.UserAccounts.SetUserAccountUUID(account, args.Player.UUID);
+					await UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
 
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
@@ -962,7 +964,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static void PasswordUser(CommandArgs args)
+		private static async Task PasswordUser(CommandArgs args)
 		{
 			try
 			{
@@ -974,7 +976,7 @@ namespace TShockAPI
 						try
 						{
 							args.Player.SendSuccessMessage(GetString("You have successfully changed your password."));
-							TShock.UserAccounts.SetUserAccountPassword(args.Player.Account, args.Parameters[1]); // SetUserPassword will hash it for you.
+							await UserAccountManager.SetUserAccountPassword(args.Player.Account, args.Parameters[1]); // SetUserPassword will hash it for you.
 							TShock.Log.ConsoleInfo(GetString("{0} ({1}) changed the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
 						}
 						catch (ArgumentOutOfRangeException)
@@ -1000,7 +1002,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static void RegisterUser(CommandArgs args)
+		private static async Task RegisterUser(CommandArgs args)
 		{
 			try
 			{
@@ -1043,7 +1045,7 @@ namespace TShockAPI
 				account.Group = TShock.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
 				account.UUID = args.Player.UUID;
 
-				if (TShock.UserAccounts.GetUserAccountByName(account.Name) == null && account.Name != TSServerPlayer.AccountName) // Cheap way of checking for existance of a user
+				if (await UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != TSServerPlayer.AccountName) // Cheap way of checking for existance of a user
 				{
 					args.Player.SendSuccessMessage(GetString("Your account, \"{0}\", has been registered.", account.Name));
 					args.Player.SendSuccessMessage(GetString("Your password is {0}.", echoPassword));
@@ -1056,7 +1058,7 @@ namespace TShockAPI
 					else
 						args.Player.SendMessage(GetString($"Type {Specifier}login {echoPassword.Color(Utils.BoldHighlight)} to log-in to your account."), Color.White);
 
-					TShock.UserAccounts.AddUserAccount(account);
+					await UserAccountManager.AddUserAccount(account);
 					TShock.Log.ConsoleInfo(GetString("{0} registered an account: \"{1}\".", args.Player.Name, account.Name));
 				}
 				else
@@ -1073,7 +1075,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static void ManageUsers(CommandArgs args)
+		private static async Task ManageUsers(CommandArgs args)
 		{
 			// This guy needs to be here so that people don't get exceptions when they type /user
 			if (args.Parameters.Count < 1)
@@ -1103,7 +1105,7 @@ namespace TShockAPI
 
 				try
 				{
-					TShock.UserAccounts.AddUserAccount(account);
+					await UserAccountManager.AddUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account {0} has been added to group {1}.", account.Name, account.Group));
 					TShock.Log.ConsoleInfo(GetString("{0} added account {1} to group {2}.", args.Player.Name, account.Name, account.Group));
 				}
@@ -1129,7 +1131,7 @@ namespace TShockAPI
 
 				try
 				{
-					TShock.UserAccounts.RemoveUserAccount(account);
+					await UserAccountManager.RemoveUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account removed successfully."));
 					TShock.Log.ConsoleInfo(GetString("{0} successfully deleted account: {1}.", args.Player.Name, args.Parameters[1]));
 				}
@@ -1152,7 +1154,7 @@ namespace TShockAPI
 
 				try
 				{
-					TShock.UserAccounts.SetUserAccountPassword(account, args.Parameters[2]);
+					await UserAccountManager.SetUserAccountPassword(account, args.Parameters[2]);
 					TShock.Log.ConsoleInfo(GetString("{0} changed the password for account {1}", args.Player.Name, account.Name));
 					args.Player.SendSuccessMessage(GetString("Password change succeeded for {0}.", account.Name));
 				}
@@ -1178,7 +1180,7 @@ namespace TShockAPI
 
 				try
 				{
-					TShock.UserAccounts.SetUserGroup(account, args.Parameters[2]);
+					await UserAccountManager.SetUserGroup(account, args.Parameters[2]);
 					TShock.Log.ConsoleInfo(GetString("{0} changed account {1} to group {2}.", args.Player.Name, account.Name, args.Parameters[2]));
 					args.Player.SendSuccessMessage(GetString("Account {0} has been changed to group {1}.", account.Name, args.Parameters[2]));
 
@@ -1265,7 +1267,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static void ViewAccountInfo(CommandArgs args)
+		private static async Task ViewAccountInfo(CommandArgs args)
 		{
 			if (args.Parameters.Count < 1)
 			{
@@ -1276,20 +1278,19 @@ namespace TShockAPI
 			string username = String.Join(" ", args.Parameters);
 			if (!string.IsNullOrWhiteSpace(username))
 			{
-				var account = TShock.UserAccounts.GetUserAccountByName(username);
+				var account = await UserAccountManager.GetUserAccountByName(username);
 				if (account != null)
 				{
 					DateTime LastSeen;
 					string Timezone = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now).Hours.ToString("+#;-#");
 
-					if (DateTime.TryParse(account.LastAccessed, out LastSeen))
-					{
-						LastSeen = DateTime.Parse(account.LastAccessed).ToLocalTime();
+
+					LastSeen = account.LastAccessed;
 						args.Player.SendSuccessMessage(GetString("{0}'s last login occurred {1} {2} UTC{3}.", account.Name, LastSeen.ToShortDateString(),
 							LastSeen.ToShortTimeString(), Timezone));
-					}
 
-					if (args.Player.Group.HasPermission(Permissions.advaccountinfo))
+
+					if (await args.Player.Group.HasPermission(Permissions.advaccountinfo))
 					{
 						List<string> KnownIps = JsonConvert.DeserializeObject<List<string>>(account.KnownIps?.ToString() ?? string.Empty);
 						string ip = KnownIps?[KnownIps.Count - 1] ?? GetString("N/A");
@@ -1306,7 +1307,7 @@ namespace TShockAPI
 			else args.Player.SendErrorMessage(GetString("Invalid syntax. Proper syntax: {0}accountinfo <username>.", Specifier));
 		}
 
-		private static void Kick(CommandArgs args)
+		private static async Task Kick(CommandArgs args)
 		{
 			if (args.Parameters.Count < 1)
 			{
@@ -1334,13 +1335,14 @@ namespace TShockAPI
 				string reason = args.Parameters.Count > 1
 									? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1))
 									: GetString("Misbehaviour.");
-				if (!players[0].Kick(reason, !args.Player.RealPlayer, false, args.Player.Name))
+				if (!await players[0].Kick(reason, !args.Player.RealPlayer, false, args.Player.Name))
 				{
 					args.Player.SendErrorMessage(GetString("You can't kick another admin."));
 				}
 			}
 		}
 
+		/*
 		private static void Ban(CommandArgs args)
 		{
 			//Ban syntax:
@@ -1727,6 +1729,7 @@ namespace TShockAPI
 					break;
 			}
 		}
+		*/
 
 		private static void Whitelist(CommandArgs args)
 		{
@@ -1753,7 +1756,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static void SaveSSC(CommandArgs args)
+		/*private static void SaveSSC(CommandArgs args)
 		{
 			if (Main.ServerSideCharacter)
 			{
@@ -1766,9 +1769,9 @@ namespace TShockAPI
 					}
 				}
 			}
-		}
+		}*/
 
-		private static void OverrideSSC(CommandArgs args)
+		private static async Task OverrideSSC(CommandArgs args)
 		{
 			if (!Main.ServerSideCharacter)
 			{
@@ -1811,10 +1814,10 @@ namespace TShockAPI
 				return;
 			}
 
-			TShock.CharacterDB.InsertPlayerData(matchedPlayer);
+			await CharacterManager.InsertPlayerData(matchedPlayer);
 			args.Player.SendSuccessMessage(GetString("Server-side character data from \"{0}\" has been replaced by their current local data.", matchedPlayer.Name));
 		}
-
+/*
 		private static void UploadJoinData(CommandArgs args)
 		{
 			TSPlayer targetPlayer = args.Player;
@@ -1871,6 +1874,7 @@ namespace TShockAPI
 				args.Player.SendErrorMessage(GetString("The target player has not logged in yet."));
 			}
 		}
+		*/
 
 		private static void ForceHalloween(CommandArgs args)
 		{
@@ -1909,7 +1913,7 @@ namespace TShockAPI
 					TSPlayer.All.SendInfoMessage(GetString("{0} disabled xmas mode.", args.Player.Name));
 			}
 		}
-
+/*
 		private static void TempGroup(CommandArgs args)
 		{
 			if (args.Parameters.Count < 2)
@@ -1969,6 +1973,7 @@ namespace TShockAPI
 					g.Name, args.Parameters[2]));
 			}
 		}
+*/
 
 		private static void SubstituteUser(CommandArgs args)
 		{
@@ -2118,6 +2123,7 @@ namespace TShockAPI
 
 		#endregion Server Maintenence Commands
 
+		/*
 		#region Cause Events and Spawn Monsters Commands
 
 		static readonly List<string> _validEvents = new List<string>()
@@ -6758,5 +6764,6 @@ namespace TShockAPI
 		}
 
 		#endregion Game Commands
+		*/
 	}
 }

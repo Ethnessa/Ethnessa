@@ -26,6 +26,7 @@ using TShockAPI.Database;
 using Terraria.Localization;
 using System.Linq;
 using Terraria.DataStructures;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {

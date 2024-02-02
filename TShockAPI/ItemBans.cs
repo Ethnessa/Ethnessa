@@ -146,7 +146,7 @@ namespace TShockAPI
 			LastTimelyRun = DateTime.UtcNow;
 		}
 
-		internal async Task OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
+		internal async Task OnPlayerUpdate(PlayerUpdateEventArgs args)
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 			bool useItem = args.Control.IsUsingItem;
@@ -171,7 +171,7 @@ namespace TShockAPI
 			return;
 		}
 
-		internal async Task OnChestItemChange(object sender, ChestItemEventArgs args)
+		internal async Task OnChestItemChange(ChestItemEventArgs args)
 		{
 			Item item = new Item();
 			item.netDefaults(args.Type);
@@ -188,7 +188,7 @@ namespace TShockAPI
 			return;
 		}
 
-		internal async Task OnTileEdit(object sender, TileEditEventArgs args)
+		internal async Task OnTileEdit(TileEditEventArgs args)
 		{
 			if (args.Action == EditAction.PlaceTile || args.Action == EditAction.PlaceWall)
 			{

@@ -39,9 +39,9 @@ namespace TShockAPI
 		public RegionHandler()
 		{
 
-			GetDataHandlers.GemLockToggle += (x,e) => AsyncContext.Run(() => OnGemLockToggle(x,e));
-			GetDataHandlers.PlayerUpdate += (x,e) => AsyncContext.Run(() => OnPlayerUpdate(x,e));
-			GetDataHandlers.TileEdit += (x,e) => AsyncContext.Run(() => OnTileEdit(x,e));
+			GetDataHandlers.GemLockToggle += OnGemLockToggle;
+			GetDataHandlers.PlayerUpdate += OnPlayerUpdate;
+			GetDataHandlers.TileEdit += OnTileEdit;
 		}
 
 		/// <summary>
@@ -49,12 +49,12 @@ namespace TShockAPI
 		/// </summary>
 		public void Dispose()
 		{
-			GetDataHandlers.GemLockToggle -= (x,e) => AsyncContext.Run(() => OnGemLockToggle(x,e));
-			GetDataHandlers.PlayerUpdate -= (x,e) => AsyncContext.Run(() => OnPlayerUpdate(x,e));
-			GetDataHandlers.TileEdit -= (x,e) => AsyncContext.Run(() => OnTileEdit(x,e));
+			GetDataHandlers.GemLockToggle -= OnGemLockToggle;
+			GetDataHandlers.PlayerUpdate -= OnPlayerUpdate;
+			GetDataHandlers.TileEdit -= OnTileEdit;
 		}
 
-		private async Task OnGemLockToggle(object sender, GetDataHandlers.GemLockToggleEventArgs e)
+		private async Task OnGemLockToggle(GetDataHandlers.GemLockToggleEventArgs e)
 		{
 			if (TShock.Config.Settings.RegionProtectGemLocks)
 			{
@@ -65,7 +65,7 @@ namespace TShockAPI
 			}
 		}
 
-		private async Task OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs e)
+		private async Task OnPlayerUpdate(GetDataHandlers.PlayerUpdateEventArgs e)
 		{
 			var player = e.Player;
 
@@ -93,7 +93,7 @@ namespace TShockAPI
 			}
 		}
 
-		private async Task OnTileEdit(object sender, GetDataHandlers.TileEditEventArgs e)
+		private async Task OnTileEdit(GetDataHandlers.TileEditEventArgs e)
 		{
 			var player = e.Player;
 

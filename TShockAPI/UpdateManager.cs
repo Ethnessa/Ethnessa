@@ -132,13 +132,13 @@ namespace TShockAPI
 			return null;
 		}
 
-		private void NotifyAdministrators(Dictionary<string, string> update)
+		private async Task NotifyAdministrators(Dictionary<string, string> update)
 		{
 			var changes = update["changes"].Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			NotifyAdministrator(TSPlayer.Server, changes);
 			foreach (TSPlayer player in TShock.Players)
 			{
-				if (player != null && player.Active && player.HasPermission(Permissions.maintenance))
+				if (player != null && player.Active && await player.HasPermission(Permissions.maintenance))
 				{
 					NotifyAdministrator(player, changes);
 				}

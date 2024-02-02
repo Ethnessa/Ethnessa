@@ -46,6 +46,8 @@ namespace TShockAPI
 {
 	public delegate bool GetDataHandlerDelegate(GetDataHandlerArgs args);
 
+	public delegate Task<bool> GetDataHandlerDelegateAsync(GetDataHandlerArgs args);
+
 	public class GetDataHandlerArgs : EventArgs
 	{
 		public TSPlayer Player { get; private set; }
@@ -79,86 +81,93 @@ namespace TShockAPI
 	public static class GetDataHandlers
 	{
 		private static Dictionary<PacketTypes, GetDataHandlerDelegate> GetDataHandlerDelegates;
+		private static Dictionary<PacketTypes, GetDataHandlerDelegateAsync> GetDataHandlerDelegatesAsync;
 
 		public static void InitGetDataHandler()
 		{
+			GetDataHandlerDelegatesAsync = new Dictionary<PacketTypes, GetDataHandlerDelegateAsync>
+			{
+				{ PacketTypes.PlayerSlot, HandlePlayerSlot },
+				{ PacketTypes.ContinueConnecting2, HandleConnecting },
+				{ PacketTypes.TileGetSection, HandleGetSection },
+				{ PacketTypes.PlayerHp, HandlePlayerHp },
+				{ PacketTypes.NpcStrike, HandleNpcStrike },
+				{ PacketTypes.ProjectileDestroy, HandleProjectileKill },
+				{ PacketTypes.PasswordSend, HandlePassword },
+				{ PacketTypes.PlayerDeathV2, HandlePlayerKillMeV2 },
+				{ PacketTypes.ChestOpen, HandleChestActive },
+				{ PacketTypes.PlayerMana, HandlePlayerMana },
+				{ PacketTypes.PaintTile, HandlePaintTile },
+				{ PacketTypes.PaintWall, HandlePaintWall },
+				{ PacketTypes.Teleport, HandleTeleport },
+				{ PacketTypes.SignNew, HandleSign },
+				{ PacketTypes.UpdateNPCHome, HandleUpdateNPCHome },
+				{ PacketTypes.SpawnBossorInvasion, HandleSpawnBoss },
+				{ PacketTypes.TeleportationPotion, HandleTeleportationPotion },
+				{ PacketTypes.NpcSpecial, HandleSpecial },
+				{ PacketTypes.ToggleParty, HandleToggleParty },
+				{ PacketTypes.CrystalInvasionStart, HandleOldOnesArmy },
+				{ PacketTypes.PlaceTileEntity, HandlePlaceTileEntity },
+			};
 			GetDataHandlerDelegates = new Dictionary<PacketTypes, GetDataHandlerDelegate>
-				{
-					{ PacketTypes.PlayerInfo, HandlePlayerInfo },
-					{ PacketTypes.PlayerSlot, HandlePlayerSlot },
-					{ PacketTypes.ContinueConnecting2, HandleConnecting },
-					{ PacketTypes.TileGetSection, HandleGetSection },
-					{ PacketTypes.PlayerSpawn, HandleSpawn },
-					{ PacketTypes.PlayerUpdate, HandlePlayerUpdate },
-					{ PacketTypes.PlayerHp, HandlePlayerHp },
-					{ PacketTypes.Tile, HandleTile },
-					{ PacketTypes.DoorUse, HandleDoorUse },
-					{ PacketTypes.TileSendSquare, HandleSendTileRect },
-					{ PacketTypes.ItemDrop, HandleItemDrop },
-					{ PacketTypes.ItemOwner, HandleItemOwner },
-					{ PacketTypes.ProjectileNew, HandleProjectileNew },
-					{ PacketTypes.NpcStrike, HandleNpcStrike },
-					{ PacketTypes.ProjectileDestroy, HandleProjectileKill },
-					{ PacketTypes.TogglePvp, HandleTogglePvp },
-					{ PacketTypes.ChestGetContents, HandleChestOpen },
-					{ PacketTypes.ChestItem, HandleChestItem },
-					{ PacketTypes.ChestOpen, HandleChestActive },
-					{ PacketTypes.PlaceChest, HandlePlaceChest },
-					{ PacketTypes.Zones, HandlePlayerZone },
-					{ PacketTypes.PasswordSend, HandlePassword },
-					{ PacketTypes.NpcTalk, HandleNpcTalk },
-					{ PacketTypes.PlayerAnimation, HandlePlayerAnimation },
-					{ PacketTypes.PlayerMana, HandlePlayerMana },
-					{ PacketTypes.PlayerTeam, HandlePlayerTeam },
-					{ PacketTypes.SignRead, HandleSignRead },
-					{ PacketTypes.SignNew, HandleSign },
-					{ PacketTypes.LiquidSet, HandleLiquidSet },
-					{ PacketTypes.PlayerBuff, HandlePlayerBuffList },
-					{ PacketTypes.NpcSpecial, HandleSpecial },
-					{ PacketTypes.NpcAddBuff, HandleNPCAddBuff },
-					{ PacketTypes.PlayerAddBuff, HandlePlayerAddBuff },
-					{ PacketTypes.UpdateNPCHome, HandleUpdateNPCHome },
-					{ PacketTypes.SpawnBossorInvasion, HandleSpawnBoss },
-					{ PacketTypes.PaintTile, HandlePaintTile },
-					{ PacketTypes.PaintWall, HandlePaintWall },
-					{ PacketTypes.Teleport, HandleTeleport },
-					{ PacketTypes.PlayerHealOther, HandleHealOther },
-					{ PacketTypes.CatchNPC, HandleCatchNpc },
-					{ PacketTypes.ReleaseNPC, HandleReleaseNpc },
-					{ PacketTypes.TeleportationPotion, HandleTeleportationPotion },
-					{ PacketTypes.CompleteAnglerQuest, HandleCompleteAnglerQuest },
-					{ PacketTypes.NumberOfAnglerQuestsCompleted, HandleNumberOfAnglerQuestsCompleted },
-					{ PacketTypes.PlaceObject, HandlePlaceObject },
-					{ PacketTypes.LoadNetModule, HandleLoadNetModule },
-					{ PacketTypes.PlaceTileEntity, HandlePlaceTileEntity },
-					{ PacketTypes.PlaceItemFrame, HandlePlaceItemFrame },
-					{ PacketTypes.UpdateItemDrop, HandleItemDrop },
-					{ PacketTypes.SyncExtraValue, HandleSyncExtraValue },
-					{ PacketTypes.KillPortal, HandleKillPortal },
-					{ PacketTypes.PlayerTeleportPortal, HandlePlayerPortalTeleport },
-					{ PacketTypes.NpcTeleportPortal, HandleNpcTeleportPortal },
-					{ PacketTypes.GemLockToggle, HandleGemLockToggle },
-					{ PacketTypes.MassWireOperation, HandleMassWireOperation },
-					{ PacketTypes.ToggleParty, HandleToggleParty },
-					{ PacketTypes.CrystalInvasionStart, HandleOldOnesArmy },
-					{ PacketTypes.PlayerHurtV2, HandlePlayerDamageV2 },
-					{ PacketTypes.PlayerDeathV2, HandlePlayerKillMeV2 },
-					{ PacketTypes.Emoji, HandleEmoji },
-					{ PacketTypes.TileEntityDisplayDollItemSync, HandleTileEntityDisplayDollItemSync },
-					{ PacketTypes.RequestTileEntityInteraction, HandleRequestTileEntityInteraction },
-					{ PacketTypes.SyncTilePicking, HandleSyncTilePicking },
-					{ PacketTypes.SyncRevengeMarker, HandleSyncRevengeMarker },
-					{ PacketTypes.LandGolfBallInCup, HandleLandGolfBallInCup },
-					{ PacketTypes.FishOutNPC, HandleFishOutNPC },
-					{ PacketTypes.FoodPlatterTryPlacing, HandleFoodPlatterTryPlacing },
-					{ PacketTypes.SyncCavernMonsterType, HandleSyncCavernMonsterType },
-					{ PacketTypes.SyncLoadout, HandleSyncLoadout }
-				};
+			{
+				{ PacketTypes.PlayerInfo, HandlePlayerInfo },
+				{ PacketTypes.PlayerSpawn, HandleSpawn },
+				{ PacketTypes.PlayerUpdate, HandlePlayerUpdate },
+				{ PacketTypes.Tile, HandleTile },
+				{ PacketTypes.DoorUse, HandleDoorUse },
+				{ PacketTypes.TileSendSquare, HandleSendTileRect },
+				{ PacketTypes.ItemDrop, HandleItemDrop },
+				{ PacketTypes.ItemOwner, HandleItemOwner },
+				{ PacketTypes.ProjectileNew, HandleProjectileNew },
+				{ PacketTypes.TogglePvp, HandleTogglePvp },
+				{ PacketTypes.ChestGetContents, HandleChestOpen },
+				{ PacketTypes.ChestItem, HandleChestItem },
+				{ PacketTypes.PlaceChest, HandlePlaceChest },
+				{ PacketTypes.Zones, HandlePlayerZone },
+				{ PacketTypes.NpcTalk, HandleNpcTalk },
+				{ PacketTypes.PlayerAnimation, HandlePlayerAnimation },
+				{ PacketTypes.PlayerTeam, HandlePlayerTeam },
+				{ PacketTypes.SignRead, HandleSignRead },
+				{ PacketTypes.LiquidSet, HandleLiquidSet },
+				{ PacketTypes.PlayerBuff, HandlePlayerBuffList },
+				{ PacketTypes.NpcAddBuff, HandleNPCAddBuff },
+				{ PacketTypes.PlayerAddBuff, HandlePlayerAddBuff },
+				{ PacketTypes.PlayerHealOther, HandleHealOther },
+				{ PacketTypes.CatchNPC, HandleCatchNpc },
+				{ PacketTypes.ReleaseNPC, HandleReleaseNpc },
+				{ PacketTypes.CompleteAnglerQuest, HandleCompleteAnglerQuest },
+				{ PacketTypes.NumberOfAnglerQuestsCompleted, HandleNumberOfAnglerQuestsCompleted },
+				{ PacketTypes.PlaceObject, HandlePlaceObject },
+				{ PacketTypes.LoadNetModule, HandleLoadNetModule },
+				{ PacketTypes.PlaceItemFrame, HandlePlaceItemFrame },
+				{ PacketTypes.UpdateItemDrop, HandleItemDrop },
+				{ PacketTypes.SyncExtraValue, HandleSyncExtraValue },
+				{ PacketTypes.KillPortal, HandleKillPortal },
+				{ PacketTypes.PlayerTeleportPortal, HandlePlayerPortalTeleport },
+				{ PacketTypes.NpcTeleportPortal, HandleNpcTeleportPortal },
+				{ PacketTypes.GemLockToggle, HandleGemLockToggle },
+				{ PacketTypes.MassWireOperation, HandleMassWireOperation },
+
+				{ PacketTypes.PlayerHurtV2, HandlePlayerDamageV2 },
+
+				{ PacketTypes.Emoji, HandleEmoji },
+				{ PacketTypes.TileEntityDisplayDollItemSync, HandleTileEntityDisplayDollItemSync },
+				{ PacketTypes.RequestTileEntityInteraction, HandleRequestTileEntityInteraction },
+				{ PacketTypes.SyncTilePicking, HandleSyncTilePicking },
+				{ PacketTypes.SyncRevengeMarker, HandleSyncRevengeMarker },
+				{ PacketTypes.LandGolfBallInCup, HandleLandGolfBallInCup },
+				{ PacketTypes.FishOutNPC, HandleFishOutNPC },
+				{ PacketTypes.FoodPlatterTryPlacing, HandleFoodPlatterTryPlacing },
+				{ PacketTypes.SyncCavernMonsterType, HandleSyncCavernMonsterType },
+				{ PacketTypes.SyncLoadout, HandleSyncLoadout }
+			};
 		}
 
 		public static bool HandlerGetData(PacketTypes type, TSPlayer player, MemoryStream data)
 		{
 			GetDataHandlerDelegate handler;
+			GetDataHandlerDelegateAsync asyncHandler;
 			if (GetDataHandlerDelegates.TryGetValue(type, out handler))
 			{
 				try
@@ -171,6 +180,19 @@ namespace TShockAPI
 					return true;
 				}
 			}
+			else if (GetDataHandlerDelegatesAsync.TryGetValue(type, out asyncHandler))
+			{
+				try
+				{
+					return asyncHandler(new GetDataHandlerArgs(player, data)).GetAwaiter().GetResult();
+				}
+				catch (Exception ex)
+				{
+					TShock.Log.Error(ex.ToString());
+					return true;
+				}
+			}
+
 			return false;
 		}
 
@@ -182,29 +204,36 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// Hair color
 			/// </summary>
 			public byte Hair { get; set; }
+
 			/// <summary>
 			/// Clothing style. 0-3 are for male characters, and 4-7 are for female characters.
 			/// </summary>
 			public int Style { get; set; }
+
 			/// <summary>
 			/// Character difficulty
 			/// </summary>
 			public byte Difficulty { get; set; }
+
 			/// <summary>
 			/// Player/character name
 			/// </summary>
 			public string Name { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerInfo - called at a PlayerInfo event
 		/// If this is cancelled, the server will kick the player. If this should be changed in the future, let someone know.
 		/// </summary>
 		public static HandlerList<PlayerInfoEventArgs> PlayerInfo = new HandlerList<PlayerInfoEventArgs>();
-		private static bool OnPlayerInfo(TSPlayer player, MemoryStream data, byte _plrid, byte _hair, int _style, byte _difficulty, string _name)
+
+		private static bool OnPlayerInfo(TSPlayer player, MemoryStream data, byte _plrid, byte _hair, int _style,
+			byte _difficulty, string _name)
 		{
 			if (PlayerInfo == null)
 				return false;
@@ -232,28 +261,35 @@ namespace TShockAPI
 			/// The Terraria playerID
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// The slot edited
 			/// </summary>
 			public short Slot { get; set; }
+
 			/// <summary>
 			/// The stack edited
 			/// </summary>
 			public short Stack { get; set; }
+
 			/// <summary>
 			/// The item prefix
 			/// </summary>
 			public byte Prefix { get; set; }
+
 			/// <summary>
 			/// Item type
 			/// </summary>
 			public short Type { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerSlot - called at a PlayerSlot event
 		/// </summary>
 		public static HandlerList<PlayerSlotEventArgs> PlayerSlot = new HandlerList<PlayerSlotEventArgs>();
-		private static bool OnPlayerSlot(TSPlayer player, MemoryStream data, byte _plr, short _slot, short _stack, byte _prefix, short _type)
+
+		private static bool OnPlayerSlot(TSPlayer player, MemoryStream data, byte _plr, short _slot, short _stack,
+			byte _prefix, short _type)
 		{
 			if (PlayerSlot == null)
 				return false;
@@ -284,6 +320,7 @@ namespace TShockAPI
 
 		/// <summary>The hook for a GetSection event.</summary>
 		public static event AsyncEventHandler<GetSectionEventArgs>? GetSection;
+
 		private static bool OnGetSection(TSPlayer player, MemoryStream data, int x, int y)
 		{
 			if (GetSection == null)
@@ -297,7 +334,7 @@ namespace TShockAPI
 				Y = y,
 			};
 
-			GetSection.Invoke( args);
+			GetSection.Invoke(args);
 			return args.Handled;
 		}
 
@@ -310,49 +347,58 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// Control direction (BitFlags)
 			/// </summary>
 			public ControlSet Control { get; set; }
+
 			/// <summary>
 			/// Misc Data Set 1
 			/// </summary>
 			public MiscDataSet1 MiscData1 { get; set; }
+
 			/// <summary>
 			/// Misc Data Set 2
 			/// </summary>
 			public MiscDataSet2 MiscData2 { get; set; }
+
 			/// <summary>
 			/// Misc Data Set 3
 			/// </summary>
 			public MiscDataSet3 MiscData3 { get; set; }
+
 			/// <summary>
 			/// The selected item in player's hand.
 			/// </summary>
 			public byte SelectedItem { get; set; }
+
 			/// <summary>
 			/// Position of the player.
 			/// </summary>
 			public Vector2 Position { get; set; }
+
 			/// <summary>
 			/// Velocity of the player.
 			/// </summary>
 			public Vector2 Velocity { get; set; }
+
 			/// <summary>
 			/// Original position of the player when using Potion of Return.
 			/// </summary>
 			public Vector2? OriginalPos { get; set; }
+
 			/// <summary>
 			/// Home Position of the player for Potion of Return.
 			/// </summary>
 			public Vector2? HomePos { get; set; }
-
 		}
 
 		/// <summary>
 		/// PlayerUpdate - When the player sends it's updated information to the server
 		/// </summary>
 		public static event AsyncEventHandler<PlayerUpdateEventArgs>? PlayerUpdate;
+
 		private static bool OnPlayerUpdate(
 			TSPlayer player,
 			MemoryStream data,
@@ -398,19 +444,23 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// Current HP
 			/// </summary>
 			public short Current { get; set; }
+
 			/// <summary>
 			/// Maximum HP
 			/// </summary>
 			public short Max { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerHP - called at a PlayerHP event
 		/// </summary>
 		public static HandlerList<PlayerHPEventArgs> PlayerHP = new HandlerList<PlayerHPEventArgs>();
+
 		private static bool OnPlayerHP(TSPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
 		{
 			if (PlayerHP == null)
@@ -447,6 +497,7 @@ namespace TShockAPI
 			/// The Tile ID being edited.
 			/// </summary>
 			public short EditData { get; set; }
+
 			/// <summary>
 			/// The EditType.
 			/// (KillTile = 0, PlaceTile = 1, KillWall = 2, PlaceWall = 3, KillTileNoItem = 4, PlaceWire = 5, KillWire = 6)
@@ -468,7 +519,9 @@ namespace TShockAPI
 		/// TileEdit - called when a tile is placed or destroyed
 		/// </summary>
 		public static event AsyncEventHandler<TileEditEventArgs>? TileEdit;
-		private static bool OnTileEdit(TSPlayer ply, MemoryStream data, int x, int y, EditAction action, EditType editDetail, short editData, byte style)
+
+		private static bool OnTileEdit(TSPlayer ply, MemoryStream data, int x, int y, EditAction action,
+			EditType editDetail, short editData, byte style)
 		{
 			if (TileEdit == null)
 				return false;
@@ -497,14 +550,17 @@ namespace TShockAPI
 			/// X - The x position of the door being used
 			/// </summary>
 			public short X { get; set; }
+
 			/// <summary>
 			/// Y - The y position of the door being used
 			/// </summary>
 			public short Y { get; set; }
+
 			/// <summary>
 			/// Direction - Information about which way the door opens or where the player is relative to the door
 			/// </summary>
 			public byte Direction { get; set; }
+
 			/// <summary>
 			/// Action - The type of thing happening to the door
 			/// </summary>
@@ -515,7 +571,9 @@ namespace TShockAPI
 		/// DoorUse - called when a door is opened or closed (normal or trap)
 		/// </summary>
 		public static HandlerList<DoorUseEventArgs> DoorUse = new HandlerList<DoorUseEventArgs>();
-		private static bool OnDoorUse(TSPlayer ply, MemoryStream data, short x, short y, byte direction, DoorAction action)
+
+		private static bool OnDoorUse(TSPlayer ply, MemoryStream data, short x, short y, byte direction,
+			DoorAction action)
 		{
 			if (DoorUse == null)
 				return false;
@@ -568,7 +626,8 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<SendTileRectEventArgs>? SendTileRect;
 
-		private static bool OnSendTileRect(TSPlayer player, MemoryStream data, short tilex, short tiley, byte width, byte length, TileChangeType changeType = TileChangeType.None)
+		private static bool OnSendTileRect(TSPlayer player, MemoryStream data, short tilex, short tiley, byte width,
+			byte length, TileChangeType changeType = TileChangeType.None)
 		{
 			if (SendTileRect == null)
 				return false;
@@ -598,26 +657,32 @@ namespace TShockAPI
 			/// If below 400 and NetID(Type) is 0 Then Set Null. If ItemID is 400 Then New Item
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// Position of the item
 			/// </summary>
 			public Vector2 Position { get; set; }
+
 			/// <summary>
 			/// Velocity at which the item is deployed
 			/// </summary>
 			public Vector2 Velocity { get; set; }
+
 			/// <summary>
 			/// Stacks
 			/// </summary>
 			public short Stacks { get; set; }
+
 			/// <summary>
 			/// Prefix of the item
 			/// </summary>
 			public byte Prefix { get; set; }
+
 			/// <summary>
 			/// No Delay on pickup
 			/// </summary>
 			public bool NoDelay { get; set; }
+
 			/// <summary>
 			/// Item type
 			/// </summary>
@@ -628,7 +693,9 @@ namespace TShockAPI
 		/// ItemDrop - Called when an item is dropped
 		/// </summary>
 		public static event AsyncEventHandler<ItemDropEventArgs>? ItemDrop;
-		private static bool OnItemDrop(TSPlayer player, MemoryStream data, short id, Vector2 pos, Vector2 vel, short stacks, byte prefix, bool noDelay, short type)
+
+		private static bool OnItemDrop(TSPlayer player, MemoryStream data, short id, Vector2 pos, Vector2 vel,
+			short stacks, byte prefix, bool noDelay, short type)
 		{
 			if (ItemDrop == null)
 				return false;
@@ -658,30 +725,37 @@ namespace TShockAPI
 			/// ???
 			/// </summary>
 			public short Identity { get; set; }
+
 			/// <summary>
 			/// Location of the projectile
 			/// </summary>
 			public Vector2 Position { get; set; }
+
 			/// <summary>
 			/// Velocity of the projectile
 			/// </summary>
 			public Vector2 Velocity { get; set; }
+
 			/// <summary>
 			/// Knockback
 			/// </summary>
 			public float Knockback { get; set; }
+
 			/// <summary>
 			/// Damage from the projectile
 			/// </summary>
 			public short Damage { get; set; }
+
 			/// <summary>
 			/// Terraria playerID owner of the projectile
 			/// </summary>
 			public byte Owner { get; set; }
+
 			/// <summary>
 			/// Type of projectile
 			/// </summary>
 			public short Type { get; set; }
+
 			/// <summary>
 			/// ???
 			/// </summary>
@@ -697,7 +771,9 @@ namespace TShockAPI
 		/// NewProjectile - Called when a client creates a new projectile
 		/// </summary>
 		public static event AsyncEventHandler<NewProjectileEventArgs>? NewProjectile;
-		private static bool OnNewProjectile(MemoryStream data, short ident, Vector2 pos, Vector2 vel, float knockback, short dmg, byte owner, short type, int index, TSPlayer player, float[] ai)
+
+		private static bool OnNewProjectile(MemoryStream data, short ident, Vector2 pos, Vector2 vel, float knockback,
+			short dmg, byte owner, short type, int index, TSPlayer player, float[] ai)
 		{
 			if (NewProjectile == null)
 				return false;
@@ -729,18 +805,22 @@ namespace TShockAPI
 			/// ???
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// Direction the damage occurred from
 			/// </summary>
 			public byte Direction { get; set; }
+
 			/// <summary>
 			/// Amount of damage
 			/// </summary>
 			public short Damage { get; set; }
+
 			/// <summary>
 			/// Knockback
 			/// </summary>
 			public float Knockback { get; set; }
+
 			/// <summary>
 			/// Critical?
 			/// </summary>
@@ -751,7 +831,9 @@ namespace TShockAPI
 		/// NPCStrike - Called when an NPC is attacked
 		/// </summary>
 		public static event AsyncEventHandler<NPCStrikeEventArgs> NPCStrike;
-		private static bool OnNPCStrike(TSPlayer player, MemoryStream data, short id, byte dir, short dmg, float knockback, byte crit)
+
+		private static bool OnNPCStrike(TSPlayer player, MemoryStream data, short id, byte dir, short dmg,
+			float knockback, byte crit)
 		{
 			if (NPCStrike == null)
 				return false;
@@ -775,13 +857,17 @@ namespace TShockAPI
 		{
 			/// <summary>The projectile's identity...?</summary>
 			public int ProjectileIdentity;
+
 			/// <summary>The player index of the projectile's owner (Main.players).</summary>
 			public byte ProjectileOwner;
+
 			/// <summary>The index of the projectile in Main.projectile.</summary>
 			public int ProjectileIndex;
 		}
+
 		/// <summary>The event fired when a projectile kill packet is received.</summary>
 		public static HandlerList<ProjectileKillEventArgs> ProjectileKill = new HandlerList<ProjectileKillEventArgs>();
+
 		/// <summary>Fires the ProjectileKill event.</summary>
 		/// <param name="player">The TSPlayer that caused the event.</param>
 		/// <param name="data">The MemoryStream containing the raw event data.</param>
@@ -816,15 +902,18 @@ namespace TShockAPI
 			/// The Terraria player ID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// Enable/disable pvp?
 			/// </summary>
 			public bool Pvp { get; set; }
 		}
+
 		/// <summary>
 		/// TogglePvp - called when a player toggles pvp
 		/// </summary>
 		public static HandlerList<TogglePvpEventArgs> TogglePvp = new HandlerList<TogglePvpEventArgs>();
+
 		private static bool OnPvpToggled(TSPlayer player, MemoryStream data, byte _id, bool _pvp)
 		{
 			if (TogglePvp == null)
@@ -850,37 +939,46 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// X location of the player's spawn
 			/// </summary>
 			public int SpawnX { get; set; }
+
 			/// <summary>
 			/// Y location of the player's spawn
 			/// </summary>
 			public int SpawnY { get; set; }
+
 			/// <summary>
 			/// Value of the timer countdown before the player can respawn alive.
 			/// If > 0, then player is still dead.
 			/// </summary>
 			public int RespawnTimer { get; set; }
+
 			/// <summary>
 			/// Number Of Deaths PVE
 			/// </summary>
 			public int NumberOfDeathsPVE { get; set; }
+
 			/// <summary>
 			/// Number Of Deaths PVP
 			/// </summary>
 			public int NumberOfDeathsPVP { get; set; }
+
 			/// <summary>
 			/// Context of where the player is spawning from.
 			/// </summary>
 			public PlayerSpawnContext SpawnContext { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerSpawn - When a player spawns
 		/// </summary>
 		public static HandlerList<SpawnEventArgs> PlayerSpawn = new HandlerList<SpawnEventArgs>();
-		private static bool OnPlayerSpawn(TSPlayer player, MemoryStream data, byte pid, int spawnX, int spawnY, int respawnTimer, int numberOfDeathsPVE, int numberOfDeathsPVP, PlayerSpawnContext spawnContext)
+
+		private static bool OnPlayerSpawn(TSPlayer player, MemoryStream data, byte pid, int spawnX, int spawnY,
+			int respawnTimer, int numberOfDeathsPVE, int numberOfDeathsPVP, PlayerSpawnContext spawnContext)
 		{
 			if (PlayerSpawn == null)
 				return false;
@@ -910,18 +1008,22 @@ namespace TShockAPI
 			/// ChestID
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// Slot of the item
 			/// </summary>
 			public byte Slot { get; set; }
+
 			/// <summary>
 			/// How many?
 			/// </summary>
 			public short Stacks { get; set; }
+
 			/// <summary>
 			/// Item prefix
 			/// </summary>
 			public byte Prefix { get; set; }
+
 			/// <summary>
 			/// Item type
 			/// </summary>
@@ -932,7 +1034,9 @@ namespace TShockAPI
 		/// ChestItemChange - Called when an item in a chest changes
 		/// </summary>
 		public static event AsyncEventHandler<ChestItemEventArgs>? ChestItemChange;
-		private static bool OnChestItemChange(TSPlayer player, MemoryStream data, short id, byte slot, short stacks, byte prefix, short type)
+
+		private static bool OnChestItemChange(TSPlayer player, MemoryStream data, short id, byte slot, short stacks,
+			byte prefix, short type)
 		{
 			if (ChestItemChange == null)
 				return false;
@@ -960,6 +1064,7 @@ namespace TShockAPI
 			/// X location of said chest
 			/// </summary>
 			public int X { get; set; }
+
 			/// <summary>
 			/// Y location of said chest
 			/// </summary>
@@ -970,6 +1075,7 @@ namespace TShockAPI
 		/// ChestOpen - Called when any chest is opened
 		/// </summary>
 		public static event AsyncEventHandler<ChestOpenEventArgs> ChestOpen;
+
 		private static bool OnChestOpen(MemoryStream data, int x, int y, TSPlayer player)
 		{
 			if (ChestOpen == null)
@@ -993,14 +1099,17 @@ namespace TShockAPI
 		{
 			/// <summary>What the packet is doing (see MP packet docs).</summary>
 			public int Flag { get; set; }
+
 			/// <summary>
 			/// The X coordinate
 			/// </summary>
 			public int TileX { get; set; }
+
 			/// <summary>
 			/// The Y coordinate
 			/// </summary>
 			public int TileY { get; set; }
+
 			/// <summary>
 			/// Place style used
 			/// </summary>
@@ -1011,7 +1120,9 @@ namespace TShockAPI
 		/// When a chest is added or removed from the world.
 		/// </summary>
 		public static event AsyncEventHandler<PlaceChestEventArgs> PlaceChest;
-		private static bool OnPlaceChest(TSPlayer player, MemoryStream data, int flag, int tilex, int tiley, short style)
+
+		private static bool OnPlaceChest(TSPlayer player, MemoryStream data, int flag, int tilex, int tiley,
+			short style)
 		{
 			if (PlaceChest == null)
 				return false;
@@ -1038,32 +1149,40 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// 0 = Dungeon, 1 = Corruption,2 =Holy, 3 = Meteor, 4 = Jungle, 5 = Snow, 6 = Crimson, 7 = Water Candle
 			/// </summary>
 			public BitsByte Zone1 { get; set; }
+
 			/// <summary>
 			/// 0 = Peace Candle, 1 = Solar Tower, 2 = Vortex Tower, 3 = Nebula Tower, 4 = Stardust Tower, 5 = Desert, 6 = Glowshroom, 7 = Underground Desert
 			/// </summary>
 			public BitsByte Zone2 { get; set; }
+
 			/// <summary>
 			/// 0 = Overworld, 1 = Dirt Layer, 2 = Rock Layer, 3 = Underworld, 4 = Beach, 5 = Rain, 6 = Sandstorm
 			/// </summary>
 			public BitsByte Zone3 { get; set; }
+
 			/// <summary>
 			/// 0 = Old One's Army, 1 = Granite, 2 = Marble, 3 = Hive, 4 = Gem Cave, 5 = Lihzhard Temple, 6 = Graveyard
 			/// </summary>
 			public BitsByte Zone4 { get; set; }
+
 			/// <summary>
 			/// 0 = The Aether
 			/// </summary>
 			public BitsByte Zone5 { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerZone - When the player sends it's zone/biome information to the server
 		/// </summary>
 		public static HandlerList<PlayerZoneEventArgs> PlayerZone = new HandlerList<PlayerZoneEventArgs>();
-		private static bool OnPlayerZone(TSPlayer player, MemoryStream data, byte plr, BitsByte zone1, BitsByte zone2, BitsByte zone3, BitsByte zone4, BitsByte zone5)
+
+		private static bool OnPlayerZone(TSPlayer player, MemoryStream data, byte plr, BitsByte zone1, BitsByte zone2,
+			BitsByte zone3, BitsByte zone4, BitsByte zone5)
 		{
 			if (PlayerZone == null)
 				return false;
@@ -1098,7 +1217,9 @@ namespace TShockAPI
 			/// </summary>
 			public short NPCTalkTarget { get; set; }
 		}
+
 		public static HandlerList<NpcTalkEventArgs> NpcTalk = new HandlerList<NpcTalkEventArgs>();
+
 		private static bool OnNpcTalk(TSPlayer player, MemoryStream data, byte _plr, short _npctarget)
 		{
 			if (NpcTalk == null)
@@ -1120,11 +1241,16 @@ namespace TShockAPI
 		/// <summary>
 		/// For use with a PlayerAnimation event
 		/// </summary>
-		public class PlayerAnimationEventArgs : GetDataHandledEventArgs { }
+		public class PlayerAnimationEventArgs : GetDataHandledEventArgs
+		{
+		}
+
 		/// <summary>
 		/// PlayerAnimation - Called when a player animates
 		/// </summary>
-		public static HandlerList<PlayerAnimationEventArgs> PlayerAnimation = new HandlerList<PlayerAnimationEventArgs>();
+		public static HandlerList<PlayerAnimationEventArgs> PlayerAnimation =
+			new HandlerList<PlayerAnimationEventArgs>();
+
 		private static bool OnPlayerAnimation(TSPlayer player, MemoryStream data)
 		{
 			if (PlayerAnimation == null)
@@ -1148,10 +1274,12 @@ namespace TShockAPI
 			public short Current { get; set; }
 			public short Max { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerMana - called at a PlayerMana event
 		/// </summary>
 		public static HandlerList<PlayerManaEventArgs> PlayerMana = new HandlerList<PlayerManaEventArgs>();
+
 		private static bool OnPlayerMana(TSPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
 		{
 			if (PlayerMana == null)
@@ -1178,15 +1306,18 @@ namespace TShockAPI
 			/// The Terraria player ID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// Enable/disable pvp?
 			/// </summary>
 			public byte Team { get; set; }
 		}
+
 		/// <summary>
 		/// TogglePvp - called when a player toggles pvp
 		/// </summary>
 		public static HandlerList<PlayerTeamEventArgs> PlayerTeam = new HandlerList<PlayerTeamEventArgs>();
+
 		private static bool OnPlayerTeam(TSPlayer player, MemoryStream data, byte _id, byte _team)
 		{
 			if (PlayerTeam == null)
@@ -1249,19 +1380,23 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// X location of the sign
 			/// </summary>
 			public int X { get; set; }
+
 			/// <summary>
 			/// Y location of the sign
 			/// </summary>
 			public int Y { get; set; }
 		}
+
 		/// <summary>
 		/// Sign - Called when a sign is changed
 		/// </summary>
 		public static HandlerList<SignEventArgs> Sign = new HandlerList<SignEventArgs>();
+
 		private static bool OnSignEvent(TSPlayer player, MemoryStream data, short id, int x, int y)
 		{
 			if (Sign == null)
@@ -1288,14 +1423,17 @@ namespace TShockAPI
 			/// X location of the tile
 			/// </summary>
 			public int TileX { get; set; }
+
 			/// <summary>
 			/// Y location of the tile
 			/// </summary>
 			public int TileY { get; set; }
+
 			/// <summary>
 			/// Amount of liquid
 			/// </summary>
 			public byte Amount { get; set; }
+
 			/// <summary>
 			/// Type of Liquid: 0=water, 1=lava, 2=honey
 			/// </summary>
@@ -1318,7 +1456,9 @@ namespace TShockAPI
 		/// LiquidSet - When ever a liquid is set
 		/// </summary>
 		public static event AsyncEventHandler<LiquidSetEventArgs> LiquidSet;
-		private static bool OnLiquidSet(TSPlayer player, MemoryStream data, int tilex, int tiley, byte amount, byte type)
+
+		private static bool OnLiquidSet(TSPlayer player, MemoryStream data, int tilex, int tiley, byte amount,
+			byte type)
 		{
 			if (LiquidSet == null)
 				return false;
@@ -1332,7 +1472,7 @@ namespace TShockAPI
 				Amount = amount,
 				Type = (LiquidType)type,
 			};
-			LiquidSet.Invoke( args);
+			LiquidSet.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1346,10 +1486,13 @@ namespace TShockAPI
 			/// </summary>
 			public byte ID { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerBuffUpdate - Called when a player updates buffs
 		/// </summary>
-		public static HandlerList<PlayerBuffUpdateEventArgs> PlayerBuffUpdate = new HandlerList<PlayerBuffUpdateEventArgs>();
+		public static HandlerList<PlayerBuffUpdateEventArgs> PlayerBuffUpdate =
+			new HandlerList<PlayerBuffUpdateEventArgs>();
+
 		private static bool OnPlayerBuffUpdate(TSPlayer player, MemoryStream data, byte id)
 		{
 			if (PlayerBuffUpdate == null)
@@ -1374,15 +1517,18 @@ namespace TShockAPI
 			/// ???
 			/// </summary>
 			public byte ID { get; set; }
+
 			/// <summary>
 			/// Type...?
 			/// </summary>
 			public byte Type { get; set; }
 		}
+
 		/// <summary>
 		/// NPCSpecial - Called at some point
 		/// </summary>
 		public static HandlerList<NPCSpecialEventArgs> NPCSpecial = new HandlerList<NPCSpecialEventArgs>();
+
 		private static bool OnNPCSpecial(TSPlayer player, MemoryStream data, byte id, byte type)
 		{
 			if (NPCSpecial == null)
@@ -1408,10 +1554,12 @@ namespace TShockAPI
 			/// The ID of the npc
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// Buff Type
 			/// </summary>
 			public int Type { get; set; }
+
 			/// <summary>
 			/// Time the buff lasts
 			/// </summary>
@@ -1422,6 +1570,7 @@ namespace TShockAPI
 		/// NPCAddBuff - Called when a npc is buffed
 		/// </summary>
 		public static event AsyncEventHandler<NPCAddBuffEventArgs> NPCAddBuff;
+
 		private static bool OnNPCAddBuff(TSPlayer player, MemoryStream data, short id, int type, short time)
 		{
 			if (NPCAddBuff == null)
@@ -1448,19 +1597,23 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte ID { get; set; }
+
 			/// <summary>
 			/// Buff Type
 			/// </summary>
 			public int Type { get; set; }
+
 			/// <summary>
 			/// Time the buff lasts
 			/// </summary>
 			public int Time { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerBuff - Called when a player is buffed
 		/// </summary>
 		public static HandlerList<PlayerBuffEventArgs> PlayerBuff = new HandlerList<PlayerBuffEventArgs>();
+
 		private static bool OnPlayerBuff(TSPlayer player, MemoryStream data, byte id, int type, int time)
 		{
 			if (PlayerBuff == null)
@@ -1494,14 +1647,17 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public short ID { get; set; }
+
 			/// <summary>
 			/// X location of the NPC home change
 			/// </summary>
 			public short X { get; set; }
+
 			/// <summary>
 			/// Y location of the NPC home change
 			/// </summary>
 			public short Y { get; set; }
+
 			/// <summary>
 			/// HouseholdStatus of the NPC
 			/// </summary>
@@ -1512,7 +1668,9 @@ namespace TShockAPI
 		/// NPCHome - Called when an NPC's home is changed
 		/// </summary>
 		public static event AsyncEventHandler<NPCHomeChangeEventArgs> NPCHome;
-		private static bool OnUpdateNPCHome(TSPlayer player, MemoryStream data, short id, short x, short y, byte houseHoldStatus)
+
+		private static bool OnUpdateNPCHome(TSPlayer player, MemoryStream data, short id, short x, short y,
+			byte houseHoldStatus)
 		{
 			if (NPCHome == null)
 				return false;
@@ -1539,23 +1697,28 @@ namespace TShockAPI
 			/// X Location
 			/// </summary>
 			public Int32 X { get; set; }
+
 			/// <summary>
 			/// Y Location
 			/// </summary>
 			public Int32 Y { get; set; }
+
 			/// <summary>
 			/// Type
 			/// </summary>
 			public byte type { get; set; }
+
 			/// <summary>
 			/// Paint Coat Tile
 			/// </summary>
 			public byte coatTile { get; set; }
 		}
+
 		/// <summary>
 		/// NPCStrike - Called when an NPC is attacked
 		/// </summary>
 		public static HandlerList<PaintTileEventArgs> PaintTile = new HandlerList<PaintTileEventArgs>();
+
 		private static bool OnPaintTile(TSPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte ct)
 		{
 			if (PaintTile == null)
@@ -1583,23 +1746,28 @@ namespace TShockAPI
 			/// X Location
 			/// </summary>
 			public Int32 X { get; set; }
+
 			/// <summary>
 			/// Y Location
 			/// </summary>
 			public Int32 Y { get; set; }
+
 			/// <summary>
 			/// Type
 			/// </summary>
 			public byte type { get; set; }
+
 			/// <summary>
 			/// Paint Coat Wall
 			/// </summary>
 			public byte coatWall { get; set; }
 		}
+
 		/// <summary>
 		/// Called When a wall is painted
 		/// </summary>
 		public static HandlerList<PaintWallEventArgs> PaintWall = new HandlerList<PaintWallEventArgs>();
+
 		private static bool OnPaintWall(TSPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte cw)
 		{
 			if (PaintWall == null)
@@ -1627,6 +1795,7 @@ namespace TShockAPI
 			/// ???
 			/// </summary>
 			public Int16 ID { get; set; }
+
 			/// <summary>
 			/// Flag is a bit field
 			///   if the first bit is set -> 0 = player, 1 = NPC
@@ -1635,28 +1804,35 @@ namespace TShockAPI
 			///   if the fourth bit is set, extra information is valid to read
 			/// </summary>
 			public byte Flag { get; set; }
+
 			/// <summary>
 			/// X Location
 			/// </summary>
 			public float X { get; set; }
+
 			/// <summary>
 			/// Y Location
 			/// </summary>
 			public float Y { get; set; }
+
 			/// <summary>
 			/// Style
 			/// </summary>
 			public byte Style { get; set; }
+
 			/// <summary>
 			/// "Extra info"
 			/// </summary>
 			public int ExtraInfo { get; set; }
 		}
+
 		/// <summary>
 		/// NPCStrike - Called when an NPC is attacked
 		/// </summary>
 		public static HandlerList<TeleportEventArgs> Teleport = new HandlerList<TeleportEventArgs>();
-		private static bool OnTeleport(TSPlayer player, MemoryStream data, Int16 id, byte f, float x, float y, byte style, int extraInfo)
+
+		private static bool OnTeleport(TSPlayer player, MemoryStream data, Int16 id, byte f, float x, float y,
+			byte style, int extraInfo)
 		{
 			if (Teleport == null)
 				return false;
@@ -1688,6 +1864,7 @@ namespace TShockAPI
 
 		/// <summary>When a player heals another player</summary>
 		public static event AsyncEventHandler<HealOtherPlayerEventArgs> HealOtherPlayer;
+
 		private static bool OnHealOtherPlayer(TSPlayer player, MemoryStream data, byte targetPlayerIndex, short amount)
 		{
 			if (HealOtherPlayer == null)
@@ -1735,6 +1912,7 @@ namespace TShockAPI
 		/// Called when player release a NPC, for checking critter released from item.
 		/// </summary>
 		public static HandlerList<ReleaseNpcEventArgs> ReleaseNPC = new HandlerList<ReleaseNpcEventArgs>();
+
 		private static bool OnReleaseNpc(TSPlayer player, MemoryStream data, int _x, int _y, short _type, byte _style)
 		{
 			if (ReleaseNPC == null)
@@ -1782,7 +1960,9 @@ namespace TShockAPI
 
 		/// <summary>Fired when an object is placed in the world.</summary>
 		public static event AsyncEventHandler<PlaceObjectEventArgs> PlaceObject;
-		private static bool OnPlaceObject(TSPlayer player, MemoryStream data, short x, short y, short type, short style, byte alternate, sbyte random, bool direction)
+
+		private static bool OnPlaceObject(TSPlayer player, MemoryStream data, short x, short y, short type, short style,
+			byte alternate, sbyte random, bool direction)
 		{
 			if (PlaceObject == null)
 				return false;
@@ -1819,6 +1999,7 @@ namespace TShockAPI
 
 		/// <summary>Fired when a PlaceTileEntity event occurs.</summary>
 		public static event AsyncEventHandler<PlaceTileEntityEventArgs> PlaceTileEntity;
+
 		private static bool OnPlaceTileEntity(TSPlayer player, MemoryStream data, short x, short y, byte type)
 		{
 			if (PlaceTileEntity == null)
@@ -1861,7 +2042,9 @@ namespace TShockAPI
 
 		/// <summary>Fired when an ItemFrame is placed.</summary>
 		public static event AsyncEventHandler<PlaceItemFrameEventArgs> PlaceItemFrame;
-		private static bool OnPlaceItemFrame(TSPlayer player, MemoryStream data, short x, short y, short itemID, byte prefix, short stack, TEItemFrame itemFrame)
+
+		private static bool OnPlaceItemFrame(TSPlayer player, MemoryStream data, short x, short y, short itemID,
+			byte prefix, short stack, TEItemFrame itemFrame)
 		{
 			if (PlaceItemFrame == null)
 				return false;
@@ -1903,9 +2086,13 @@ namespace TShockAPI
 			/// </summary>
 			public int PortalColorIndex { get; set; }
 		}
+
 		/// <summary>When a player passes through a portal</summary>
-		public static HandlerList<TeleportThroughPortalEventArgs> PortalTeleport = new HandlerList<TeleportThroughPortalEventArgs>();
-		private static bool OnPlayerTeleportThroughPortal(TSPlayer sender, byte targetPlayerIndex, MemoryStream data, Vector2 position, Vector2 velocity, int colorIndex)
+		public static HandlerList<TeleportThroughPortalEventArgs> PortalTeleport =
+			new HandlerList<TeleportThroughPortalEventArgs>();
+
+		private static bool OnPlayerTeleportThroughPortal(TSPlayer sender, byte targetPlayerIndex, MemoryStream data,
+			Vector2 position, Vector2 velocity, int colorIndex)
 		{
 			TeleportThroughPortalEventArgs args = new TeleportThroughPortalEventArgs
 			{
@@ -1931,10 +2118,12 @@ namespace TShockAPI
 			/// X Location
 			/// </summary>
 			public short X { get; set; }
+
 			/// <summary>
 			/// Y Location
 			/// </summary>
 			public short Y { get; set; }
+
 			/// <summary>
 			/// On status
 			/// </summary>
@@ -1945,6 +2134,7 @@ namespace TShockAPI
 		/// GemLockToggle - Called when a gem lock is switched
 		/// </summary>
 		public static event AsyncEventHandler<GemLockToggleEventArgs> GemLockToggle;
+
 		private static bool OnGemLockToggle(TSPlayer player, MemoryStream data, short x, short y, bool on)
 		{
 			if (GemLockToggle == null)
@@ -1983,7 +2173,9 @@ namespace TShockAPI
 
 		/// <summary>Fired on a mass wire edit operation.</summary>
 		public static event AsyncEventHandler<MassWireOperationEventArgs> MassWireOperation;
-		private static bool OnMassWireOperation(TSPlayer player, MemoryStream data, short startX, short startY, short endX, short endY, byte toolMode)
+
+		private static bool OnMassWireOperation(TSPlayer player, MemoryStream data, short startX, short startY,
+			short endX, short endY, byte toolMode)
 		{
 			if (MassWireOperation == null)
 				return false;
@@ -2012,26 +2204,32 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte ID { get; set; }
+
 			/// <summary>
 			/// The direction the damage is occurring from
 			/// </summary>
 			public byte Direction { get; set; }
+
 			/// <summary>
 			/// Amount of damage
 			/// </summary>
 			public short Damage { get; set; }
+
 			/// <summary>
 			/// If the player has PVP on
 			/// </summary>
 			public bool PVP { get; set; }
+
 			/// <summary>
 			/// Is the damage critical?
 			/// </summary>
 			public bool Critical { get; set; }
+
 			/// <summary>
 			/// Cooldown Counter
 			/// </summary>
 			public sbyte CooldownCounter { get; set; }
+
 			/// <summary>The reason the player took damage and/or died.</summary>
 			public PlayerDeathReason PlayerDeathReason { get; set; }
 		}
@@ -2040,7 +2238,9 @@ namespace TShockAPI
 		/// PlayerDamage - Called when a player is damaged
 		/// </summary>
 		public static event AsyncEventHandler<PlayerDamageEventArgs> PlayerDamage;
-		private static bool OnPlayerDamage(TSPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp, bool crit, sbyte cooldownCounter, PlayerDeathReason playerDeathReason)
+
+		private static bool OnPlayerDamage(TSPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp,
+			bool crit, sbyte cooldownCounter, PlayerDeathReason playerDeathReason)
 		{
 			if (PlayerDamage == null)
 				return false;
@@ -2070,26 +2270,33 @@ namespace TShockAPI
 			/// The Terraria playerID of the player
 			/// </summary>
 			public byte PlayerId { get; set; }
+
 			/// <summary>
 			/// The direction the damage is coming from (?)
 			/// </summary>
 			public byte Direction { get; set; }
+
 			/// <summary>
 			/// Amount of damage dealt
 			/// </summary>
 			public short Damage { get; set; }
+
 			/// <summary>
 			/// Player's current pvp setting
 			/// </summary>
 			public bool Pvp { get; set; }
+
 			/// <summary>The reason the player died.</summary>
 			public PlayerDeathReason PlayerDeathReason { get; set; }
 		}
+
 		/// <summary>
 		/// KillMe - Terraria's crappy way of handling damage from players
 		/// </summary>
 		public static HandlerList<KillMeEventArgs> KillMe = new HandlerList<KillMeEventArgs>();
-		private static bool OnKillMe(TSPlayer player, MemoryStream data, byte plr, byte direction, short damage, bool pvp, PlayerDeathReason playerDeathReason)
+
+		private static bool OnKillMe(TSPlayer player, MemoryStream data, byte plr, byte direction, short damage,
+			bool pvp, PlayerDeathReason playerDeathReason)
 		{
 			if (KillMe == null)
 				return false;
@@ -2117,6 +2324,7 @@ namespace TShockAPI
 			/// The player index in the packet, who sends the emoji.
 			/// </summary>
 			public byte PlayerIndex { get; set; }
+
 			/// <summary>
 			/// The ID of the emoji, that is being received.
 			/// </summary>
@@ -2127,6 +2335,7 @@ namespace TShockAPI
 		/// Called when a player sends an emoji.
 		/// </summary>
 		public static event AsyncEventHandler<EmojiEventArgs>? Emoji;
+
 		private static bool OnEmoji(TSPlayer player, MemoryStream data, byte playerIndex, byte emojiID)
 		{
 			if (Emoji == null)
@@ -2152,26 +2361,32 @@ namespace TShockAPI
 			/// The player index in the packet who modifies the DisplayDoll item slot.
 			/// </summary>
 			public byte PlayerIndex { get; set; }
+
 			/// <summary>
 			/// The ID of the TileEntity that is being modified.
 			/// </summary>
 			public int TileEntityID { get; set; }
+
 			/// <summary>
 			/// The TEDisplayDoll object that is being modified.
 			/// </summary>
 			public TEDisplayDoll DisplayDollEntity { get; set; }
+
 			/// <summary>
 			/// The slot of the DisplayDoll that is being modified.
 			/// </summary>
 			public int Slot { get; set; }
+
 			/// <summary>
 			/// Whether or not the slot that is being modified is a Dye slot.
 			/// </summary>
 			public bool IsDye { get; set; }
+
 			/// <summary>
 			/// The current item that is present in the slot before the modification.
 			/// </summary>
 			public Item OldItem { get; set; }
+
 			/// <summary>
 			/// The item that is about to replace the OldItem in the slot that is being modified.
 			/// </summary>
@@ -2182,7 +2397,9 @@ namespace TShockAPI
 		/// Called when a player modifies a DisplayDoll (Mannequin) item slot.
 		/// </summary>
 		public static event AsyncEventHandler<DisplayDollItemSyncEventArgs>? DisplayDollItemSync;
-		private static bool OnDisplayDollItemSync(TSPlayer player, MemoryStream data, byte playerIndex, int tileEntityID, TEDisplayDoll displayDollEntity, int slot, bool isDye, Item oldItem, Item newItem)
+
+		private static bool OnDisplayDollItemSync(TSPlayer player, MemoryStream data, byte playerIndex,
+			int tileEntityID, TEDisplayDoll displayDollEntity, int slot, bool isDye, Item oldItem, Item newItem)
 		{
 			if (DisplayDollItemSync == null)
 				return false;
@@ -2212,6 +2429,7 @@ namespace TShockAPI
 			/// The TileEntity object that the player is requesting interaction with.
 			/// </summary>
 			public TileEntity TileEntity { get; set; }
+
 			/// <summary>
 			/// The player index in the packet who requests interaction with the TileEntity.
 			/// </summary>
@@ -2222,7 +2440,9 @@ namespace TShockAPI
 		/// Called when a player requests interaction with a TileEntity.
 		/// </summary>
 		public static event AsyncEventHandler<RequestTileEntityInteractionEventArgs>? RequestTileEntityInteraction;
-		private static bool OnRequestTileEntityInteraction(TSPlayer player, MemoryStream data, TileEntity tileEntity, byte playerIndex)
+
+		private static bool OnRequestTileEntityInteraction(TSPlayer player, MemoryStream data, TileEntity tileEntity,
+			byte playerIndex)
 		{
 			if (RequestTileEntityInteraction == null)
 				return false;
@@ -2247,14 +2467,17 @@ namespace TShockAPI
 			/// The player index in the packet, who sends the tile picking data.
 			/// </summary>
 			public byte PlayerIndex { get; set; }
+
 			/// <summary>
 			/// The X world position of the tile that is being picked.
 			/// </summary>
 			public short TileX { get; set; }
+
 			/// <summary>
 			/// The Y world position of the tile that is being picked.
 			/// </summary>
 			public short TileY { get; set; }
+
 			/// <summary>
 			/// The damage that is being dealt on the tile.
 			/// </summary>
@@ -2265,14 +2488,16 @@ namespace TShockAPI
 		/// Called when a player hits and damages a tile.
 		/// </summary>
 		public static event AsyncEventHandler<SyncTilePickingEventArgs>? SyncTilePicking;
-		private static bool OnSyncTilePicking(TSPlayer player, MemoryStream data, byte playerIndex, short tileX, short tileY, byte tileDamage)
+
+		private static bool OnSyncTilePicking(TSPlayer player, MemoryStream data, byte playerIndex, short tileX,
+			short tileY, byte tileDamage)
 		{
 			if (SyncTilePicking == null)
 				return false;
 
 			var args = new SyncTilePickingEventArgs
 			{
-                                Player = player,
+				Player = player,
 				PlayerIndex = playerIndex,
 				TileX = tileX,
 				TileY = tileY,
@@ -2291,18 +2516,22 @@ namespace TShockAPI
 			/// The player index in the packet, who puts the ball in the cup.
 			/// </summary>
 			public byte PlayerIndex { get; set; }
+
 			/// <summary>
 			/// The X tile position of where the ball lands in a cup.
 			/// </summary>
 			public ushort TileX { get; set; }
+
 			/// <summary>
 			/// The Y tile position of where the ball lands in a cup.
 			/// </summary>
 			public ushort TileY { get; set; }
+
 			/// <summary>
 			/// The amount of hits it took for the player to land the ball in the cup.
 			/// </summary>
 			public ushort Hits { get; set; }
+
 			/// <summary>
 			/// The type of the projectile that was landed in the cup. A golfball in legit cases.
 			/// </summary>
@@ -2313,7 +2542,9 @@ namespace TShockAPI
 		/// Called when a player lands a golf ball in a cup.
 		/// </summary>
 		public static event AsyncEventHandler<LandGolfBallInCupEventArgs>? LandGolfBallInCup;
-		private static bool OnLandGolfBallInCup(TSPlayer player, MemoryStream data, byte playerIndex, ushort tileX, ushort tileY, ushort hits, ushort projectileType)
+
+		private static bool OnLandGolfBallInCup(TSPlayer player, MemoryStream data, byte playerIndex, ushort tileX,
+			ushort tileY, ushort hits, ushort projectileType)
 		{
 			if (LandGolfBallInCup == null)
 				return false;
@@ -2341,10 +2572,12 @@ namespace TShockAPI
 			/// The X world position of the spawning NPC.
 			/// </summary>
 			public ushort TileX { get; set; }
+
 			/// <summary>
 			/// The Y world position of the spawning NPC.
 			/// </summary>
 			public ushort TileY { get; set; }
+
 			/// <summary>
 			/// The NPC type that is being spawned.
 			/// </summary>
@@ -2355,6 +2588,7 @@ namespace TShockAPI
 		/// Called when a player fishes out an NPC.
 		/// </summary>
 		public static event AsyncEventHandler<FishOutNPCEventArgs> FishOutNPC;
+
 		private static bool OnFishOutNPC(TSPlayer player, MemoryStream data, ushort tileX, ushort tileY, short npcID)
 		{
 			if (FishOutNPC == null)
@@ -2378,18 +2612,22 @@ namespace TShockAPI
 			/// The X tile position of the placement action.
 			/// </summary>
 			public short TileX { get; set; }
+
 			/// <summary>
 			/// The Y tile position of the placement action.
 			/// </summary>
 			public short TileY { get; set; }
+
 			/// <summary>
 			/// The Item ID that is being placed in the plate.
 			/// </summary>
 			public short ItemID { get; set; }
+
 			/// <summary>
 			/// The prefix of the item that is being placed in the plate.
 			/// </summary>
 			public byte Prefix { get; set; }
+
 			/// <summary>
 			/// The stack of the item that is being placed in the plate.
 			/// </summary>
@@ -2400,7 +2638,9 @@ namespace TShockAPI
 		/// Called when a player is placing an item in a food plate.
 		/// </summary>
 		public static event AsyncEventHandler<FoodPlatterTryPlacingEventArgs> FoodPlatterTryPlacing;
-		private static bool OnFoodPlatterTryPlacing(TSPlayer player, MemoryStream data, short tileX, short tileY, short itemID, byte prefix, short stack)
+
+		private static bool OnFoodPlatterTryPlacing(TSPlayer player, MemoryStream data, short tileX, short tileY,
+			short itemID, byte prefix, short stack)
 		{
 			if (FoodPlatterTryPlacing == null)
 				return false;
@@ -2490,6 +2730,7 @@ namespace TShockAPI
 			{
 				difficulty = 3;
 			}
+
 			bool extraSlot = extra[2];
 			BitsByte torchFlags = args.Data.ReadInt8();
 			bool usingBiomeTorches = torchFlags[0];
@@ -2508,7 +2749,8 @@ namespace TShockAPI
 
 			if (OnPlayerInfo(args.Player, args.Data, playerid, hair, skinVariant, difficulty, name))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected plugin phase {0}", name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected plugin phase {0}",
+					name));
 				args.Player.Kick(GetString("A plugin on this server stopped your login."), true, true);
 				return true;
 			}
@@ -2522,7 +2764,8 @@ namespace TShockAPI
 
 			if (name.Trim().StartsWith("tsi:") || name.Trim().StartsWith("tsn:"))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / rejecting player for name prefix starting with tsi: or tsn:."));
+				TShock.Log.ConsoleDebug(
+					GetString("GetDataHandlers / rejecting player for name prefix starting with tsi: or tsn:."));
 				args.Player.Kick(GetString("Illegal name: prefixes tsi: and tsn: are forbidden."), true, true);
 				return true;
 			}
@@ -2563,27 +2806,32 @@ namespace TShockAPI
 				args.Player.TPlayer.unlockedSuperCart = unlockedSuperCart;
 				args.Player.TPlayer.enabledSuperCart = enabledSuperCart;
 
-				NetMessage.SendData((int)PacketTypes.PlayerInfo, -1, args.Player.Index, NetworkText.FromLiteral(args.Player.Name), args.Player.Index);
+				NetMessage.SendData((int)PacketTypes.PlayerInfo, -1, args.Player.Index,
+					NetworkText.FromLiteral(args.Player.Name), args.Player.Index);
 				return true;
 			}
+
 			if (TShock.Config.Settings.SoftcoreOnly && difficulty != 0)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected softcore required"));
 				args.Player.Kick(GetString("You need to join with a softcore player."), true, true);
 				return true;
 			}
+
 			if (TShock.Config.Settings.MediumcoreOnly && difficulty < 1)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected mediumcore required"));
 				args.Player.Kick(GetString("You need to join with a mediumcore player or higher."), true, true);
 				return true;
 			}
+
 			if (TShock.Config.Settings.HardcoreOnly && difficulty < 2)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected hardcore required"));
 				args.Player.Kick(GetString("You need to join with a hardcore player."), true, true);
 				return true;
 			}
+
 			args.Player.Difficulty = difficulty;
 			args.TPlayer.name = name;
 			args.Player.ReceivedInfo = true;
@@ -2607,8 +2855,9 @@ namespace TShockAPI
 				bypassTrashCanCheck = true;
 			}
 
-			if (OnPlayerSlot(args.Player, args.Data, plr, slot, stack, prefix, type) || plr != args.Player.Index || slot < 0 ||
-				slot > NetItem.MaxInventory)
+			if (OnPlayerSlot(args.Player, args.Data, plr, slot, stack, prefix, type) || plr != args.Player.Index ||
+			    slot < 0 ||
+			    slot > NetItem.MaxInventory)
 				return true;
 			if (args.Player.IgnoreSSCPackets)
 			{
@@ -2626,8 +2875,9 @@ namespace TShockAPI
 			{
 				args.Player.PlayerData.StoreSlot(slot, type, prefix, stack);
 			}
-			else if (Main.ServerSideCharacter && TShock.Config.Settings.DisableLoginBeforeJoin && !bypassTrashCanCheck &&
-					 args.Player.HasSentInventory && !await args.Player.HasPermission(Permissions.bypassssc))
+			else if (Main.ServerSideCharacter && TShock.Config.Settings.DisableLoginBeforeJoin &&
+			         !bypassTrashCanCheck &&
+			         args.Player.HasSentInventory && !await args.Player.HasPermission(Permissions.bypassssc))
 			{
 				// The player might have moved an item to their trash can before they performed a single login attempt yet.
 				args.Player.IsDisabledPendingTrashRemoval = true;
@@ -2644,7 +2894,7 @@ namespace TShockAPI
 
 		private static async Task<bool> HandleConnecting(GetDataHandlerArgs args)
 		{
-			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name);//
+			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name); //
 			args.Player.DataWhenJoined = new PlayerData(args.Player);
 			args.Player.DataWhenJoined.CopyCharacter(args.Player);
 			args.Player.PlayerData = new PlayerData(args.Player);
@@ -2675,17 +2925,24 @@ namespace TShockAPI
 					{
 						if (await args.Player.HasPermission(Permissions.bypassssc))
 						{
-							if (args.Player.PlayerData.exists && TShock.ServerSideCharacterConfig.Settings.WarnPlayersAboutBypassPermission)
+							if (args.Player.PlayerData.exists && TShock.ServerSideCharacterConfig.Settings
+								    .WarnPlayersAboutBypassPermission)
 							{
-								args.Player.SendWarningMessage(GetString("Bypass SSC is enabled for your account. SSC data will not be loaded or saved."));
-								TShock.Log.ConsoleInfo(GetString($"{args.Player.Name} has SSC data in the database, but has the tshock.ignore.ssc permission. This means their SSC data is being ignored."));
-								TShock.Log.ConsoleInfo(GetString("You may wish to consider removing the tshock.ignore.ssc permission or negating it for this player."));
+								args.Player.SendWarningMessage(GetString(
+									"Bypass SSC is enabled for your account. SSC data will not be loaded or saved."));
+								TShock.Log.ConsoleInfo(GetString(
+									$"{args.Player.Name} has SSC data in the database, but has the tshock.ignore.ssc permission. This means their SSC data is being ignored."));
+								TShock.Log.ConsoleInfo(GetString(
+									"You may wish to consider removing the tshock.ignore.ssc permission or negating it for this player."));
 							}
+
 							args.Player.PlayerData.CopyCharacter(args.Player);
 							await CharacterManager.InsertPlayerData(args.Player);
 						}
+
 						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
+
 					args.Player.LoginFailsBySsi = false;
 
 					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
@@ -2695,7 +2952,8 @@ namespace TShockAPI
 						args.Player.IsDisabledForBannedWearable = false;
 
 					args.Player.SendSuccessMessage(GetString($"Authenticated as {account.Name} successfully."));
-					TShock.Log.ConsoleInfo(GetString($"{args.Player.Name} authenticated successfully as user {args.Player.Name}."));
+					TShock.Log.ConsoleInfo(
+						GetString($"{args.Player.Name} authenticated successfully as user {args.Player.Name}."));
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 					return true;
 				}
@@ -2725,14 +2983,15 @@ namespace TShockAPI
 				return true;
 
 			if (TShock.Utils.GetActivePlayerCount() + 1 > TShock.Config.Settings.MaxSlots &&
-				!await args.Player.HasPermission(Permissions.reservedslot))
+			    !await args.Player.HasPermission(Permissions.reservedslot))
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleGetSection rejected reserve slot"));
 				args.Player.Kick(TShock.Config.Settings.ServerFullReason, true, true);
 				return true;
 			}
 
-			NetMessage.SendData((int)PacketTypes.TimeSet, -1, -1, NetworkText.Empty, Main.dayTime ? 1 : 0, (int)Main.time, Main.sunModY, Main.moonModY);
+			NetMessage.SendData((int)PacketTypes.TimeSet, -1, -1, NetworkText.Empty, Main.dayTime ? 1 : 0,
+				(int)Main.time, Main.sunModY, Main.moonModY);
 			return false;
 		}
 
@@ -2740,7 +2999,8 @@ namespace TShockAPI
 		{
 			if (args.Player.Dead && args.Player.RespawnTimer > 0)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn rejected dead player spawn request {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSpawn rejected dead player spawn request {0}", args.Player.Name));
 				return true;
 			}
 
@@ -2752,35 +3012,46 @@ namespace TShockAPI
 			short numberOfDeathsPVP = args.Data.ReadInt16();
 			PlayerSpawnContext context = (PlayerSpawnContext)args.Data.ReadByte();
 
-			if (OnPlayerSpawn(args.Player, args.Data, player, spawnx, spawny, respawnTimer, numberOfDeathsPVE, numberOfDeathsPVP, context))
+			if (OnPlayerSpawn(args.Player, args.Data, player, spawnx, spawny, respawnTimer, numberOfDeathsPVE,
+				    numberOfDeathsPVP, context))
 				return true;
 
-			if ((Main.ServerSideCharacter) && (spawnx == -1 && spawny == -1)) //this means they want to spawn to vanilla spawn
+			if ((Main.ServerSideCharacter) &&
+			    (spawnx == -1 && spawny == -1)) //this means they want to spawn to vanilla spawn
 			{
 				args.Player.sX = Main.spawnTileX;
 				args.Player.sY = Main.spawnTileY;
 				args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport 'vanilla spawn' {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport 'vanilla spawn' {0}",
+					args.Player.Name));
 			}
 
-			else if ((Main.ServerSideCharacter) && (args.Player.sX > 0) && (args.Player.sY > 0) && (args.TPlayer.SpawnX > 0) && ((args.TPlayer.SpawnX != args.Player.sX) && (args.TPlayer.SpawnY != args.Player.sY)))
+			else if ((Main.ServerSideCharacter) && (args.Player.sX > 0) && (args.Player.sY > 0) &&
+			         (args.TPlayer.SpawnX > 0) && ((args.TPlayer.SpawnX != args.Player.sX) &&
+			                                       (args.TPlayer.SpawnY != args.Player.sY)))
 			{
 				args.Player.sX = args.TPlayer.SpawnX;
 				args.Player.sY = args.TPlayer.SpawnY;
 
-				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() && Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) && (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
+				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() &&
+				      Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
+				    (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
 				{
 					args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 1 {0}", args.Player.Name));
+					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 1 {0}",
+						args.Player.Name));
 				}
 			}
 
 			else if ((Main.ServerSideCharacter) && (args.Player.sX > 0) && (args.Player.sY > 0))
 			{
-				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() && Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) && (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
+				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() &&
+				      Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
+				    (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
 				{
 					args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 2 {0}", args.Player.Name));
+					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 2 {0}",
+						args.Player.Name));
 				}
 			}
 
@@ -2817,10 +3088,12 @@ namespace TShockAPI
 			{
 				originalPosition = new Vector2?(args.Data.ReadVector2());
 				homePosition = new Vector2?(args.Data.ReadVector2());
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerUpdate home position delta {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerUpdate home position delta {0}",
+					args.Player.Name));
 			}
 
-			if (OnPlayerUpdate(args.Player, args.Data, playerID, controls, miscData1, miscData2, miscData3, selectedItem, position, velocity, originalPosition, homePosition))
+			if (OnPlayerUpdate(args.Player, args.Data, playerID, controls, miscData1, miscData2, miscData3,
+				    selectedItem, position, velocity, originalPosition, homePosition))
 				return true;
 
 			return false;
@@ -2832,12 +3105,14 @@ namespace TShockAPI
 			var cur = args.Data.ReadInt16();
 			var max = args.Data.ReadInt16();
 
-			if (OnPlayerHP(args.Player, args.Data, plr, cur, max) || cur <= 0 || max <= 0 || args.Player.IgnoreSSCPackets)
+			if (OnPlayerHP(args.Player, args.Data, plr, cur, max) || cur <= 0 || max <= 0 ||
+			    args.Player.IgnoreSSCPackets)
 				return true;
 
 			if (max > TShock.Config.Settings.MaxHP && !await args.Player.HasPermission(Permissions.ignorehp))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerHp rejected over max hp {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerHp rejected over max hp {0}",
+					args.Player.Name));
 				args.Player.Disable("Maximum HP beyond limit", DisableFlags.WriteToLogAndConsole);
 				return true;
 			}
@@ -2859,9 +3134,10 @@ namespace TShockAPI
 			short tileY = args.Data.ReadInt16();
 			short editData = args.Data.ReadInt16();
 			EditType type = (action == EditAction.KillTile || action == EditAction.KillWall ||
-							 action == EditAction.KillTileNoItem || action == EditAction.TryKillTile)
+			                 action == EditAction.KillTileNoItem || action == EditAction.TryKillTile)
 				? EditType.Fail
-				: (action == EditAction.PlaceTile || action == EditAction.PlaceWall || action == EditAction.ReplaceTile || action == EditAction.ReplaceWall)
+				: (action == EditAction.PlaceTile || action == EditAction.PlaceWall ||
+				   action == EditAction.ReplaceTile || action == EditAction.ReplaceWall)
 					? EditType.Type
 					: EditType.Slope;
 
@@ -2889,22 +3165,25 @@ namespace TShockAPI
 
 			if (x >= Main.maxTilesX || y >= Main.maxTilesY || x < 0 || y < 0) // Check for out of range
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected out of range door {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected out of range door {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			if (action < 0 || action > 5)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected type 0 5 check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected type 0 5 check {0}",
+					args.Player.Name));
 				return true;
 			}
 
 
 			if (tileType != TileID.ClosedDoor && tileType != TileID.OpenDoor
-											  && tileType != TileID.TallGateClosed && tileType != TileID.TallGateOpen
-											  && tileType != TileID.TrapdoorClosed && tileType != TileID.TrapdoorOpen)
+			                                  && tileType != TileID.TallGateClosed && tileType != TileID.TallGateOpen
+			                                  && tileType != TileID.TrapdoorClosed && tileType != TileID.TrapdoorOpen)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected door gap check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected door gap check {0}",
+					args.Player.Name));
 				return true;
 			}
 
@@ -3006,6 +3285,7 @@ namespace TShockAPI
 					});
 				}
 			}
+
 			return false;
 		}
 
@@ -3024,7 +3304,8 @@ namespace TShockAPI
 			{
 				args.Player.SendErrorMessage(GetString("You do not have permission to hurt Town NPCs."));
 				args.Player.SendData(PacketTypes.NpcUpdate, "", id);
-				TShock.Log.ConsoleDebug(GetString($"GetDataHandlers / HandleNpcStrike rejected npc strike {args.Player.Name}"));
+				TShock.Log.ConsoleDebug(
+					GetString($"GetDataHandlers / HandleNpcStrike rejected npc strike {args.Player.Name}"));
 				return true;
 			}
 
@@ -3032,29 +3313,36 @@ namespace TShockAPI
 			{
 				if (!await args.Player.HasPermission(Permissions.summonboss))
 				{
-					args.Player.SendErrorMessage(GetString("You do not have permission to summon the Empress of Light."));
+					args.Player.SendErrorMessage(
+						GetString("You do not have permission to summon the Empress of Light."));
 					args.Player.SendData(PacketTypes.NpcUpdate, "", id);
-					TShock.Log.ConsoleDebug(GetString($"GetDataHandlers / HandleNpcStrike rejected EoL summon from {args.Player.Name}"));
+					TShock.Log.ConsoleDebug(
+						GetString($"GetDataHandlers / HandleNpcStrike rejected EoL summon from {args.Player.Name}"));
 					return true;
 				}
 				else if (!TShock.Config.Settings.AnonymousBossInvasions)
 				{
-					TShock.Utils.Broadcast(GetString($"{args.Player.Name} summoned the Empress of Light!"), 175, 75, 255);
+					TShock.Utils.Broadcast(GetString($"{args.Player.Name} summoned the Empress of Light!"), 175, 75,
+						255);
 				}
 				else
-					TShock.Utils.SendLogs(GetString($"{args.Player.Name} summoned the Empress of Light!"), Color.PaleVioletRed, args.Player);
+					TShock.Utils.SendLogs(GetString($"{args.Player.Name} summoned the Empress of Light!"),
+						Color.PaleVioletRed, args.Player);
 			}
 
 			if (Main.npc[id].netID == NPCID.CultistDevote || Main.npc[id].netID == NPCID.CultistArcherBlue)
 			{
 				if (!await args.Player.HasPermission(Permissions.summonboss))
 				{
-					args.Player.SendErrorMessage(GetString("You do not have permission to summon the Lunatic Cultist!"));
+					args.Player.SendErrorMessage(
+						GetString("You do not have permission to summon the Lunatic Cultist!"));
 					args.Player.SendData(PacketTypes.NpcUpdate, "", id);
-					TShock.Log.ConsoleDebug(GetString($"GetDataHandlers / HandleNpcStrike rejected Cultist summon from {args.Player.Name}"));
+					TShock.Log.ConsoleDebug(GetString(
+						$"GetDataHandlers / HandleNpcStrike rejected Cultist summon from {args.Player.Name}"));
 					return true;
 				}
 			}
+
 			return false;
 		}
 
@@ -3076,7 +3364,8 @@ namespace TShockAPI
 
 			if (type == ProjectileID.Tombstone)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleProjectileKill rejected tombstone {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleProjectileKill rejected tombstone {0}",
+					args.Player.Name));
 				args.Player.RemoveProjectile(ident, owner);
 				return true;
 			}
@@ -3087,11 +3376,16 @@ namespace TShockAPI
 				// https://github.com/Pryaxis/TShock/commit/a5aa9231239926f361b7246651e32144bbf28dda
 				if (type == ProjectileID.Bomb || type == ProjectileID.DeathLaser)
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleProjectileKill permitted skeletron prime exemption {0}", args.Player.Name));
-					TShock.Log.ConsoleDebug(GetString("If this was not skeletron prime related, please report to TShock what happened."));
+					TShock.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandleProjectileKill permitted skeletron prime exemption {0}",
+						args.Player.Name));
+					TShock.Log.ConsoleDebug(
+						GetString("If this was not skeletron prime related, please report to TShock what happened."));
 					return false;
 				}
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleProjectileKill rejected banned projectile {0}", args.Player.Name));
+
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleProjectileKill rejected banned projectile {0}", args.Player.Name));
 				args.Player.RemoveProjectile(ident, owner);
 				return true;
 			}
@@ -3099,7 +3393,13 @@ namespace TShockAPI
 			args.Player.LastKilledProjectile = type;
 			lock (args.Player.RecentlyCreatedProjectiles)
 			{
-				args.Player.RecentlyCreatedProjectiles.ForEach(s => { if (s.Index == index) { s.Killed = true; } });
+				args.Player.RecentlyCreatedProjectiles.ForEach(s =>
+				{
+					if (s.Index == index)
+					{
+						s.Killed = true;
+					}
+				});
 			}
 
 			return false;
@@ -3114,14 +3414,17 @@ namespace TShockAPI
 
 			if (id != args.Player.Index)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected index mismatch {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected index mismatch {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			string pvpMode = TShock.Config.Settings.PvPMode.ToLowerInvariant();
-			if (pvpMode == "disabled" || pvpMode == "always" || pvpMode == "pvpwithnoteam" || (DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
+			if (pvpMode == "disabled" || pvpMode == "always" || pvpMode == "pvpwithnoteam" ||
+			    (DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected fastswitch {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected fastswitch {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.TogglePvp, "", id);
 				return true;
 			}
@@ -3156,14 +3459,15 @@ namespace TShockAPI
 			item.netDefaults(type);
 			if (stacks > item.maxStack)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleChestItem rejected max stacks {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleChestItem rejected max stacks {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			return false;
 		}
 
-		private static bool HandleChestActive(GetDataHandlerArgs args)
+		private static async Task<bool> HandleChestActive(GetDataHandlerArgs args)
 		{
 			//chest ID
 			var id = args.Data.ReadInt16();
@@ -3179,9 +3483,11 @@ namespace TShockAPI
 
 			args.Player.ActiveChest = id;
 
-			if (!args.Player.HasBuildPermission(x, y) && TShock.Config.Settings.RegionProtectChests)
+			if (!await args.Player.HasBuildPermission(x, y) && TShock.Config.Settings.RegionProtectChests)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleChestActive rejected build permission and region check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleChestActive rejected build permission and region check {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.ChestOpen, "", -1);
 				return true;
 			}
@@ -3263,8 +3569,10 @@ namespace TShockAPI
 							args.Player.PlayerData.CopyCharacter(args.Player);
 							await CharacterManager.InsertPlayerData(args.Player);
 						}
+
 						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
+
 					args.Player.LoginFailsBySsi = false;
 
 					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
@@ -3274,12 +3582,15 @@ namespace TShockAPI
 						args.Player.IsDisabledForBannedWearable = false;
 
 
-					args.Player.SendMessage(GetString($"Authenticated as {args.Player.Name} successfully."), Color.LimeGreen);
-					TShock.Log.ConsoleInfo(GetString($"{args.Player.Name} authenticated successfully as user {args.Player.Name}."));
+					args.Player.SendMessage(GetString($"Authenticated as {args.Player.Name} successfully."),
+						Color.LimeGreen);
+					TShock.Log.ConsoleInfo(
+						GetString($"{args.Player.Name} authenticated successfully as user {args.Player.Name}."));
 					await UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 					return true;
 				}
+
 				await args.Player.Kick(GetString("Your password did not match this character's password."), true, true);
 				return true;
 			}
@@ -3294,11 +3605,14 @@ namespace TShockAPI
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 					return true;
 				}
+
 				await args.Player.Kick(GetString("Invalid server password."), true, true);
 				return true;
 			}
 
-			await args.Player.Kick(GetParticularString("Likely non-vanilla client send zero-length password", "You have been Bounced for invalid password."), true, true);
+			await args.Player.Kick(
+				GetParticularString("Likely non-vanilla client send zero-length password",
+					"You have been Bounced for invalid password."), true, true);
 			return true;
 		}
 
@@ -3313,23 +3627,27 @@ namespace TShockAPI
 			//Rejecting player who trying to talk to a npc if player were disabled, mainly for unregistered and logged out players. Preventing smuggling or duplicating their items if player put it in a npc's item slot
 			if (args.Player.IsBeingDisabled())
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTalk rejected npc talk {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTalk rejected npc talk {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.NpcTalk, "", plr, -1);
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled())
 			{
-				TShock.Log.ConsoleDebug(GetString("Bouncer / HandleNpcTalk rejected from bouncer throttle from {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("Bouncer / HandleNpcTalk rejected from bouncer throttle from {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			// -1 is a magic value, represents not talking to an NPC
 			if (npc < -1 || npc >= Main.maxNPCs)
 			{
-				TShock.Log.ConsoleDebug(GetString("Bouncer / HandleNpcTalk rejected from bouncer out of bounds from {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"Bouncer / HandleNpcTalk rejected from bouncer out of bounds from {0}", args.Player.Name));
 				return true;
 			}
+
 			return false;
 		}
 
@@ -3341,18 +3659,20 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlayerMana(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlayerMana(GetDataHandlerArgs args)
 		{
 			var plr = args.Data.ReadInt8();
 			var cur = args.Data.ReadInt16();
 			var max = args.Data.ReadInt16();
 
-			if (OnPlayerMana(args.Player, args.Data, plr, cur, max) || cur < 0 || max < 0 || args.Player.IgnoreSSCPackets)
+			if (OnPlayerMana(args.Player, args.Data, plr, cur, max) || cur < 0 || max < 0 ||
+			    args.Player.IgnoreSSCPackets)
 				return true;
 
-			if (max > TShock.Config.Settings.MaxMP && !args.Player.HasPermission(Permissions.ignoremp))
+			if (max > TShock.Config.Settings.MaxMP && !await args.Player.HasPermission(Permissions.ignoremp))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerMana rejected max mana {0} {1}/{2}", args.Player.Name, max, TShock.Config.Settings.MaxMP));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerMana rejected max mana {0} {1}/{2}",
+					args.Player.Name, max, TShock.Config.Settings.MaxMP));
 				args.Player.Disable("Maximum MP beyond limit", DisableFlags.WriteToLogAndConsole);
 				return true;
 			}
@@ -3363,6 +3683,7 @@ namespace TShockAPI
 				args.Player.TPlayer.statManaMax = max;
 				args.Player.PlayerData.maxMana = max;
 			}
+
 			return false;
 		}
 
@@ -3380,7 +3701,8 @@ namespace TShockAPI
 			if (pvpMode == "pvpwithnoteam" || (DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
 			{
 				args.Player.SendData(PacketTypes.PlayerTeam, "", id);
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerTeam rejected team fastswitch {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerTeam rejected team fastswitch {0}",
+					args.Player.Name));
 				return true;
 			}
 
@@ -3398,14 +3720,15 @@ namespace TShockAPI
 
 			if (x < 0 || y < 0 || x >= Main.maxTilesX || y >= Main.maxTilesY)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSignRead rejected out of bounds {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSignRead rejected out of bounds {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			return false;
 		}
 
-		private static bool HandleSign(GetDataHandlerArgs args)
+		private static async Task<bool> HandleSign(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var x = args.Data.ReadInt16();
@@ -3415,19 +3738,22 @@ namespace TShockAPI
 			if (OnSignEvent(args.Player, args.Data, id, x, y))
 				return true;
 
-			if (!args.Player.HasBuildPermission(x, y))
+			if (!await args.Player.HasBuildPermission(x, y))
 			{
 				args.Player.SendData(PacketTypes.SignNew, "", id);
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSign rejected sign on build permission {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSign rejected sign on build permission {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			if (!args.Player.IsInRange(x, y))
 			{
 				args.Player.SendData(PacketTypes.SignNew, "", id);
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSign rejected sign range check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSign rejected sign range check {0}",
+					args.Player.Name));
 				return true;
 			}
+
 			return false;
 		}
 
@@ -3460,7 +3786,9 @@ namespace TShockAPI
 
 				if (Netplay.Clients[args.TPlayer.whoAmI].State < 2 && (buff == 156 || buff == 47 || buff == 149))
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerBuffList zeroed player buff due to below state 2 {0} {1}", args.Player.Name, buff));
+					TShock.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandlePlayerBuffList zeroed player buff due to below state 2 {0} {1}",
+						args.Player.Name, buff));
 					buff = 0;
 				}
 
@@ -3475,12 +3803,14 @@ namespace TShockAPI
 				}
 			}
 
-			TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerBuffList handled event and sent data {0}", args.Player.Name));
-			NetMessage.SendData((int)PacketTypes.PlayerBuff, -1, args.Player.Index, NetworkText.Empty, args.Player.Index);
+			TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerBuffList handled event and sent data {0}",
+				args.Player.Name));
+			NetMessage.SendData((int)PacketTypes.PlayerBuff, -1, args.Player.Index, NetworkText.Empty,
+				args.Player.Index);
 			return true;
 		}
 
-		private static bool HandleSpecial(GetDataHandlerArgs args)
+		private static async Task<bool> HandleSpecial(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
 			var type = args.Data.ReadInt8();
@@ -3490,29 +3820,36 @@ namespace TShockAPI
 
 			if (type == 1 && TShock.Config.Settings.DisableDungeonGuardian)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpecial rejected type 1 for {0}", args.Player.Name));
-				args.Player.SendMessage(GetString("The Dungeon Guardian returned you to your spawn point."), Color.Purple);
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpecial rejected type 1 for {0}",
+					args.Player.Name));
+				args.Player.SendMessage(GetString("The Dungeon Guardian returned you to your spawn point."),
+					Color.Purple);
 				args.Player.Spawn(PlayerSpawnContext.RecallFromItem);
 				return true;
 			}
 
 			if (type == 3)
 			{
-				if (!args.Player.HasPermission(Permissions.usesundial))
+				if (!await args.Player.HasPermission(Permissions.usesundial))
 				{
-					TShock.Log.ConsoleDebug(GetString($"GetDataHandlers / HandleSpecial rejected enchanted sundial permission {args.Player.Name}"));
+					TShock.Log.ConsoleDebug(GetString(
+						$"GetDataHandlers / HandleSpecial rejected enchanted sundial permission {args.Player.Name}"));
 					args.Player.SendErrorMessage(GetString("You do not have permission to use the Enchanted Sundial."));
 					return true;
 				}
 				else if (TShock.Config.Settings.ForceTime != "normal")
 				{
-					TShock.Log.ConsoleDebug(GetString($"GetDataHandlers / HandleSpecial rejected enchanted sundial permission (ForceTime) {args.Player.Name}"));
-					if (!args.Player.HasPermission(Permissions.cfgreload))
+					TShock.Log.ConsoleDebug(GetString(
+						$"GetDataHandlers / HandleSpecial rejected enchanted sundial permission (ForceTime) {args.Player.Name}"));
+					if (!await args.Player.HasPermission(Permissions.cfgreload))
 					{
-						args.Player.SendErrorMessage(GetString("You cannot use the Enchanted Sundial because time is stopped."));
+						args.Player.SendErrorMessage(
+							GetString("You cannot use the Enchanted Sundial because time is stopped."));
 					}
 					else
-						args.Player.SendErrorMessage(GetString("You must set ForceTime to normal via config to use the Enchanted Sundial."));
+						args.Player.SendErrorMessage(
+							GetString("You must set ForceTime to normal via config to use the Enchanted Sundial."));
+
 					return true;
 				}
 			}
@@ -3544,7 +3881,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleUpdateNPCHome(GetDataHandlerArgs args)
+		private static async Task<bool> HandleUpdateNPCHome(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var x = args.Data.ReadInt16();
@@ -3554,48 +3891,56 @@ namespace TShockAPI
 			if (OnUpdateNPCHome(args.Player, args.Data, id, x, y, householdStatus))
 				return true;
 
-			if (!args.Player.HasPermission(Permissions.movenpc))
+			if (!await args.Player.HasPermission(Permissions.movenpc))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / UpdateNPCHome rejected no permission {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / UpdateNPCHome rejected no permission {0}",
+					args.Player.Name));
 				args.Player.SendErrorMessage(GetString("You do not have permission to relocate Town NPCs."));
 				args.Player.SendData(PacketTypes.UpdateNPCHome, "", id, Main.npc[id].homeTileX, Main.npc[id].homeTileY,
 					Convert.ToByte(Main.npc[id].homeless));
 				return true;
 			}
+
 			return false;
 		}
 
 		private static readonly int[] invasions = { -1, -2, -3, -4, -5, -6, -7, -8, -10, -11 };
 		private static readonly int[] pets = { -12, -13, -14, -15 };
-		private static bool HandleSpawnBoss(GetDataHandlerArgs args)
+
+		private static async Task<bool> HandleSpawnBoss(GetDataHandlerArgs args)
 		{
 			if (args.Player.IsBouncerThrottled())
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected bouner throttled {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected bouner throttled {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			var plr = args.Data.ReadInt16();
 			var thingType = args.Data.ReadInt16();
 
-			var isKnownBoss = thingType > 0 && thingType < Terraria.ID.NPCID.Count && NPCID.Sets.MPAllowedEnemies[thingType];
-			if ((isKnownBoss || thingType == -16) && !args.Player.HasPermission(Permissions.summonboss))
+			var isKnownBoss = thingType > 0 && thingType < Terraria.ID.NPCID.Count &&
+			                  NPCID.Sets.MPAllowedEnemies[thingType];
+			if ((isKnownBoss || thingType == -16) && !await args.Player.HasPermission(Permissions.summonboss))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected boss {0} {1}", args.Player.Name, thingType));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected boss {0} {1}",
+					args.Player.Name, thingType));
 				args.Player.SendErrorMessage(GetString("You do not have permission to summon bosses."));
 				return true;
 			}
 
-			if (invasions.Contains(thingType) && !args.Player.HasPermission(Permissions.startinvasion))
+			if (invasions.Contains(thingType) && !await args.Player.HasPermission(Permissions.startinvasion))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected invasion {0} {1}", args.Player.Name, thingType));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected invasion {0} {1}",
+					args.Player.Name, thingType));
 				args.Player.SendErrorMessage(GetString("You do not have permission to start invasions."));
 				return true;
 			}
 
-			if (pets.Contains(thingType) && !args.Player.HasPermission(Permissions.spawnpets))
+			if (pets.Contains(thingType) && !await args.Player.HasPermission(Permissions.spawnpets))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected pet {0} {1}", args.Player.Name, thingType));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected pet {0} {1}",
+					args.Player.Name, thingType));
 				args.Player.SendErrorMessage(GetString("You do not have permission to spawn pets."));
 				return true;
 			}
@@ -3659,12 +4004,14 @@ namespace TShockAPI
 					break;
 				default:
 					if (!isKnownBoss)
-						TShock.Log.ConsoleDebug("GetDataHandlers / HandleSpawnBoss unknown boss {0} summoned by {1}", thingType, args.Player.Name);
+						TShock.Log.ConsoleDebug("GetDataHandlers / HandleSpawnBoss unknown boss {0} summoned by {1}",
+							thingType, args.Player.Name);
 					NPC npc = new NPC();
 					npc.SetDefaults(thingType);
 					thing = GetString("{0} summoned the {1}!", args.Player.Name, npc.FullName);
 					break;
 			}
+
 			if (TShock.Config.Settings.AnonymousBossInvasions)
 				TShock.Utils.SendLogs(thing, Color.PaleVioletRed, args.Player);
 			else
@@ -3674,22 +4021,24 @@ namespace TShockAPI
 
 		private static bool HasPaintSprayerAbilities(Item item)
 			=> item is not null && item.stack > 0 && (
-			   item.type == ItemID.PaintSprayer ||
-			   item.type == ItemID.ArchitectGizmoPack ||
-			   item.type == ItemID.HandOfCreation);
+				item.type == ItemID.PaintSprayer ||
+				item.type == ItemID.ArchitectGizmoPack ||
+				item.type == ItemID.HandOfCreation);
 
-		private static bool HandlePaintTile(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePaintTile(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
 			var t = args.Data.ReadInt8();
-			var ct = args.Data.ReadInt8();//PaintCoatTile
+			var ct = args.Data.ReadInt8(); //PaintCoatTile
 
 			if (x < 0 || y < 0 || x >= Main.maxTilesX || y >= Main.maxTilesY || t > Main.numTileColors)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected range check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected range check {0}",
+					args.Player.Name));
 				return true;
 			}
+
 			if (OnPaintTile(args.Player, args.Data, x, y, t, ct))
 			{
 				return true;
@@ -3697,47 +4046,53 @@ namespace TShockAPI
 
 			// Not selecting paintbrush or paint scraper or the spectre versions? Hacking.
 			if (args.Player.SelectedItem.type != ItemID.PaintRoller &&
-				args.Player.SelectedItem.type != ItemID.PaintScraper &&
-				args.Player.SelectedItem.type != ItemID.Paintbrush &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
-				!args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
-				!args.Player.Inventory.Any(HasPaintSprayerAbilities))
+			    args.Player.SelectedItem.type != ItemID.PaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.Paintbrush &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
+			    !args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
+			    !args.Player.Inventory.Any(HasPaintSprayerAbilities))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected select consistency {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected select consistency {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintTile, "", x, y, Main.tile[x, y].color());
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled() ||
-				!args.Player.HasPaintPermission(x, y) ||
-				!args.Player.IsInRange(x, y))
+			    !await args.Player.HasPaintPermission(x, y) ||
+			    !args.Player.IsInRange(x, y))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected throttle/permission/range check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandlePaintTile rejected throttle/permission/range check {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintTile, "", x, y, Main.tile[x, y].color());
 				return true;
 			}
 
-			if (!args.Player.HasPermission(Permissions.ignorepaintdetection))
+			if (!await args.Player.HasPermission(Permissions.ignorepaintdetection))
 			{
 				args.Player.PaintThreshold++;
 			}
+
 			return false;
 		}
 
-		private static bool HandlePaintWall(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePaintWall(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
 			var t = args.Data.ReadInt8();
-			var cw = args.Data.ReadInt8();//PaintCoatWall
+			var cw = args.Data.ReadInt8(); //PaintCoatWall
 
 			if (x < 0 || y < 0 || x >= Main.maxTilesX || y >= Main.maxTilesY || t > Main.numTileColors)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected range check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected range check {0}",
+					args.Player.Name));
 				return true;
 			}
+
 			if (OnPaintWall(args.Player, args.Data, x, y, t, cw))
 			{
 				return true;
@@ -3745,36 +4100,39 @@ namespace TShockAPI
 
 			// Not selecting paint roller or paint scraper or the spectre versions? Hacking.
 			if (args.Player.SelectedItem.type != ItemID.PaintRoller &&
-				args.Player.SelectedItem.type != ItemID.PaintScraper &&
-				args.Player.SelectedItem.type != ItemID.Paintbrush &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
-				!args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
-				!args.Player.Inventory.Any(HasPaintSprayerAbilities))
+			    args.Player.SelectedItem.type != ItemID.PaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.Paintbrush &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
+			    !args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
+			    !args.Player.Inventory.Any(HasPaintSprayerAbilities))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected selector consistency {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected selector consistency {0}",
+					args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintWall, "", x, y, Main.tile[x, y].wallColor());
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled() ||
-				!args.Player.HasPaintPermission(x, y) ||
-				!args.Player.IsInRange(x, y))
+			    !await args.Player.HasPaintPermission(x, y) ||
+			    !args.Player.IsInRange(x, y))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected throttle/permission/range {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandlePaintWall rejected throttle/permission/range {0}", args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintWall, "", x, y, Main.tile[x, y].wallColor());
 				return true;
 			}
 
-			if (!args.Player.HasPermission(Permissions.ignorepaintdetection))
+			if (!await args.Player.HasPermission(Permissions.ignorepaintdetection))
 			{
 				args.Player.PaintThreshold++;
 			}
+
 			return false;
 		}
 
-		private static bool HandleTeleport(GetDataHandlerArgs args)
+		private static async Task<bool> HandleTeleport(GetDataHandlerArgs args)
 		{
 			BitsByte flag = (BitsByte)args.Data.ReadByte();
 			short id = args.Data.ReadInt16();
@@ -3791,14 +4149,17 @@ namespace TShockAPI
 			{
 				type = 1;
 			}
+
 			if (flag[1])
 			{
 				type = 2;
 			}
+
 			if (flag[2])
 			{
 				getPositionFromTarget = true;
 			}
+
 			if (flag[3])
 			{
 				extraInfo = args.Data.ReadInt32();
@@ -3808,18 +4169,24 @@ namespace TShockAPI
 				return true;
 
 			//Rod of Discord teleport (usually (may be used by modded clients to teleport))
-			if (type == 0 && !args.Player.HasPermission(Permissions.rod))
+			if (type == 0 && !await args.Player.HasPermission(Permissions.rod))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected rod type {0} {1}", args.Player.Name, type));
-				args.Player.SendErrorMessage(GetString("You do not have permission to teleport using items.")); // Was going to write using RoD but Hook of Disonnance and Potion of Return both use the same teleport packet as RoD.
-				args.Player.Teleport(args.TPlayer.position.X, args.TPlayer.position.Y); // Suggest renaming rod permission unless someone plans to add separate perms for the other 2 tp items.
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected rod type {0} {1}",
+					args.Player.Name, type));
+				args.Player.SendErrorMessage(
+					GetString(
+						"You do not have permission to teleport using items.")); // Was going to write using RoD but Hook of Disonnance and Potion of Return both use the same teleport packet as RoD.
+				args.Player.Teleport(args.TPlayer.position.X,
+					args.TPlayer.position
+						.Y); // Suggest renaming rod permission unless someone plans to add separate perms for the other 2 tp items.
 				return true;
 			}
 
 			//NPC teleport
 			if (type == 1 && id >= Main.maxNPCs)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected npc teleport {0} {1}", args.Player.Name, type));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected npc teleport {0} {1}",
+					args.Player.Name, type));
 				return true;
 			}
 
@@ -3828,14 +4195,18 @@ namespace TShockAPI
 			{
 				if (id >= Main.maxPlayers || Main.player[id] == null || TShock.Players[id] == null)
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected p2p extents {0} {1}", args.Player.Name, type));
+					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected p2p extents {0} {1}",
+						args.Player.Name, type));
 					return true;
 				}
 
-				if (!args.Player.HasPermission(Permissions.wormhole))
+				if (!await args.Player.HasPermission(Permissions.wormhole))
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected p2p wormhole permission {0} {1}", args.Player.Name, type));
-					args.Player.SendErrorMessage(GetString("You do not have permission to teleport using Wormhole Potions."));
+					TShock.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandleTeleport rejected p2p wormhole permission {0} {1}", args.Player.Name,
+						type));
+					args.Player.SendErrorMessage(
+						GetString("You do not have permission to teleport using Wormhole Potions."));
 					args.Player.Teleport(args.TPlayer.position.X, args.TPlayer.position.Y);
 					return true;
 				}
@@ -3870,7 +4241,8 @@ namespace TShockAPI
 
 			if (args.Player.IsBeingDisabled())
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc rejected catch npc {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc rejected catch npc {0}",
+					args.Player.Name));
 				return true;
 			}
 
@@ -3892,13 +4264,15 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleTeleportationPotion(GetDataHandlerArgs args)
+		private static async Task<bool> HandleTeleportationPotion(GetDataHandlerArgs args)
 		{
 			var type = args.Data.ReadByte();
 
 			void Fail(string tpItem)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleportationPotion rejected permissions {0} {1}", args.Player.Name, type));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleTeleportationPotion rejected permissions {0} {1}", args.Player.Name,
+					type));
 				args.Player.SendErrorMessage(GetString("You do not have permission to teleport using {0}.", tpItem));
 			}
 
@@ -3906,31 +4280,37 @@ namespace TShockAPI
 			{
 				case 0: // Teleportation Potion
 					if (args.Player.ItemInHand.type != ItemID.TeleportationPotion &&
-						args.Player.SelectedItem.type != ItemID.TeleportationPotion)
+					    args.Player.SelectedItem.type != ItemID.TeleportationPotion)
 					{
-						TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}", args.Player.Name, type));
+						TShock.Log.ConsoleDebug(GetString(
+							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
+							args.Player.Name, type));
 						return true;
 					}
 
-					if (!args.Player.HasPermission(Permissions.tppotion))
+					if (!await args.Player.HasPermission(Permissions.tppotion))
 					{
 						Fail("Teleportation Potions");
 						return true;
 					}
+
 					break;
 				case 1: // Magic Conch or Shellphone (Ocean)
 					if (args.Player.ItemInHand.type != ItemID.MagicConch &&
-						args.Player.SelectedItem.type != ItemID.MagicConch &&
-						args.Player.ItemInHand.type != ItemID.ShellphoneOcean &&
-						args.Player.SelectedItem.type != ItemID.ShellphoneOcean)
+					    args.Player.SelectedItem.type != ItemID.MagicConch &&
+					    args.Player.ItemInHand.type != ItemID.ShellphoneOcean &&
+					    args.Player.SelectedItem.type != ItemID.ShellphoneOcean)
 					{
-						TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}", args.Player.Name, type));
+						TShock.Log.ConsoleDebug(GetString(
+							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
+							args.Player.Name, type));
 						return true;
 					}
 
-					if (!args.Player.HasPermission(Permissions.magicconch))
+					if (!await args.Player.HasPermission(Permissions.magicconch))
 					{
-						if (args.Player.ItemInHand.type == ItemID.ShellphoneOcean || args.Player.SelectedItem.type == ItemID.ShellphoneOcean)
+						if (args.Player.ItemInHand.type == ItemID.ShellphoneOcean ||
+						    args.Player.SelectedItem.type == ItemID.ShellphoneOcean)
 						{
 							Fail("the Shellphone (Ocean)");
 						}
@@ -3938,22 +4318,27 @@ namespace TShockAPI
 						{
 							Fail("the Magic Conch");
 						}
-						return true;
-					}
-					break;
-				case 2: // Demon Conch or Shellphone (Underworld)
-					if (args.Player.ItemInHand.type != ItemID.DemonConch &&
-						args.Player.SelectedItem.type != ItemID.DemonConch &&
-						args.Player.ItemInHand.type != ItemID.ShellphoneHell &&
-						args.Player.SelectedItem.type != ItemID.ShellphoneHell)
-					{
-						TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}", args.Player.Name, type));
+
 						return true;
 					}
 
-					if (!args.Player.HasPermission(Permissions.demonconch))
+					break;
+				case 2: // Demon Conch or Shellphone (Underworld)
+					if (args.Player.ItemInHand.type != ItemID.DemonConch &&
+					    args.Player.SelectedItem.type != ItemID.DemonConch &&
+					    args.Player.ItemInHand.type != ItemID.ShellphoneHell &&
+					    args.Player.SelectedItem.type != ItemID.ShellphoneHell)
 					{
-						if (args.Player.ItemInHand.type == ItemID.ShellphoneHell || args.Player.SelectedItem.type == ItemID.ShellphoneHell)
+						TShock.Log.ConsoleDebug(GetString(
+							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
+							args.Player.Name, type));
+						return true;
+					}
+
+					if (!await args.Player.HasPermission(Permissions.demonconch))
+					{
+						if (args.Player.ItemInHand.type == ItemID.ShellphoneHell ||
+						    args.Player.SelectedItem.type == ItemID.ShellphoneHell)
 						{
 							Fail("the Shellphone (Underworld)");
 						}
@@ -3961,15 +4346,21 @@ namespace TShockAPI
 						{
 							Fail("the Demon Conch");
 						}
+
 						return true;
 					}
+
 					break;
 				case 3: // Shellphone (Spawn)
-					if (args.Player.ItemInHand.type != ItemID.ShellphoneSpawn && args.Player.SelectedItem.type != ItemID.ShellphoneSpawn)
+					if (args.Player.ItemInHand.type != ItemID.ShellphoneSpawn &&
+					    args.Player.SelectedItem.type != ItemID.ShellphoneSpawn)
 					{
-						TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}", args.Player.Name, type));
+						TShock.Log.ConsoleDebug(GetString(
+							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
+							args.Player.Name, type));
 						return true;
 					}
+
 					break;
 			}
 
@@ -3986,7 +4377,9 @@ namespace TShockAPI
 		private static bool HandleNumberOfAnglerQuestsCompleted(GetDataHandlerArgs args)
 		{
 			// Never sent by vanilla client, ignore this
-			TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNumberOfAnglerQuestsCompleted surprise packet! Someone tell the TShock team! {0}", args.Player.Name));
+			TShock.Log.ConsoleDebug(GetString(
+				"GetDataHandlers / HandleNumberOfAnglerQuestsCompleted surprise packet! Someone tell the TShock team! {0}",
+				args.Player.Name));
 			return true;
 		}
 
@@ -4018,7 +4411,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlaceTileEntity(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlaceTileEntity(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
@@ -4031,7 +4424,7 @@ namespace TShockAPI
 
 			// ItemBan subsystem
 
-			if (TShock.TileBans.TileIsBanned((short)TileID.LogicSensor, args.Player))
+			if (await TileManager.TileIsBanned((short)TileID.LogicSensor, args.Player))
 			{
 				args.Player.SendTileSquareCentered(x, y, 1);
 				args.Player.SendErrorMessage(GetString("You do not have permission to place Logic Sensors."));
@@ -4064,35 +4457,43 @@ namespace TShockAPI
 			var extraValue = args.Data.ReadInt32();
 			var position = new Vector2(args.Data.ReadSingle(), args.Data.ReadSingle());
 
-			if (position.X < 0 || position.X >= (Main.maxTilesX * 16.0f) || position.Y < 0 || position.Y >= (Main.maxTilesY * 16.0f))
+			if (position.X < 0 || position.X >= (Main.maxTilesX * 16.0f) || position.Y < 0 ||
+			    position.Y >= (Main.maxTilesY * 16.0f))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected extents check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected extents check {0}",
+					args.Player.Name));
 				return true;
 			}
 
 			if (!Main.expertMode && !Main.masterMode)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected expert/master mode check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncExtraValue rejected expert/master mode check {0}", args.Player.Name));
 				return true;
 			}
 
 			if (npcIndex < 0 || npcIndex >= Main.npc.Length)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected npc id out of bounds check - NPC ID: {0}", npcIndex));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncExtraValue rejected npc id out of bounds check - NPC ID: {0}",
+					npcIndex));
 				return true;
 			}
 
 			var npc = Main.npc[npcIndex];
 			if (npc == null)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC ID: {0}", npcIndex));
+				TShock.Log.ConsoleDebug(
+					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC ID: {0}", npcIndex));
 				return true;
 			}
 
 			var distanceFromCoinPacketToNpc = Utils.Distance(position, npc.position);
 			if (distanceFromCoinPacketToNpc >= (5 * 16f)) //5 tile range
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected range check {0},{1} vs {2},{3} which is {4}", npc.position.X, npc.position.Y, position.X, position.Y, distanceFromCoinPacketToNpc));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncExtraValue rejected range check {0},{1} vs {2},{3} which is {4}",
+					npc.position.X, npc.position.Y, position.X, position.Y, distanceFromCoinPacketToNpc));
 				return true;
 			}
 
@@ -4109,7 +4510,8 @@ namespace TShockAPI
 			{
 				if (projectile.owner != args.TPlayer.whoAmI)
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleKillPortal rejected owner mismatch check {0}", args.Player.Name));
+					TShock.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandleKillPortal rejected owner mismatch check {0}", args.Player.Name));
 					return true;
 				}
 			}
@@ -4142,18 +4544,24 @@ namespace TShockAPI
 			var portalColorIndex = args.Data.ReadInt16();
 			var newPosition = new Vector2(args.Data.ReadSingle(), args.Data.ReadSingle());
 			var velocity = new Vector2(args.Data.ReadSingle(), args.Data.ReadSingle());
-			var projectile = Main.projectile.FirstOrDefault(p => p.position.X == newPosition.X && p.position.Y == newPosition.Y); // Check for projectiles at this location
+			var projectile =
+				Main.projectile.FirstOrDefault(p =>
+					p.position.X == newPosition.X &&
+					p.position.Y == newPosition.Y); // Check for projectiles at this location
 
 			if (projectile == null || !projectile.active)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTeleportPortal rejected null check {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTeleportPortal rejected null check {0}",
+					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcIndex);
 				return true;
 			}
 
 			if (projectile.type != ProjectileID.PortalGunGate)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTeleportPortal rejected not thinking with portals {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleNpcTeleportPortal rejected not thinking with portals {0}",
+					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcIndex);
 				return true;
 			}
@@ -4189,11 +4597,12 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleToggleParty(GetDataHandlerArgs args)
+		private static async Task<bool> HandleToggleParty(GetDataHandlerArgs args)
 		{
-			if (args.Player != null && !args.Player.HasPermission(Permissions.toggleparty))
+			if (args.Player != null && !await args.Player.HasPermission(Permissions.toggleparty))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleToggleParty rejected no party {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleToggleParty rejected no party {0}",
+					args.Player.Name));
 				args.Player.SendErrorMessage(GetString("You do not have permission to start a party."));
 				return true;
 			}
@@ -4201,25 +4610,29 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleOldOnesArmy(GetDataHandlerArgs args)
+		private static async Task<bool> HandleOldOnesArmy(GetDataHandlerArgs args)
 		{
 			if (args.Player.IsBouncerThrottled())
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleOldOnesArmy rejected throttled {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleOldOnesArmy rejected throttled {0}",
+					args.Player.Name));
 				return true;
 			}
 
-			if (!args.Player.HasPermission(Permissions.startdd2))
+			if (!await args.Player.HasPermission(Permissions.startdd2))
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleOldOnesArmy rejected permissions {0}", args.Player.Name));
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleOldOnesArmy rejected permissions {0}",
+					args.Player.Name));
 				args.Player.SendErrorMessage(GetString("You do not have permission to start the Old One's Army."));
 				return true;
 			}
 
 			if (TShock.Config.Settings.AnonymousBossInvasions)
-				TShock.Utils.SendLogs(GetString("{0} started the Old One's Army event!", args.Player.Name), Color.PaleVioletRed, args.Player);
+				TShock.Utils.SendLogs(GetString("{0} started the Old One's Army event!", args.Player.Name),
+					Color.PaleVioletRed, args.Player);
 			else
-				TShock.Utils.Broadcast(GetString("{0} started the Old One's Army event!", args.Player.Name), 175, 75, 255);
+				TShock.Utils.Broadcast(GetString("{0} started the Old One's Army event!", args.Player.Name), 175, 75,
+					255);
 			return false;
 		}
 
@@ -4234,13 +4647,14 @@ namespace TShockAPI
 			var pvp = bits[1];
 			var cooldownCounter = (sbyte)args.Data.ReadInt8();
 
-			if (OnPlayerDamage(args.Player, args.Data, id, direction, dmg, pvp, crit, cooldownCounter, playerDeathReason))
+			if (OnPlayerDamage(args.Player, args.Data, id, direction, dmg, pvp, crit, cooldownCounter,
+				    playerDeathReason))
 				return true;
 
 			return false;
 		}
 
-		private static bool HandlePlayerKillMeV2(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlayerKillMeV2(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
 			PlayerDeathReason playerDeathReason = PlayerDeathReason.FromReader(new BinaryReader(args.Data));
@@ -4258,7 +4672,8 @@ namespace TShockAPI
 			foreach (NPC npc in Main.npc)
 			{
 				if (npc.active && (npc.boss || npc.type == 13 || npc.type == 14 || npc.type == 15) &&
-					Math.Abs(args.TPlayer.Center.X - npc.Center.X) + Math.Abs(args.TPlayer.Center.Y - npc.Center.Y) < 4000f)
+				    Math.Abs(args.TPlayer.Center.X - npc.Center.X) + Math.Abs(args.TPlayer.Center.Y - npc.Center.Y) <
+				    4000f)
 				{
 					args.Player.RespawnTimer = TShock.Config.Settings.RespawnBossSeconds;
 					break;
@@ -4269,33 +4684,47 @@ namespace TShockAPI
 			if (args.TPlayer.difficulty == 1 || args.TPlayer.difficulty == 2) // Player is not softcore
 			{
 				bool mediumcore = args.TPlayer.difficulty == 1;
-				bool shouldBan = mediumcore ? TShock.Config.Settings.BanOnMediumcoreDeath : TShock.Config.Settings.BanOnHardcoreDeath;
-				bool shouldKick = mediumcore ? TShock.Config.Settings.KickOnMediumcoreDeath : TShock.Config.Settings.KickOnHardcoreDeath;
-				string banReason = mediumcore ? TShock.Config.Settings.MediumcoreBanReason : TShock.Config.Settings.HardcoreBanReason;
-				string kickReason = mediumcore ? TShock.Config.Settings.MediumcoreKickReason : TShock.Config.Settings.HardcoreKickReason;
+				bool shouldBan = mediumcore
+					? TShock.Config.Settings.BanOnMediumcoreDeath
+					: TShock.Config.Settings.BanOnHardcoreDeath;
+				bool shouldKick = mediumcore
+					? TShock.Config.Settings.KickOnMediumcoreDeath
+					: TShock.Config.Settings.KickOnHardcoreDeath;
+				string banReason = mediumcore
+					? TShock.Config.Settings.MediumcoreBanReason
+					: TShock.Config.Settings.HardcoreBanReason;
+				string kickReason = mediumcore
+					? TShock.Config.Settings.MediumcoreKickReason
+					: TShock.Config.Settings.HardcoreKickReason;
 
 				if (shouldBan)
 				{
-					if (!args.Player.Ban(banReason, "TShock"))
+					if (!await args.Player.Ban(banReason, "TShock"))
 					{
-						TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerKillMeV2 kicked with difficulty {0} {1}", args.Player.Name, args.TPlayer.difficulty));
+						TShock.Log.ConsoleDebug(GetString(
+							"GetDataHandlers / HandlePlayerKillMeV2 kicked with difficulty {0} {1}", args.Player.Name,
+							args.TPlayer.difficulty));
 						args.Player.Kick(GetString("You died! Normally, you'd be banned."), true, true);
 					}
 				}
 				else if (shouldKick)
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerKillMeV2 kicked with difficulty {0} {1}", args.Player.Name, args.TPlayer.difficulty));
+					TShock.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandlePlayerKillMeV2 kicked with difficulty {0} {1}", args.Player.Name,
+						args.TPlayer.difficulty));
 					args.Player.Kick(kickReason, true, true, null, false);
 				}
 			}
 
 			if (args.TPlayer.difficulty == 2 && Main.ServerSideCharacter && args.Player.IsLoggedIn)
 			{
-				if (TShock.CharacterDB.RemovePlayer(args.Player.Account.ID))
+				if (await CharacterManager.RemovePlayer(args.Player.Account.ID))
 				{
-					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerKillMeV2 ssc delete {0} {1}", args.Player.Name, args.TPlayer.difficulty));
-					args.Player.SendErrorMessage(GetString("You have fallen in hardcore mode, and your items have been lost forever."));
-					TShock.CharacterDB.SeedInitialData(args.Player.Account);
+					TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerKillMeV2 ssc delete {0} {1}",
+						args.Player.Name, args.TPlayer.difficulty));
+					args.Player.SendErrorMessage(
+						GetString("You have fallen in hardcore mode, and your items have been lost forever."));
+					await CharacterManager.SeedInitialData(args.Player.Account);
 				}
 			}
 
@@ -4349,9 +4778,11 @@ namespace TShockAPI
 				newItem.stack = stack;
 				newItem.Prefix(prefix);
 
-				if (OnDisplayDollItemSync(args.Player, args.Data, playerIndex, tileEntityID, displayDoll, slot, isDye, oldItem, newItem))
+				if (OnDisplayDollItemSync(args.Player, args.Data, playerIndex, tileEntityID, displayDoll, slot, isDye,
+					    oldItem, newItem))
 					return true;
 			}
+
 			return false;
 		}
 
@@ -4440,7 +4871,8 @@ namespace TShockAPI
 		private static bool HandleSyncCavernMonsterType(GetDataHandlerArgs args)
 		{
 			args.Player.Kick(GetString("Exploit attempt detected!"));
-			TShock.Log.ConsoleDebug(GetString($"HandleSyncCavernMonsterType: Player is trying to modify NPC cavernMonsterType; this is a crafted packet! - From {args.Player.Name}"));
+			TShock.Log.ConsoleDebug(GetString(
+				$"HandleSyncCavernMonsterType: Player is trying to modify NPC cavernMonsterType; this is a crafted packet! - From {args.Player.Name}"));
 			return true;
 		}
 
@@ -4456,17 +4888,21 @@ namespace TShockAPI
 
 			if (loadoutIndex >= args.TPlayer.Loadouts.Length)
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncLoadout rejected loadout index sync out of bounds {0}",
+				TShock.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncLoadout rejected loadout index sync out of bounds {0}",
 					args.Player.Name));
-				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index, number2: args.TPlayer.CurrentLoadoutIndex);
+				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index,
+					number2: args.TPlayer.CurrentLoadoutIndex);
 
 				return true;
 			}
 
 			if (args.Player.IsBeingDisabled())
 			{
-				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncLoadout rejected loadout index sync {0}", args.Player.Name));
-				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index, number2: args.TPlayer.CurrentLoadoutIndex);
+				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncLoadout rejected loadout index sync {0}",
+					args.Player.Name));
+				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index,
+					number2: args.TPlayer.CurrentLoadoutIndex);
 
 				return true;
 			}
@@ -4564,12 +5000,14 @@ namespace TShockAPI
 			ReplaceWall,
 			SlopePoundTile
 		}
+
 		public enum EditType
 		{
 			Fail = 0,
 			Type,
 			Slope,
 		}
+
 		/// <summary>
 		/// The maximum place styles for each tile.
 		/// </summary>
@@ -4658,34 +5096,34 @@ namespace TShockAPI
 
 		internal static Dictionary<int, LiquidType> projectileCreatesLiquid = new Dictionary<int, LiquidType>
 		{
-			{ProjectileID.LavaBomb, LiquidType.Lava},
-			{ProjectileID.LavaRocket, LiquidType.Lava },
-			{ProjectileID.LavaGrenade, LiquidType.Lava },
-			{ProjectileID.LavaMine, LiquidType.Lava },
+			{ ProjectileID.LavaBomb, LiquidType.Lava },
+			{ ProjectileID.LavaRocket, LiquidType.Lava },
+			{ ProjectileID.LavaGrenade, LiquidType.Lava },
+			{ ProjectileID.LavaMine, LiquidType.Lava },
 			//{ProjectileID.LavaSnowmanRocket, LiquidType.Lava }, //these require additional checks.
-			{ProjectileID.WetBomb, LiquidType.Water},
-			{ProjectileID.WetRocket, LiquidType.Water },
-			{ProjectileID.WetGrenade, LiquidType.Water},
-			{ProjectileID.WetMine, LiquidType.Water},
+			{ ProjectileID.WetBomb, LiquidType.Water },
+			{ ProjectileID.WetRocket, LiquidType.Water },
+			{ ProjectileID.WetGrenade, LiquidType.Water },
+			{ ProjectileID.WetMine, LiquidType.Water },
 			//{ProjectileID.WetSnowmanRocket, LiquidType.Water}, //these require additional checks.
-			{ProjectileID.HoneyBomb, LiquidType.Honey},
-			{ProjectileID.HoneyRocket, LiquidType.Honey },
-			{ProjectileID.HoneyGrenade, LiquidType.Honey },
-			{ProjectileID.HoneyMine, LiquidType.Honey },
+			{ ProjectileID.HoneyBomb, LiquidType.Honey },
+			{ ProjectileID.HoneyRocket, LiquidType.Honey },
+			{ ProjectileID.HoneyGrenade, LiquidType.Honey },
+			{ ProjectileID.HoneyMine, LiquidType.Honey },
 			//{ProjectileID.HoneySnowmanRocket, LiquidType.Honey }, //these require additional checks.
-			{ProjectileID.DryBomb, LiquidType.Removal },
-			{ProjectileID.DryRocket, LiquidType.Removal },
-			{ProjectileID.DryGrenade, LiquidType.Removal },
-			{ProjectileID.DryMine, LiquidType.Removal },
+			{ ProjectileID.DryBomb, LiquidType.Removal },
+			{ ProjectileID.DryRocket, LiquidType.Removal },
+			{ ProjectileID.DryGrenade, LiquidType.Removal },
+			{ ProjectileID.DryMine, LiquidType.Removal },
 			//{ProjectileID.DrySnowmanRocket, LiquidType.Removal } //these require additional checks.
 		};
 
 		internal static Dictionary<int, int> ropeCoilPlacements = new Dictionary<int, int>
 		{
-			{ItemID.RopeCoil, TileID.Rope},
-			{ItemID.SilkRopeCoil, TileID.SilkRope},
-			{ItemID.VineRopeCoil, TileID.VineRope},
-			{ItemID.WebRopeCoil, TileID.WebRope}
+			{ ItemID.RopeCoil, TileID.Rope },
+			{ ItemID.SilkRopeCoil, TileID.SilkRope },
+			{ ItemID.VineRopeCoil, TileID.VineRope },
+			{ ItemID.WebRopeCoil, TileID.WebRope }
 		};
 
 		/// <summary>
@@ -4693,11 +5131,11 @@ namespace TShockAPI
 		/// </summary>
 		internal static Dictionary<int, int> ExtraneousPlaceStyles = new Dictionary<int, int>
 		{
-			{TileID.Presents, 6},
-			{TileID.Explosives, 1},
-			{TileID.MagicalIceBlock, 0},
-			{TileID.Crystals, 17},
-			{TileID.MinecartTrack, 3}
+			{ TileID.Presents, 6 },
+			{ TileID.Explosives, 1 },
+			{ TileID.MagicalIceBlock, 0 },
+			{ TileID.Crystals, 17 },
+			{ TileID.MinecartTrack, 3 }
 		};
 
 		/// <summary>
@@ -4709,14 +5147,17 @@ namespace TShockAPI
 			/// Index inside Main.projectile
 			/// </summary>
 			public int Index { get; set; }
+
 			/// <summary>
 			/// Projectile's type ID
 			/// </summary>
 			public short Type { get; set; }
+
 			/// <summary>
 			/// Time at which the projectile was created
 			/// </summary>
 			public DateTime CreatedAt { get; set; }
+
 			/// <summary>
 			/// Whether or not the projectile has been killed
 			/// </summary>
