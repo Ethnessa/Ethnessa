@@ -24,12 +24,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using HttpServer;
 using Rests;
 using Terraria;
 using TShockAPI.Database;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {
@@ -303,11 +305,14 @@ namespace TShockAPI
 		[Permission(RestPermissions.restrawcommand)]
 		[Noun("cmd", true, "The command and arguments to execute.", typeof(String))]
 		[Token]
-		private object ServerCommandV3(RestRequestArgs args)
+		private async Task<object> ServerCommandV3(RestRequestArgs args)
 		{
 			if (string.IsNullOrWhiteSpace(args.Parameters["cmd"]))
 				return RestMissingParam("cmd");
-			
+
+			var restPlayerGroup = await GroupManager.GetGroupByName(args.TokenData.UserGroupName);
+
+
 			TSRestPlayer tr = new TSRestPlayer(args.TokenData.Username, restPlayerGroup);
 			Commands.HandleCommand(tr, args.Parameters["cmd"]);
 			return new RestObject()
@@ -339,10 +344,10 @@ namespace TShockAPI
 		[Route("/v3/server/reload")]
 		[Permission(RestPermissions.restcfg)]
 		[Token]
-		private object ServerReload(RestRequestArgs args)
+		private async Task<object> ServerReload(RestRequestArgs args)
 		{
 			TShock.Utils.Reload();
-			Hooks.GeneralHooks.OnReloadEvent(new TSRestPlayer(args.TokenData.Username, TShock.Groups.GetGroupByName(args.TokenData.UserGroupName)));
+			Hooks.GeneralHooks.OnReloadEvent(new TSRestPlayer(args.TokenData.Username, await GroupManager.GetGroupByName(args.TokenData.UserGroupName)));
 
 			return RestResponse("Configuration, permissions, and regions reload complete. Some changes may require a server restart.");
 		}
@@ -393,7 +398,7 @@ namespace TShockAPI
 		[Description("Get a list of information about the current TShock server.")]
 		[Route("/v2/server/status")]
 		[Token]
-		private object ServerStatusV2(RestRequestArgs args)
+		private async Task<object> ServerStatusV2(RestRequestArgs args)
 		{
 			var ret = new RestObject()
 			{
@@ -413,7 +418,7 @@ namespace TShockAPI
 				var players = new ArrayList();
 				foreach (TSPlayer tsPlayer in TShock.Players.Where(p => null != p))
 				{
-					var p = PlayerFilter(tsPlayer, args.Parameters, (!string.IsNullOrEmpty(args.TokenData.UserGroupName) && TShock.Groups.GetGroupByName(args.TokenData.UserGroupName).HasPermission(RestPermissions.viewips)));
+					var p = PlayerFilter(tsPlayer, args.Parameters, (!string.IsNullOrEmpty(args.TokenData.UserGroupName) && (await (await GroupManager.GetGroupByName(args.TokenData.UserGroupName))?.HasPermission(RestPermissions.viewips))));
 					if (null != p)
 						players.Add(p);
 				}
@@ -464,16 +469,21 @@ namespace TShockAPI
 		[Token]
 		private object UserActiveListV2(RestRequestArgs args)
 		{
-			return new RestObject() { { "activeusers", string.Join("\t", TShock.Players.Where(p => null != p && null != p.Account && p.Active).Select(p => p.Account.Name)) } };
+			var players = TShock.Players.Where(x=>x != null && x.Account != null && x.Active).ToList();
+			var userAccounts = players.Select(x => x.Account.Name);
+			return new RestObject()
+			{
+				{ "activeusers", userAccounts }
+			};
 		}
 
 		[Description("Lists all user accounts in the TShock database.")]
 		[Route("/v2/users/list")]
 		[Permission(RestPermissions.restviewusers)]
 		[Token]
-		private object UserListV2(RestRequestArgs args)
+		private async Task<object> UserListV2(RestRequestArgs args)
 		{
-			return new RestObject() { { "users", TShock.UserAccounts.GetUserAccounts().Select(p => new Dictionary<string,object>(){
+			return new RestObject() { { "users", (await UserAccountManager.GetUserAccounts()).Select(p => new Dictionary<string,object>(){
 				{"name", p.Name},
 				{"id", p.ID},
 				{"group", p.Group},
@@ -487,7 +497,7 @@ namespace TShockAPI
 		[Noun("group", false, "The group the new account should be assigned.", typeof(String))]
 		[Noun("password", true, "The password for the new account.", typeof(String))]
 		[Token]
-		private object UserCreateV2(RestRequestArgs args)
+		private async Task<object> UserCreateV2(RestRequestArgs args)
 		{
 			var username = args.Parameters["user"];
 			if (string.IsNullOrWhiteSpace(username))
@@ -502,11 +512,11 @@ namespace TShockAPI
 				return RestMissingParam("password");
 
 			// NOTE: ip can be blank
-			UserAccount account = new UserAccount(username, "", "", group, "", "", "");
+			UserAccount account = new UserAccount(username, "", "", group, "", DateTime.UtcNow, "");
 			try
 			{
 				account.CreateBCryptHash(password);
-				TShock.UserAccounts.AddUserAccount(account);
+				await UserAccountManager.AddUserAccount(account);
 			}
 			catch (Exception e)
 			{
@@ -524,7 +534,7 @@ namespace TShockAPI
 		[Noun("password", false, "The users new password, and at least this or group must be defined.", typeof(String))]
 		[Noun("group", false, "The new group for the user, at least this or password must be defined.", typeof(String))]
 		[Token]
-		private object UserUpdateV2(RestRequestArgs args)
+		private async Task<object> UserUpdateV2(RestRequestArgs args)
 		{
 			var ret = UserFind(args.Parameters);
 			if (ret is RestObject)
@@ -535,13 +545,13 @@ namespace TShockAPI
 			if (string.IsNullOrWhiteSpace(group) && string.IsNullOrWhiteSpace(password))
 				return RestMissingParam("group", "password");
 
-			UserAccount account = (UserAccount)ret;
+			UserAccount account = await UserAccountManager.GetUserAccountByName(args.Parameters["user"]);
 			var response = new RestObject();
 			if (!string.IsNullOrWhiteSpace(password))
 			{
 				try
 				{
-					TShock.UserAccounts.SetUserAccountPassword(account, password);
+					await UserAccountManager.SetUserAccountPassword(account, password);
 					response.Add("password-response", "Password updated successfully");
 				}
 				catch (Exception e)
@@ -554,7 +564,7 @@ namespace TShockAPI
 			{
 				try
 				{
-					TShock.UserAccounts.SetUserGroup(account, group);
+					await UserAccountManager.SetUserGroup(account, group);
 					response.Add("group-response", "Group updated successfully");
 				}
 				catch (Exception e)
@@ -572,15 +582,13 @@ namespace TShockAPI
 		[Noun("user", true, "The search criteria (name or id of account to lookup).", typeof(String))]
 		[Noun("type", true, "The search criteria type (name for name lookup, id for id lookup).", typeof(String))]
 		[Token]
-		private object UserDestroyV2(RestRequestArgs args)
+		private async Task<object> UserDestroyV2(RestRequestArgs args)
 		{
-			var ret = UserFind(args.Parameters);
-			if (ret is RestObject)
-				return ret;
+			var user = await UserAccountManager.GetUserAccountByName(args.Parameters["user"]);
 
 			try
 			{
-				TShock.UserAccounts.RemoveUserAccount((UserAccount)ret);
+				await UserAccountManager.RemoveUserAccount(user);
 			}
 			catch (Exception e)
 			{
@@ -596,13 +604,13 @@ namespace TShockAPI
 		[Noun("user", true, "The search criteria (name or id of account to lookup).", typeof(String))]
 		[Noun("type", true, "The search criteria type (name for name lookup, id for id lookup).", typeof(String))]
 		[Token]
-		private object UserInfoV2(RestRequestArgs args)
+		private async Task<object> UserInfoV2(RestRequestArgs args)
 		{
 			var ret = UserFind(args.Parameters);
 			if (ret is RestObject)
 				return ret;
 
-			UserAccount account = (UserAccount)ret;
+			UserAccount account = await UserAccountManager.GetUserAccountByName(args.Parameters["user"]);
 			return new RestObject() { { "group", account.Group }, { "id", account.ID.ToString() }, { "name", account.Name } };
 		}
 
@@ -618,56 +626,9 @@ namespace TShockAPI
 		[Noun("start", false, "The datetime at which the ban should start.", typeof(String))]
 		[Noun("end", false, "The datetime at which the ban should end.", typeof(String))]
 		[Token]
-		private object BanCreateV3(RestRequestArgs args)
+		private async Task<object> BanCreateV3(RestRequestArgs args)
 		{
-			string identifier = args.Parameters["identifier"];
-			if (string.IsNullOrWhiteSpace(identifier))
-				return RestMissingParam("identifier");
-
-			string reason = args.Parameters["reason"];
-			if (string.IsNullOrWhiteSpace(reason))
-				reason = "Banned";
-
-			if (!DateTime.TryParse(args.Parameters["start"], out DateTime startDate))
-				startDate = DateTime.UtcNow;
-
-			if (!DateTime.TryParse(args.Parameters["end"], out DateTime endDate))
-				endDate = DateTime.MaxValue;
-
-			AddBanResult banResult = TShock.Bans.InsertBan(identifier, reason, args.TokenData.Username, startDate, endDate);
-			if (banResult.Ban != null)
-			{
-				TSPlayer player = null;
-				if (identifier.StartsWith(Identifier.IP.Prefix))
-				{
-					player = TShock.Players.FirstOrDefault(p => p.IP == identifier.Substring(Identifier.IP.Prefix.Length));
-				}
-				else if (identifier.StartsWith(Identifier.Name.Prefix))
-				{
-					//Character names may not necessarily be unique, so kick all matches
-					foreach (var ply in TShock.Players.Where(p => p.Name == identifier.Substring(Identifier.Name.Prefix.Length)))
-					{
-						ply.Kick(reason, true);
-					}
-				}
-				else if (identifier.StartsWith(Identifier.Account.Prefix))
-				{
-					player = TShock.Players.FirstOrDefault(p => p.Account?.Name == identifier.Substring(Identifier.Account.Prefix.Length));
-				}
-				else if (identifier.StartsWith(Identifier.UUID.Prefix))
-				{
-					player = TShock.Players.FirstOrDefault(p => p.UUID == identifier.Substring(Identifier.UUID.Prefix.Length));
-				}
-
-				if (player != null)
-				{
-					player.Kick(reason, true);
-				}
-
-				return RestResponse(GetString($"Ban added. Ticket number: {banResult.Ban.BanId}"));
-			}
-
-			return RestError(GetString($"Failed to add ban. {banResult.Message}"), status: "500");
+			return RestError("BanCreateV3 is currently not implemented.");
 		}
 
 		[Description("Delete an existing ban entry.")]
@@ -676,7 +637,7 @@ namespace TShockAPI
 		[Noun("ticketNumber", true, "The ticket number of the ban to delete.", typeof(String))]
 		[Noun("fullDelete", false, "Whether or not to completely remove the ban from the system.", typeof(bool))]
 		[Token]
-		private object BanDestroyV3(RestRequestArgs args)
+		private async Task<object> BanDestroyV3(RestRequestArgs args)
 		{
 			string id = args.Parameters["ticketNumber"];
 			if (string.IsNullOrWhiteSpace(id))
@@ -689,7 +650,7 @@ namespace TShockAPI
 
 			bool.TryParse(args.Parameters["fullDelete"], out bool fullDelete);
 
-			if (TShock.Bans.RemoveBan(ticketNumber, fullDelete))
+			if (await BanManager.RemoveBan(ticketNumber.ToString()))
 			{
 				return RestResponse(GetString("Ban removed."));
 			}
@@ -702,7 +663,7 @@ namespace TShockAPI
 		[Permission(RestPermissions.restviewbans)]
 		[Noun("ticketNumber", true, "The ticket number to search for.", typeof(String))]
 		[Token]
-		private object BanInfoV3(RestRequestArgs args)
+		private async Task<object> BanInfoV3(RestRequestArgs args)
 		{
 			string id = args.Parameters["ticketNumber"];
 			if (string.IsNullOrWhiteSpace(id))
@@ -713,7 +674,7 @@ namespace TShockAPI
 				return RestInvalidParam("ticketNumber");
 			}
 
-			Ban ban = TShock.Bans.GetBanById(ticketNumber);
+			Ban ban = await BanManager.GetBanById(ticketNumber);
 
 			if (ban == null)
 			{
@@ -723,7 +684,6 @@ namespace TShockAPI
 			return new RestObject
 			{
 				{ "ticket_number", ban.BanId },
-				{ "identifier", ban.Identifier },
 				{ "reason", ban.Reason },
 				{ "banning_user", ban.BanningUser },
 				{ "start_date_ticks", ban.BanDateTime.Ticks },
@@ -737,28 +697,7 @@ namespace TShockAPI
 		[Token]
 		private object BanListV3(RestRequestArgs args)
 		{
-			IEnumerable<Ban> bans = TShock.Bans.Bans.Select(kvp => kvp.Value);
-
-			var banList = new ArrayList();
-			foreach (var ban in bans)
-			{
-				banList.Add(
-					new Dictionary<string, object>
-					{
-						{ "ticket_number", ban.BanId },
-						{ "identifier", ban.Identifier },
-						{ "reason", ban.Reason },
-						{ "banning_user", ban.BanningUser },
-						{ "start_date_ticks", ban.BanDateTime.Ticks },
-						{ "end_date_ticks", ban.ExpirationDateTime.Ticks },
-					}
-				);
-			}
-
-			return new RestObject
-			{
-				{ "bans", banList }
-			};
+			return RestError("BanListV3 is currently not implemented.");
 		}
 
 		#endregion
@@ -1076,10 +1015,10 @@ namespace TShockAPI
 		[Route("/v2/groups/list")]
 		[Permission(RestPermissions.restviewgroups)]
 		[Token]
-		private object GroupList(RestRequestArgs args)
+		private async Task<object> GroupList(RestRequestArgs args)
 		{
 			var groups = new ArrayList();
-			foreach (Group group in TShock.Groups)
+			foreach (Group group in await GroupManager.GetGroupsAsync())
 			{
 				groups.Add(new Dictionary<string, object> { { "name", group.Name }, { "parent", group.ParentGroupName }, { "chatcolor", group.ChatColor } });
 			}
@@ -1091,20 +1030,20 @@ namespace TShockAPI
 		[Permission(RestPermissions.restviewgroups)]
 		[Noun("group", true, "The group name to get information on.", typeof(String))]
 		[Token]
-		private object GroupInfo(RestRequestArgs args)
+		private async Task<object> GroupInfo(RestRequestArgs args)
 		{
 			var ret = GroupFind(args.Parameters);
 			if (ret is RestObject)
 				return ret;
 
-			Group group = (Group)ret;
+			Group group = await GroupManager.GetGroupByName(args.Parameters["group"]);
 			return new RestObject() {
 				{"name", group.Name},
 				{"parent", group.ParentGroupName},
 				{"chatcolor", string.Format("{0},{1},{2}", group.R, group.G, group.B)},
-				{"permissions", group.permissions},
-				{"negatedpermissions", group.negatedpermissions},
-				{"totalpermissions", group.TotalPermissions}
+				{"permissions", group.Permissions},
+				{"negatedpermissions", group.NegatedPermissions},
+				{"totalpermissions", group.GetPermissions()}
 			};
 		}
 
@@ -1113,16 +1052,16 @@ namespace TShockAPI
 		[Permission(RestPermissions.restmanagegroups)]
 		[Noun("group", true, "The group name to delete.", typeof(String))]
 		[Token]
-		private object GroupDestroy(RestRequestArgs args)
+		private async Task<object> GroupDestroy(RestRequestArgs args)
 		{
 			var ret = GroupFind(args.Parameters);
 			if (ret is RestObject)
 				return ret;
 
-			Group group = (Group)ret;
+			Group group = await GroupManager.GetGroupByName(args.Parameters["group"]);
 			try
 			{
-				TShock.Groups.DeleteGroup(group.Name, true);
+				await GroupManager.DeleteGroup(group.Name, true);
 			}
 			catch (Exception e)
 			{
@@ -1137,17 +1076,18 @@ namespace TShockAPI
 		[Permission(RestPermissions.restmanagegroups)]
 		[Noun("group", true, "The name of the new group.", typeof(String))]
 		[Noun("parent", false, "The name of the parent group.", typeof(String))]
-		[Noun("permissions", false, "A comma separated list of permissions for the new group.", typeof(String))]
+		[Noun("permissions", false, "A list of comma-seperated permissions for the new group.", typeof(String))]
 		[Noun("chatcolor", false, "A r,g,b string representing the color for this groups chat.", typeof(String))]
 		[Token]
-		private object GroupCreate(RestRequestArgs args)
+		private async Task<object> GroupCreate(RestRequestArgs args)
 		{
 			var name = args.Parameters["group"];
 			if (string.IsNullOrWhiteSpace(name))
 				return RestMissingParam("group");
 			try
 			{
-				TShock.Groups.AddGroup(name, args.Parameters["parent"], args.Parameters["permissions"], args.Parameters["chatcolor"]);
+				List<string> permList = args.Parameters["permissions"].Split(',').ToList();
+				await GroupManager.AddGroup(name, args.Parameters["parent"], permList, args.Parameters["chatcolor"]);
 			}
 			catch (Exception e)
 			{
@@ -1164,19 +1104,19 @@ namespace TShockAPI
 		[Noun("chatcolor", false, "The new chat color r,g,b.", typeof(String))]
 		[Noun("permissions", false, "The new comma separated list of permissions.", typeof(String))]
 		[Token]
-		private object GroupUpdate(RestRequestArgs args)
+		private async Task<object> GroupUpdate(RestRequestArgs args)
 		{
 			var ret = GroupFind(args.Parameters);
 			if (ret is RestObject)
 				return ret;
 
-			Group group = (Group)ret;
+			Group group = await GroupManager.GetGroupByName(args.Parameters["group"]);
 			var parent = (null == args.Parameters["parent"]) ? group.ParentGroupName : args.Parameters["parent"];
 			var chatcolor = (null == args.Parameters["chatcolor"]) ? string.Format("{0}.{1}.{2}", group.R, group.G, group.B) : args.Parameters["chatcolor"];
-			var permissions = (null == args.Parameters["permissions"]) ? group.Permissions : args.Parameters["permissions"];
+			List<string> permList = args.Parameters["permissions"].Split(',').ToList();
 			try
 			{
-				TShock.Groups.UpdateGroup(group.Name, parent, permissions, chatcolor, group.Suffix, group.Prefix);
+				await GroupManager.UpdateGroup(group.Name, parent, permList, chatcolor, group.Suffix, group.Prefix);
 			}
 			catch (Exception e)
 			{
@@ -1307,7 +1247,7 @@ namespace TShockAPI
 			}
 		}
 
-		private object UserFind(EscapedParameterCollection parameters)
+		private async Task<object> UserFind(EscapedParameterCollection parameters)
 		{
 			string name = parameters["user"];
 			if (string.IsNullOrWhiteSpace(name))
@@ -1322,10 +1262,10 @@ namespace TShockAPI
 					case null:
 					case "name":
 						type = "name";
-						account = TShock.UserAccounts.GetUserAccountByName(name);
+						account = await UserAccountManager.GetUserAccountByName(name);
 						break;
 					case "id":
-						account = TShock.UserAccounts.GetUserAccountByID(Convert.ToInt32(name));
+						account = await UserAccountManager.GetUserAccountById(Convert.ToInt32(name));
 						break;
 					default:
 						return RestError(GetString($"Invalid Type: '{type}'"));
@@ -1342,13 +1282,13 @@ namespace TShockAPI
 			return account;
 		}
 
-		private object GroupFind(EscapedParameterCollection parameters)
+		private async Task<object> GroupFind(EscapedParameterCollection parameters)
 		{
 			var name = parameters["group"];
 			if (string.IsNullOrWhiteSpace(name))
 				return RestMissingParam("group");
 
-			var group = TShock.Groups.GetGroupByName(name);
+			var group = await GroupManager.GetGroupByName(name);
 			if (null == group)
 				return RestError(GetString($"Group {name} doesn't exist"));
 

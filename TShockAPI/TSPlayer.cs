@@ -34,7 +34,9 @@ using TShockAPI.Hooks;
 using TShockAPI.Net;
 using Timer = System.Timers.Timer;
 using System.Linq;
+using System.Threading.Tasks;
 using Terraria.GameContent.Creative;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {
@@ -774,7 +776,7 @@ namespace TShockAPI
 		/// <param name="y">The y coordinate they want to build at.</param>
 		/// <param name="shouldWarnPlayer">Whether or not the player should be warned if their build attempt fails</param>
 		/// <returns>True if the player can build at the given point from build, spawn, and region protection.</returns>
-		public bool HasBuildPermission(int x, int y, bool shouldWarnPlayer = true)
+		public async Task<bool> HasBuildPermission(int x, int y, bool shouldWarnPlayer = true)
 		{
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerHasBuildPermission(this, x, y);
 			if (hookResult != PermissionHookResult.Unhandled)
@@ -788,16 +790,16 @@ namespace TShockAPI
 
 			// If the player has bypass on build protection or building is enabled; continue
 			// (General build protection takes precedence over spawn protection)
-			if (!TShock.Config.Settings.DisableBuild || HasPermission(Permissions.antibuild))
+			if (!TShock.Config.Settings.DisableBuild || await HasPermission(Permissions.antibuild))
 			{
 				failure = BuildPermissionFailPoint.SpawnProtect;
 				// If they have spawn protect bypass, or it isn't spawn, or it isn't in spawn; continue
 				// (If they have spawn protect bypass, we don't care if it's spawn or not)
-				if (!TShock.Config.Settings.SpawnProtection || HasPermission(Permissions.editspawn) || !Utils.IsInSpawn(x, y))
+				if (!TShock.Config.Settings.SpawnProtection || await HasPermission(Permissions.editspawn) || !Utils.IsInSpawn(x, y))
 				{
 					failure = BuildPermissionFailPoint.Regions;
 					// If they have build permission in this region, then they're allowed to continue
-					if (TShock.Regions.CanBuild(x, y, this))
+					if (await RegionManager.CanBuild(x, y, this))
 					{
 						return true;
 					}
@@ -849,13 +851,13 @@ namespace TShockAPI
 		/// <param name="height">The height of the tile object</param>
 		/// <param name="shouldWarnPlayer">Whether or not the player should be warned if their build attempt fails</param>
 		/// <returns>True if the player can build at the given point from build, spawn, and region protection.</returns>
-		public bool HasBuildPermissionForTileObject(int x, int y, int width, int height, bool shouldWarnPlayer = true)
+		public async Task<bool> HasBuildPermissionForTileObject(int x, int y, int width, int height, bool shouldWarnPlayer = true)
 		{
 			for (int realx = x; realx < x + width; realx++)
 			{
 				for (int realy = y; realy < y + height; realy++)
 				{
-					if (!HasBuildPermission(realx, realy, shouldWarnPlayer))
+					if (!(await HasBuildPermission(realx, realy, shouldWarnPlayer)))
 					{
 						return false;
 					}
@@ -869,9 +871,9 @@ namespace TShockAPI
 		/// <param name="x">The x coordinate they want to paint at.</param>
 		/// <param name="y">The y coordinate they want to paint at.</param>
 		/// <returns>True if they can paint.</returns>
-		public bool HasPaintPermission(int x, int y)
+		public async Task<bool> HasPaintPermission(int x, int y)
 		{
-			return HasBuildPermission(x, y) && HasPermission(Permissions.canpaint);
+			return await HasBuildPermission(x, y) && await HasPermission(Permissions.canpaint);
 		}
 
 		/// <summary>Checks if a player can place ice, and if they can, tracks ice placements and removals.</summary>
@@ -1063,7 +1065,7 @@ namespace TShockAPI
 		/// Saves the player's inventory to SSC
 		/// </summary>
 		/// <returns>bool - True/false if it saved successfully</returns>
-		public bool SaveServerCharacter()
+		public async Task<bool> SaveServerCharacter()
 		{
 			if (!Main.ServerSideCharacter)
 			{
@@ -1071,13 +1073,13 @@ namespace TShockAPI
 			}
 			try
 			{
-				if (HasPermission(Permissions.bypassssc))
+				if (await HasPermission(Permissions.bypassssc))
 				{
 					TShock.Log.ConsoleInfo(GetString($"Skipping SSC save (due to tshock.ignore.ssc) for {Account.Name}"));
 					return true;
 				}
 				PlayerData.CopyCharacter(this);
-				TShock.CharacterDB.InsertPlayerData(this);
+				await CharacterManager.InsertPlayerData(this);
 				return true;
 			}
 			catch (Exception e)
@@ -1271,7 +1273,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Logs the player out of an account.
 		/// </summary>
-		public void Logout()
+		public async Task Logout()
 		{
 			PlayerHooks.OnPlayerLogout(this);
 			if (Main.ServerSideCharacter)
@@ -1280,12 +1282,12 @@ namespace TShockAPI
 				if (!IsDisabledPendingTrashRemoval && (!Dead || TPlayer.difficulty != 2))
 				{
 					PlayerData.CopyCharacter(this);
-					TShock.CharacterDB.InsertPlayerData(this);
+					await CharacterManager.InsertPlayerData(this);
 				}
 			}
 
 			PlayerData = new PlayerData(this);
-			Group = TShock.Groups.GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
+			Group = await GroupManager.GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
 			tempGroup = null;
 			if (tempGroupTimer != null)
 			{
@@ -1525,7 +1527,7 @@ namespace TShockAPI
 					{
 						Client.TileSections[i, j] = isLoaded;
 					}
-				}	
+				}
 			}
 			else
 			{
@@ -1547,10 +1549,10 @@ namespace TShockAPI
 		/// <param name="stack">The item stack.</param>
 		/// <param name="prefix">The item prefix.</param>
 		/// <returns>True or false, depending if the item passed the check or not.</returns>
-		public bool GiveItemCheck(int type, string name, int stack, int prefix = 0)
+		public async Task<bool> GiveItemCheck(int type, string name, int stack, int prefix = 0)
 		{
-			if ((TShock.ItemBans.DataModel.ItemIsBanned(name) && TShock.Config.Settings.PreventBannedItemSpawn) &&
-				(TShock.ItemBans.DataModel.ItemIsBanned(name, this) || !TShock.Config.Settings.AllowAllowedGroupsToSpawnBannedItems))
+			if ((await ItemBanManager.ItemIsBanned(name) && TShock.Config.Settings.PreventBannedItemSpawn) &&
+				(await ItemBanManager.ItemIsBanned(name, this) || !TShock.Config.Settings.AllowAllowedGroupsToSpawnBannedItems))
 				return false;
 
 			GiveItem(type, stack, prefix);
@@ -1994,11 +1996,11 @@ namespace TShockAPI
 		/// <param name="silent">If no message should be broadcasted to the server.</param>
 		/// <param name="adminUserName">The originator of the kick, for display purposes.</param>
 		/// <param name="saveSSI">If the player's server side character should be saved on kick.</param>
-		public bool Kick(string reason, bool force = false, bool silent = false, string adminUserName = null, bool saveSSI = false)
+		public async Task<bool> Kick(string reason, bool force = false, bool silent = false, string adminUserName = null, bool saveSSI = false)
 		{
 			if (!ConnectionAlive)
 				return true;
-			if (force || !HasPermission(Permissions.immunetokick))
+			if (force || !await HasPermission(Permissions.immunetokick))
 			{
 				SilentKickInProgress = silent;
 				if (IsLoggedIn && saveSSI)
@@ -2022,16 +2024,15 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="reason">The reason to be displayed to the server.</param>
 		/// <param name="adminUserName">The player who initiated the ban.</param>
-		public bool Ban(string reason, string adminUserName = null)
+		public async Task<bool> Ban(string reason, string adminUserName = null)
 		{
 			if (!ConnectionAlive)
 				return true;
 
-			TShock.Bans.InsertBan($"{Identifier.IP}{IP}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
-			TShock.Bans.InsertBan($"{Identifier.UUID}{UUID}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+			await BanManager.CreateBan(BanType.IpAddress, this.IP, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
 			if (Account != null)
 			{
-				TShock.Bans.InsertBan($"{Identifier.Account}{Account.Name}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+				await BanManager.CreateBan(BanType.AccountName, this.Account.Name, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
 			}
 
 			Disconnect(GetString("Banned: {0}", reason));
@@ -2173,7 +2174,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="permission">The permission to check.</param>
 		/// <returns>True if the player has that permission.</returns>
-		public bool HasPermission(string permission)
+		public async Task<bool> HasPermission(string permission)
 		{
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerPermission(this, permission);
 
@@ -2181,9 +2182,9 @@ namespace TShockAPI
 				return hookResult == PermissionHookResult.Granted;
 
 			if (tempGroup != null)
-				return tempGroup.HasPermission(permission);
+				return await tempGroup.HasPermission(permission);
 			else
-				return Group.HasPermission(permission);
+				return await Group.HasPermission(permission);
 		}
 
 		/// <summary>
@@ -2192,9 +2193,9 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="bannedItem">The <see cref="ItemBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned item.</returns>
-		public bool HasPermission(ItemBan bannedItem)
+		public async Task<bool> HasPermission(ItemBan bannedItem)
 		{
-			return TShock.ItemBans.DataModel.ItemIsBanned(bannedItem.Name, this);
+			return await ItemBanManager.ItemIsBanned(bannedItem.Name, this);
 		}
 
 		/// <summary>
@@ -2203,9 +2204,9 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="bannedProj">The <see cref="ProjectileBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned projectile.</returns>
-		public bool HasPermission(ProjectileBan bannedProj)
+		public async Task<bool> HasPermission(ProjectileBan bannedProj)
 		{
-			return TShock.ProjectileBans.ProjectileIsBanned(bannedProj.ID, this);
+			return await ProjectileManager.ProjectileIsBanned(bannedProj.ID, this);
 		}
 		/// <summary>
 		/// Checks to see if a player has permission to use the specific banned tile.
@@ -2213,9 +2214,9 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="bannedTile">The <see cref="TileBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned tile.</returns>
-		public bool HasPermission(TileBan bannedTile)
+		public async Task<bool> HasPermission(TileBan bannedTile)
 		{
-			return TShock.TileBans.TileIsBanned(bannedTile.ID, this);
+			return await TileManager.TileIsBanned(bannedTile.ID, this);
 		}
 	}
 

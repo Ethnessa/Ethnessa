@@ -145,7 +145,7 @@ namespace TShockAPI.Database
 			if (ply == null)
 				return false;
 
-			if (ply.HasPermission(Permissions.canusebannedprojectiles))
+			if (await ply.HasPermission(Permissions.canusebannedprojectiles))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerProjbanPermission(ply, this);

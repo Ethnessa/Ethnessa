@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Terraria;
 using static TShockAPI.GetDataHandlers;
 
@@ -29,7 +30,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public void OnReceive(object sender, ReadNetModuleEventArgs args)
+		public async Task OnReceive(ReadNetModuleEventArgs args)
 		{
 			INetModuleHandler handler;
 
@@ -46,7 +47,7 @@ namespace TShockAPI.Handlers.NetModules
 			}
 
 			handler.Deserialize(args.Data);
-			handler.HandlePacket(args.Player, out bool rejectPacket);
+			var rejectPacket = await handler.HandlePacket(args.Player);
 
 			args.Handled = rejectPacket;
 		}

@@ -1,4 +1,6 @@
-﻿namespace TShockAPI.Handlers
+﻿using System.Threading.Tasks;
+
+namespace TShockAPI.Handlers
 {
 	/// <summary>
 	/// Describes a packet handler that receives a packet from a GetDataHandler
@@ -11,6 +13,6 @@
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		void OnReceive(object sender, TEventArgs args);
+		public Task OnReceive(TEventArgs args);
 	}
 }

@@ -24,11 +24,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.Utilities;
 using Microsoft.Xna.Framework;
 using Terraria.Localization;
+using TShockAPI.Database;
 using TShockAPI.Localization;
 
 namespace TShockAPI
@@ -38,6 +40,7 @@ namespace TShockAPI
 	/// </summary>
 	public class Utils
 	{
+		public delegate Task AsynchronousEventHandler<TEventArgs>(object? sender, TEventArgs e);
 		/// <summary>
 		/// Hex code for a blue pastel color
 		/// </summary>
@@ -165,13 +168,13 @@ namespace TShockAPI
 		/// <param name="log">Message to send</param>
 		/// <param name="color">Color of the message</param>
 		/// <param name="excludedPlayer">The player to not send the message to.</param>
-		public void SendLogs(string log, Color color, TSPlayer excludedPlayer = null)
+		public async Task SendLogs(string log, Color color, TSPlayer excludedPlayer = null)
 		{
 			TShock.Log.Info(log);
 			TSPlayer.Server.SendMessage(log, color);
 			foreach (TSPlayer player in TShock.Players)
 			{
-				if (player != null && player != excludedPlayer && player.Active && player.HasPermission(Permissions.logs) &&
+				if (player != null && player != excludedPlayer && player.Active && await player.HasPermission(Permissions.logs) &&
 						player.DisplayLogs && TShock.Config.Settings.DisableSpewLogs == false)
 					player.SendMessage(log, color);
 			}
@@ -602,11 +605,6 @@ namespace TShockAPI
 		{
 			FileTools.SetupConfig();
 			TShock.HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
-			TShock.Groups.LoadPermisions();
-			TShock.Regions.Reload();
-			TShock.ItemBans.DataModel.UpdateItemBans();
-			TShock.ProjectileBans.UpdateBans();
-			TShock.TileBans.UpdateBans();
 		}
 
 		/// <summary>
@@ -1053,13 +1051,14 @@ namespace TShockAPI
 
 		/// <summary>Dumps a matrix of all permissions &amp; all groups in Markdown table format.</summary>
 		/// <param name="path">The save destination.</param>
-		internal void DumpPermissionMatrix(string path)
+		internal async Task DumpPermissionMatrix(string path)
 		{
 			StringBuilder output = new StringBuilder();
 			output.Append("|Permission|");
 
 			// Traverse to build group name list
-			foreach (Group g in TShock.Groups.groups)
+			var groups = await GroupManager.GetGroupsAsync();
+			foreach (Group g in groups)
 			{
 				output.Append("[[");
 				output.Append(g.Name);
@@ -1070,7 +1069,7 @@ namespace TShockAPI
 			output.AppendLine();
 			output.Append("|-------|");
 
-			foreach (Group g in TShock.Groups.groups)
+			foreach (Group g in groups)
 			{
 				output.Append("-------|");
 			}
@@ -1082,9 +1081,9 @@ namespace TShockAPI
 				output.Append((string)field.GetValue(null));
 				output.Append("]]|");
 
-				foreach (Group g in TShock.Groups.groups)
+				foreach (Group g in groups)
 				{
-					if (g.HasPermission((string)field.GetValue(null)))
+					if (await g.HasPermission((string)field.GetValue(null)))
 					{
 						output.Append("✔|");
 					}

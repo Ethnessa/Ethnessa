@@ -30,16 +30,13 @@ using Terraria.ObjectData;
 using Terraria.DataStructures;
 using Terraria.Localization;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace TShockAPI
 {
 	/// <summary>The TShock item ban subsystem. It handles keeping things out of people's inventories.</summary>
 	public sealed class ItemBans
 	{
-
-		/// <summary>The database connection layer to for the item ban subsystem.</summary>
-		public ItemBanManager DataModel;
-
 		/// <summary>The last time the second update process was run. Used to throttle task execution.</summary>
 		private DateTime LastTimelyRun = DateTime.UtcNow;
 
@@ -50,9 +47,8 @@ namespace TShockAPI
 		/// <param name="plugin">The executing plugin.</param>
 		/// <param name="database">The database the item ban information is stored in.</param>
 		/// <returns>A new item ban system.</returns>
-		internal ItemBans(TShock plugin, IDbConnection database)
+		internal ItemBans(TShock plugin)
 		{
-			DataModel = new ItemBanManager(database);
 			Plugin = plugin;
 
 			ServerApi.Hooks.GameUpdate.Register(plugin, OnGameUpdate);
@@ -73,7 +69,7 @@ namespace TShockAPI
 
 		/// <summary>Called by OnGameUpdate once per second to execute tasks regularly but not too often.</summary>
 		/// <param name="args">The standard event arguments.</param>
-		internal void OnSecondlyUpdate(EventArgs args)
+		internal async Task OnSecondlyUpdate(EventArgs args)
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 
@@ -88,7 +84,7 @@ namespace TShockAPI
 				UnTaint(player);
 
 				// No matter the player type, we do a check when a player is holding an item that's banned.
-				if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[player.TPlayer.selectedItem].netID), player))
+				if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[player.TPlayer.selectedItem].netID), player))
 				{
 					string itemName = player.TPlayer.inventory[player.TPlayer.selectedItem].Name;
 					player.Disable(GetString($"holding banned item: {itemName}"), disableFlags);
@@ -105,7 +101,7 @@ namespace TShockAPI
 					// Armor ban checks
 					foreach (Item item in player.TPlayer.armor)
 					{
-						if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -115,7 +111,7 @@ namespace TShockAPI
 					// Dye ban checks
 					foreach (Item item in player.TPlayer.dye)
 					{
-						if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -125,7 +121,7 @@ namespace TShockAPI
 					// Misc equip ban checks
 					foreach (Item item in player.TPlayer.miscEquips)
 					{
-						if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -135,7 +131,7 @@ namespace TShockAPI
 					// Misc dye ban checks
 					foreach (Item item in player.TPlayer.miscDyes)
 					{
-						if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -150,14 +146,14 @@ namespace TShockAPI
 			LastTimelyRun = DateTime.UtcNow;
 		}
 
-		internal void OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
+		internal async Task OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 			bool useItem = args.Control.IsUsingItem;
 			TSPlayer player = args.Player;
 			string itemName = player.TPlayer.inventory[args.SelectedItem].Name;
 
-			if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[args.SelectedItem].netID), args.Player))
+			if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[args.SelectedItem].netID), args.Player))
 			{
 				player.TPlayer.controlUseItem = false;
 				player.Disable(GetString($"holding banned item: {itemName}"), disableFlags);
@@ -175,13 +171,13 @@ namespace TShockAPI
 			return;
 		}
 
-		internal void OnChestItemChange(object sender, ChestItemEventArgs args)
+		internal async Task OnChestItemChange(object sender, ChestItemEventArgs args)
 		{
 			Item item = new Item();
 			item.netDefaults(args.Type);
 
 
-			if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player))
+			if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player))
 			{
 				SendCorrectiveMessage(args.Player, item.Name);
 				args.Handled = true;
@@ -192,11 +188,11 @@ namespace TShockAPI
 			return;
 		}
 
-		internal void OnTileEdit(object sender, TileEditEventArgs args)
+		internal async Task OnTileEdit(object sender, TileEditEventArgs args)
 		{
 			if (args.Action == EditAction.PlaceTile || args.Action == EditAction.PlaceWall)
 			{
-				if (args.Player.TPlayer.autoActuator && DataModel.ItemIsBanned("Actuator", args.Player))
+				if (args.Player.TPlayer.autoActuator && await ItemBanManager.ItemIsBanned("Actuator", args.Player))
 				{
 					args.Player.SendTileSquareCentered(args.X, args.Y, 1);
 					args.Player.SendErrorMessage(GetString("You do not have permission to place actuators."));
@@ -204,7 +200,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (DataModel.ItemIsBanned(EnglishLanguage.GetItemNameById(args.Player.SelectedItem.netID), args.Player))
+				if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(args.Player.SelectedItem.netID), args.Player))
 				{
 					args.Player.SendTileSquareCentered(args.X, args.Y, 4);
 					args.Handled = true;

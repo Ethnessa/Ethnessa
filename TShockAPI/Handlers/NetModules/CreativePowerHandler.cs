@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Streams;
+using System.Threading.Tasks;
 using static TShockAPI.GetDataHandlers;
 
 namespace TShockAPI.Handlers.NetModules
@@ -29,15 +30,14 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public void HandlePacket(TSPlayer player, out bool rejectPacket)
+		public async Task<bool> HandlePacket(TSPlayer player)
 		{
-			if (!HasPermission(PowerType, player))
+			if (!await HasPermission(PowerType, player))
 			{
-				rejectPacket = true;
-				return;
+				return true;
 			}
 
-			rejectPacket = false;
+			return false;
 		}
 
 		/// <summary>
@@ -46,7 +46,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// <param name="powerType"></param>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public static bool HasPermission(CreativePowerTypes powerType, TSPlayer player)
+		public static async Task<bool> HasPermission(CreativePowerTypes powerType, TSPlayer player)
 		{
 			if (!PowerToPermissionMap.ContainsKey(powerType))
 			{
@@ -63,7 +63,7 @@ namespace TShockAPI.Handlers.NetModules
 				return false;
 			}
 
-			if (!player.HasPermission(permission))
+			if (!await player.HasPermission(permission))
 			{
 				player.SendErrorMessage(PermissionToDescriptionMap[permission]);
 				return false;

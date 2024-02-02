@@ -29,6 +29,10 @@ namespace TShockAPI.Database
 {
 	public static class TileManager
 	{
+		public static async Task<List<TileBan>> ToListAsync()
+		{
+			return await DB.Find<TileBan>().ExecuteAsync();
+		}
 		public static async Task AddNewBan(short id = 0)
 		{
 			try
@@ -136,7 +140,7 @@ namespace TShockAPI.Database
 			if (ply == null)
 				return false;
 
-			if (ply.HasPermission(Permissions.canusebannedtiles))
+			if (await ply.HasPermission(Permissions.canusebannedtiles))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerTilebanPermission(ply, this);

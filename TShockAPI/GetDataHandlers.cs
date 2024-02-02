@@ -34,6 +34,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent.Tile_Entities;
 using Terraria.Localization;
 using Microsoft.Xna.Framework;
+using MongoDB.Entities;
 using TShockAPI.Localization;
 using TShockAPI.Models;
 using TShockAPI.Models.PlayerUpdate;
@@ -280,8 +281,9 @@ namespace TShockAPI
 			/// <summary>The Y position requested. Or -1 for spawn.</summary>
 			public int Y { get; set; }
 		}
+
 		/// <summary>The hook for a GetSection event.</summary>
-		public static HandlerList<GetSectionEventArgs> GetSection = new HandlerList<GetSectionEventArgs>();
+		public static event AsyncEventHandler<GetSectionEventArgs>? GetSection;
 		private static bool OnGetSection(TSPlayer player, MemoryStream data, int x, int y)
 		{
 			if (GetSection == null)
@@ -295,7 +297,7 @@ namespace TShockAPI
 				Y = y,
 			};
 
-			GetSection.Invoke(null, args);
+			GetSection.Invoke( args);
 			return args.Handled;
 		}
 
@@ -346,10 +348,11 @@ namespace TShockAPI
 			public Vector2? HomePos { get; set; }
 
 		}
+
 		/// <summary>
 		/// PlayerUpdate - When the player sends it's updated information to the server
 		/// </summary>
-		public static HandlerList<PlayerUpdateEventArgs> PlayerUpdate = new HandlerList<PlayerUpdateEventArgs>();
+		public static event AsyncEventHandler<PlayerUpdateEventArgs>? PlayerUpdate;
 		private static bool OnPlayerUpdate(
 			TSPlayer player,
 			MemoryStream data,
@@ -382,7 +385,7 @@ namespace TShockAPI
 				OriginalPos = originalPos,
 				HomePos = homePos
 			};
-			PlayerUpdate.Invoke(null, args);
+			PlayerUpdate.Invoke(args);
 			return args.Handled;
 		}
 
@@ -460,10 +463,11 @@ namespace TShockAPI
 			/// </summary>
 			public byte Style { get; set; }
 		}
+
 		/// <summary>
 		/// TileEdit - called when a tile is placed or destroyed
 		/// </summary>
-		public static HandlerList<TileEditEventArgs> TileEdit = new HandlerList<TileEditEventArgs>();
+		public static event AsyncEventHandler<TileEditEventArgs>? TileEdit;
 		private static bool OnTileEdit(TSPlayer ply, MemoryStream data, int x, int y, EditAction action, EditType editDetail, short editData, byte style)
 		{
 			if (TileEdit == null)
@@ -480,7 +484,7 @@ namespace TShockAPI
 				editDetail = editDetail,
 				Style = style
 			};
-			TileEdit.Invoke(null, args);
+			TileEdit.Invoke(args);
 			return args.Handled;
 		}
 
@@ -562,7 +566,8 @@ namespace TShockAPI
 		/// <summary>
 		/// When the player sends a tile square
 		/// </summary>
-		public static HandlerList<SendTileRectEventArgs> SendTileRect = new HandlerList<SendTileRectEventArgs>();
+		public static event AsyncEventHandler<SendTileRectEventArgs>? SendTileRect;
+
 		private static bool OnSendTileRect(TSPlayer player, MemoryStream data, short tilex, short tiley, byte width, byte length, TileChangeType changeType = TileChangeType.None)
 		{
 			if (SendTileRect == null)
@@ -579,7 +584,7 @@ namespace TShockAPI
 				ChangeType = changeType
 			};
 
-			SendTileRect.Invoke(null, args);
+			SendTileRect.Invoke(args);
 			return args.Handled;
 		}
 
@@ -618,10 +623,11 @@ namespace TShockAPI
 			/// </summary>
 			public short Type { get; set; }
 		}
+
 		/// <summary>
 		/// ItemDrop - Called when an item is dropped
 		/// </summary>
-		public static HandlerList<ItemDropEventArgs> ItemDrop = new HandlerList<ItemDropEventArgs>();
+		public static event AsyncEventHandler<ItemDropEventArgs>? ItemDrop;
 		private static bool OnItemDrop(TSPlayer player, MemoryStream data, short id, Vector2 pos, Vector2 vel, short stacks, byte prefix, bool noDelay, short type)
 		{
 			if (ItemDrop == null)
@@ -639,7 +645,7 @@ namespace TShockAPI
 				NoDelay = noDelay,
 				Type = type,
 			};
-			ItemDrop.Invoke(null, args);
+			ItemDrop.Invoke(args);
 			return args.Handled;
 		}
 
@@ -686,10 +692,11 @@ namespace TShockAPI
 			/// </summary>
 			public float[] Ai { get; set; }
 		}
+
 		/// <summary>
 		/// NewProjectile - Called when a client creates a new projectile
 		/// </summary>
-		public static HandlerList<NewProjectileEventArgs> NewProjectile = new HandlerList<NewProjectileEventArgs>();
+		public static event AsyncEventHandler<NewProjectileEventArgs>? NewProjectile;
 		private static bool OnNewProjectile(MemoryStream data, short ident, Vector2 pos, Vector2 vel, float knockback, short dmg, byte owner, short type, int index, TSPlayer player, float[] ai)
 		{
 			if (NewProjectile == null)
@@ -709,7 +716,7 @@ namespace TShockAPI
 				Player = player,
 				Ai = ai
 			};
-			NewProjectile.Invoke(null, args);
+			NewProjectile.Invoke(args);
 			return args.Handled;
 		}
 
@@ -739,10 +746,11 @@ namespace TShockAPI
 			/// </summary>
 			public byte Critical { get; set; }
 		}
+
 		/// <summary>
 		/// NPCStrike - Called when an NPC is attacked
 		/// </summary>
-		public static HandlerList<NPCStrikeEventArgs> NPCStrike = new HandlerList<NPCStrikeEventArgs>();
+		public static event AsyncEventHandler<NPCStrikeEventArgs> NPCStrike;
 		private static bool OnNPCStrike(TSPlayer player, MemoryStream data, short id, byte dir, short dmg, float knockback, byte crit)
 		{
 			if (NPCStrike == null)
@@ -758,7 +766,7 @@ namespace TShockAPI
 				Knockback = knockback,
 				Critical = crit,
 			};
-			NPCStrike.Invoke(null, args);
+			NPCStrike.Invoke(args);
 			return args.Handled;
 		}
 
@@ -919,10 +927,11 @@ namespace TShockAPI
 			/// </summary>
 			public short Type { get; set; }
 		}
+
 		/// <summary>
 		/// ChestItemChange - Called when an item in a chest changes
 		/// </summary>
-		public static HandlerList<ChestItemEventArgs> ChestItemChange = new HandlerList<ChestItemEventArgs>();
+		public static event AsyncEventHandler<ChestItemEventArgs>? ChestItemChange;
 		private static bool OnChestItemChange(TSPlayer player, MemoryStream data, short id, byte slot, short stacks, byte prefix, short type)
 		{
 			if (ChestItemChange == null)
@@ -938,7 +947,7 @@ namespace TShockAPI
 				Prefix = prefix,
 				Type = type,
 			};
-			ChestItemChange.Invoke(null, args);
+			ChestItemChange.Invoke(args);
 			return args.Handled;
 		}
 
@@ -956,10 +965,11 @@ namespace TShockAPI
 			/// </summary>
 			public int Y { get; set; }
 		}
+
 		/// <summary>
 		/// ChestOpen - Called when any chest is opened
 		/// </summary>
-		public static HandlerList<ChestOpenEventArgs> ChestOpen = new HandlerList<ChestOpenEventArgs>();
+		public static event AsyncEventHandler<ChestOpenEventArgs> ChestOpen;
 		private static bool OnChestOpen(MemoryStream data, int x, int y, TSPlayer player)
 		{
 			if (ChestOpen == null)
@@ -972,7 +982,7 @@ namespace TShockAPI
 				Y = y,
 				Player = player,
 			};
-			ChestOpen.Invoke(null, args);
+			ChestOpen.Invoke(args);
 			return args.Handled;
 		}
 
@@ -996,10 +1006,11 @@ namespace TShockAPI
 			/// </summary>
 			public short Style { get; set; }
 		}
+
 		/// <summary>
 		/// When a chest is added or removed from the world.
 		/// </summary>
-		public static HandlerList<PlaceChestEventArgs> PlaceChest = new HandlerList<PlaceChestEventArgs>();
+		public static event AsyncEventHandler<PlaceChestEventArgs> PlaceChest;
 		private static bool OnPlaceChest(TSPlayer player, MemoryStream data, int flag, int tilex, int tiley, short style)
 		{
 			if (PlaceChest == null)
@@ -1014,7 +1025,7 @@ namespace TShockAPI
 				TileY = tiley,
 				Style = style
 			};
-			PlaceChest.Invoke(null, args);
+			PlaceChest.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1306,7 +1317,7 @@ namespace TShockAPI
 		/// <summary>
 		/// LiquidSet - When ever a liquid is set
 		/// </summary>
-		public static HandlerList<LiquidSetEventArgs> LiquidSet = new HandlerList<LiquidSetEventArgs>();
+		public static event AsyncEventHandler<LiquidSetEventArgs> LiquidSet;
 		private static bool OnLiquidSet(TSPlayer player, MemoryStream data, int tilex, int tiley, byte amount, byte type)
 		{
 			if (LiquidSet == null)
@@ -1321,7 +1332,7 @@ namespace TShockAPI
 				Amount = amount,
 				Type = (LiquidType)type,
 			};
-			LiquidSet.Invoke(null, args);
+			LiquidSet.Invoke( args);
 			return args.Handled;
 		}
 
@@ -1406,10 +1417,11 @@ namespace TShockAPI
 			/// </summary>
 			public short Time { get; set; }
 		}
+
 		/// <summary>
 		/// NPCAddBuff - Called when a npc is buffed
 		/// </summary>
-		public static HandlerList<NPCAddBuffEventArgs> NPCAddBuff = new HandlerList<NPCAddBuffEventArgs>();
+		public static event AsyncEventHandler<NPCAddBuffEventArgs> NPCAddBuff;
 		private static bool OnNPCAddBuff(TSPlayer player, MemoryStream data, short id, int type, short time)
 		{
 			if (NPCAddBuff == null)
@@ -1423,7 +1435,7 @@ namespace TShockAPI
 				Type = type,
 				Time = time
 			};
-			NPCAddBuff.Invoke(null, args);
+			NPCAddBuff.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1495,10 +1507,11 @@ namespace TShockAPI
 			/// </summary>
 			public HouseholdStatus HouseholdStatus { get; set; }
 		}
+
 		/// <summary>
 		/// NPCHome - Called when an NPC's home is changed
 		/// </summary>
-		public static HandlerList<NPCHomeChangeEventArgs> NPCHome = new HandlerList<NPCHomeChangeEventArgs>();
+		public static event AsyncEventHandler<NPCHomeChangeEventArgs> NPCHome;
 		private static bool OnUpdateNPCHome(TSPlayer player, MemoryStream data, short id, short x, short y, byte houseHoldStatus)
 		{
 			if (NPCHome == null)
@@ -1513,7 +1526,7 @@ namespace TShockAPI
 				Y = y,
 				HouseholdStatus = (HouseholdStatus)houseHoldStatus,
 			};
-			NPCHome.Invoke(null, args);
+			NPCHome.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1672,8 +1685,9 @@ namespace TShockAPI
 			/// <summary>The amount to heal by</summary>
 			public short Amount { get; set; }
 		}
+
 		/// <summary>When a player heals another player</summary>
-		public static HandlerList<HealOtherPlayerEventArgs> HealOtherPlayer = new HandlerList<HealOtherPlayerEventArgs>();
+		public static event AsyncEventHandler<HealOtherPlayerEventArgs> HealOtherPlayer;
 		private static bool OnHealOtherPlayer(TSPlayer player, MemoryStream data, byte targetPlayerIndex, short amount)
 		{
 			if (HealOtherPlayer == null)
@@ -1687,7 +1701,7 @@ namespace TShockAPI
 				Amount = amount,
 			};
 
-			HealOtherPlayer.Invoke(null, args);
+			HealOtherPlayer.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1765,8 +1779,9 @@ namespace TShockAPI
 			/// <summary>The direction the object was placed.</summary>
 			public bool Direction { get; set; }
 		}
+
 		/// <summary>Fired when an object is placed in the world.</summary>
-		public static HandlerList<PlaceObjectEventArgs> PlaceObject = new HandlerList<PlaceObjectEventArgs>();
+		public static event AsyncEventHandler<PlaceObjectEventArgs> PlaceObject;
 		private static bool OnPlaceObject(TSPlayer player, MemoryStream data, short x, short y, short type, short style, byte alternate, sbyte random, bool direction)
 		{
 			if (PlaceObject == null)
@@ -1785,7 +1800,7 @@ namespace TShockAPI
 				Direction = direction
 			};
 
-			PlaceObject.Invoke(null, args);
+			PlaceObject.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1801,8 +1816,9 @@ namespace TShockAPI
 			/// <summary>The Type of event.</summary>
 			public byte Type { get; set; }
 		}
+
 		/// <summary>Fired when a PlaceTileEntity event occurs.</summary>
-		public static HandlerList<PlaceTileEntityEventArgs> PlaceTileEntity = new HandlerList<PlaceTileEntityEventArgs>();
+		public static event AsyncEventHandler<PlaceTileEntityEventArgs> PlaceTileEntity;
 		private static bool OnPlaceTileEntity(TSPlayer player, MemoryStream data, short x, short y, byte type)
 		{
 			if (PlaceTileEntity == null)
@@ -1817,7 +1833,7 @@ namespace TShockAPI
 				Type = type
 			};
 
-			PlaceTileEntity.Invoke(null, args);
+			PlaceTileEntity.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1842,8 +1858,9 @@ namespace TShockAPI
 			/// <summary>The ItemFrame object associated with this event.</summary>
 			public TEItemFrame ItemFrame { get; set; }
 		}
+
 		/// <summary>Fired when an ItemFrame is placed.</summary>
-		public static HandlerList<PlaceItemFrameEventArgs> PlaceItemFrame = new HandlerList<PlaceItemFrameEventArgs>();
+		public static event AsyncEventHandler<PlaceItemFrameEventArgs> PlaceItemFrame;
 		private static bool OnPlaceItemFrame(TSPlayer player, MemoryStream data, short x, short y, short itemID, byte prefix, short stack, TEItemFrame itemFrame)
 		{
 			if (PlaceItemFrame == null)
@@ -1861,7 +1878,7 @@ namespace TShockAPI
 				ItemFrame = itemFrame,
 			};
 
-			PlaceItemFrame.Invoke(null, args);
+			PlaceItemFrame.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1923,10 +1940,11 @@ namespace TShockAPI
 			/// </summary>
 			public bool On { get; set; }
 		}
+
 		/// <summary>
 		/// GemLockToggle - Called when a gem lock is switched
 		/// </summary>
-		public static HandlerList<GemLockToggleEventArgs> GemLockToggle = new HandlerList<GemLockToggleEventArgs>();
+		public static event AsyncEventHandler<GemLockToggleEventArgs> GemLockToggle;
 		private static bool OnGemLockToggle(TSPlayer player, MemoryStream data, short x, short y, bool on)
 		{
 			if (GemLockToggle == null)
@@ -1940,7 +1958,7 @@ namespace TShockAPI
 				Y = y,
 				On = on
 			};
-			GemLockToggle.Invoke(null, args);
+			GemLockToggle.Invoke(args);
 			return args.Handled;
 		}
 
@@ -1962,8 +1980,9 @@ namespace TShockAPI
 			/// <summary>ToolMode</summary>
 			public byte ToolMode { get; set; }
 		}
+
 		/// <summary>Fired on a mass wire edit operation.</summary>
-		public static HandlerList<MassWireOperationEventArgs> MassWireOperation = new HandlerList<MassWireOperationEventArgs>();
+		public static event AsyncEventHandler<MassWireOperationEventArgs> MassWireOperation;
 		private static bool OnMassWireOperation(TSPlayer player, MemoryStream data, short startX, short startY, short endX, short endY, byte toolMode)
 		{
 			if (MassWireOperation == null)
@@ -1980,7 +1999,7 @@ namespace TShockAPI
 				ToolMode = toolMode,
 			};
 
-			MassWireOperation.Invoke(null, args);
+			MassWireOperation.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2016,10 +2035,11 @@ namespace TShockAPI
 			/// <summary>The reason the player took damage and/or died.</summary>
 			public PlayerDeathReason PlayerDeathReason { get; set; }
 		}
+
 		/// <summary>
 		/// PlayerDamage - Called when a player is damaged
 		/// </summary>
-		public static HandlerList<PlayerDamageEventArgs> PlayerDamage = new HandlerList<PlayerDamageEventArgs>();
+		public static event AsyncEventHandler<PlayerDamageEventArgs> PlayerDamage;
 		private static bool OnPlayerDamage(TSPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp, bool crit, sbyte cooldownCounter, PlayerDeathReason playerDeathReason)
 		{
 			if (PlayerDamage == null)
@@ -2037,7 +2057,7 @@ namespace TShockAPI
 				CooldownCounter = cooldownCounter,
 				PlayerDeathReason = playerDeathReason,
 			};
-			PlayerDamage.Invoke(null, args);
+			PlayerDamage.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2102,10 +2122,11 @@ namespace TShockAPI
 			/// </summary>
 			public byte EmojiID { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player sends an emoji.
 		/// </summary>
-		public static HandlerList<EmojiEventArgs> Emoji = new HandlerList<EmojiEventArgs>();
+		public static event AsyncEventHandler<EmojiEventArgs>? Emoji;
 		private static bool OnEmoji(TSPlayer player, MemoryStream data, byte playerIndex, byte emojiID)
 		{
 			if (Emoji == null)
@@ -2118,7 +2139,7 @@ namespace TShockAPI
 				PlayerIndex = playerIndex,
 				EmojiID = emojiID
 			};
-			Emoji.Invoke(null, args);
+			Emoji.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2156,10 +2177,11 @@ namespace TShockAPI
 			/// </summary>
 			public Item NewItem { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player modifies a DisplayDoll (Mannequin) item slot.
 		/// </summary>
-		public static HandlerList<DisplayDollItemSyncEventArgs> DisplayDollItemSync = new HandlerList<DisplayDollItemSyncEventArgs>();
+		public static event AsyncEventHandler<DisplayDollItemSyncEventArgs>? DisplayDollItemSync;
 		private static bool OnDisplayDollItemSync(TSPlayer player, MemoryStream data, byte playerIndex, int tileEntityID, TEDisplayDoll displayDollEntity, int slot, bool isDye, Item oldItem, Item newItem)
 		{
 			if (DisplayDollItemSync == null)
@@ -2177,7 +2199,7 @@ namespace TShockAPI
 				OldItem = oldItem,
 				NewItem = newItem
 			};
-			DisplayDollItemSync.Invoke(null, args);
+			DisplayDollItemSync.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2195,10 +2217,11 @@ namespace TShockAPI
 			/// </summary>
 			public byte PlayerIndex { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player requests interaction with a TileEntity.
 		/// </summary>
-		public static HandlerList<RequestTileEntityInteractionEventArgs> RequestTileEntityInteraction = new HandlerList<RequestTileEntityInteractionEventArgs>();
+		public static event AsyncEventHandler<RequestTileEntityInteractionEventArgs>? RequestTileEntityInteraction;
 		private static bool OnRequestTileEntityInteraction(TSPlayer player, MemoryStream data, TileEntity tileEntity, byte playerIndex)
 		{
 			if (RequestTileEntityInteraction == null)
@@ -2211,7 +2234,7 @@ namespace TShockAPI
 				PlayerIndex = playerIndex,
 				TileEntity = tileEntity
 			};
-			RequestTileEntityInteraction.Invoke(null, args);
+			RequestTileEntityInteraction.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2237,10 +2260,11 @@ namespace TShockAPI
 			/// </summary>
 			public byte TileDamage { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player hits and damages a tile.
 		/// </summary>
-		public static HandlerList<SyncTilePickingEventArgs> SyncTilePicking = new HandlerList<SyncTilePickingEventArgs>();
+		public static event AsyncEventHandler<SyncTilePickingEventArgs>? SyncTilePicking;
 		private static bool OnSyncTilePicking(TSPlayer player, MemoryStream data, byte playerIndex, short tileX, short tileY, byte tileDamage)
 		{
 			if (SyncTilePicking == null)
@@ -2254,7 +2278,7 @@ namespace TShockAPI
 				TileY = tileY,
 				TileDamage = tileDamage
 			};
-			SyncTilePicking.Invoke(null, args);
+			SyncTilePicking.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2288,7 +2312,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Called when a player lands a golf ball in a cup.
 		/// </summary>
-		public static HandlerList<LandGolfBallInCupEventArgs> LandGolfBallInCup = new HandlerList<LandGolfBallInCupEventArgs>();
+		public static event AsyncEventHandler<LandGolfBallInCupEventArgs>? LandGolfBallInCup;
 		private static bool OnLandGolfBallInCup(TSPlayer player, MemoryStream data, byte playerIndex, ushort tileX, ushort tileY, ushort hits, ushort projectileType)
 		{
 			if (LandGolfBallInCup == null)
@@ -2304,7 +2328,7 @@ namespace TShockAPI
 				Hits = hits,
 				ProjectileType = projectileType
 			};
-			LandGolfBallInCup.Invoke(null, args);
+			LandGolfBallInCup.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2326,10 +2350,11 @@ namespace TShockAPI
 			/// </summary>
 			public short NpcID { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player fishes out an NPC.
 		/// </summary>
-		public static HandlerList<FishOutNPCEventArgs> FishOutNPC = new HandlerList<FishOutNPCEventArgs>();
+		public static event AsyncEventHandler<FishOutNPCEventArgs> FishOutNPC;
 		private static bool OnFishOutNPC(TSPlayer player, MemoryStream data, ushort tileX, ushort tileY, short npcID)
 		{
 			if (FishOutNPC == null)
@@ -2343,7 +2368,7 @@ namespace TShockAPI
 				TileY = tileY,
 				NpcID = npcID
 			};
-			FishOutNPC.Invoke(null, args);
+			FishOutNPC.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2370,10 +2395,11 @@ namespace TShockAPI
 			/// </summary>
 			public short Stack { get; set; }
 		}
+
 		/// <summary>
 		/// Called when a player is placing an item in a food plate.
 		/// </summary>
-		public static HandlerList<FoodPlatterTryPlacingEventArgs> FoodPlatterTryPlacing = new HandlerList<FoodPlatterTryPlacingEventArgs>();
+		public static event AsyncEventHandler<FoodPlatterTryPlacingEventArgs> FoodPlatterTryPlacing;
 		private static bool OnFoodPlatterTryPlacing(TSPlayer player, MemoryStream data, short tileX, short tileY, short itemID, byte prefix, short stack)
 		{
 			if (FoodPlatterTryPlacing == null)
@@ -2389,7 +2415,7 @@ namespace TShockAPI
 				Prefix = prefix,
 				Stack = stack,
 			};
-			FoodPlatterTryPlacing.Invoke(null, args);
+			FoodPlatterTryPlacing.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2407,7 +2433,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Called when a net module is received
 		/// </summary>
-		public static HandlerList<ReadNetModuleEventArgs> ReadNetModule = new HandlerList<ReadNetModuleEventArgs>();
+		public static event AsyncEventHandler<ReadNetModuleEventArgs>? ReadNetModule;
 
 		private static bool OnReadNetModule(TSPlayer player, MemoryStream data, NetModuleType moduleType)
 		{
@@ -2423,7 +2449,7 @@ namespace TShockAPI
 				ModuleType = moduleType
 			};
 
-			ReadNetModule.Invoke(null, args);
+			ReadNetModule.Invoke(args);
 			return args.Handled;
 		}
 
@@ -2565,7 +2591,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlayerSlot(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlayerSlot(GetDataHandlerArgs args)
 		{
 			byte plr = args.Data.ReadInt8();
 			short slot = args.Data.ReadInt16();
@@ -2601,7 +2627,7 @@ namespace TShockAPI
 				args.Player.PlayerData.StoreSlot(slot, type, prefix, stack);
 			}
 			else if (Main.ServerSideCharacter && TShock.Config.Settings.DisableLoginBeforeJoin && !bypassTrashCanCheck &&
-					 args.Player.HasSentInventory && !args.Player.HasPermission(Permissions.bypassssc))
+					 args.Player.HasSentInventory && !await args.Player.HasPermission(Permissions.bypassssc))
 			{
 				// The player might have moved an item to their trash can before they performed a single login attempt yet.
 				args.Player.IsDisabledPendingTrashRemoval = true;
@@ -2616,9 +2642,9 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleConnecting(GetDataHandlerArgs args)
+		private static async Task<bool> HandleConnecting(GetDataHandlerArgs args)
 		{
-			var account = TShock.UserAccounts.GetUserAccountByName(args.Player.Name);//
+			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name);//
 			args.Player.DataWhenJoined = new PlayerData(args.Player);
 			args.Player.DataWhenJoined.CopyCharacter(args.Player);
 			args.Player.PlayerData = new PlayerData(args.Player);
@@ -2632,12 +2658,12 @@ namespace TShockAPI
 						args.Player.State = 2;
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 
-					var group = TShock.Groups.GetGroupByName(account.Group);
+					var group = await GroupManager.GetGroupByName(account.Group);
 
-					if (!TShock.Groups.AssertGroupValid(args.Player, group, true))
+					if (!GroupManager.AssertGroupValid(args.Player, group, true))
 						return true;
 
-					args.Player.PlayerData = TShock.CharacterDB.GetPlayerData(args.Player, account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
 
 					args.Player.Group = group;
 					args.Player.tempGroup = null;
@@ -2647,7 +2673,7 @@ namespace TShockAPI
 
 					if (Main.ServerSideCharacter)
 					{
-						if (args.Player.HasPermission(Permissions.bypassssc))
+						if (await args.Player.HasPermission(Permissions.bypassssc))
 						{
 							if (args.Player.PlayerData.exists && TShock.ServerSideCharacterConfig.Settings.WarnPlayersAboutBypassPermission)
 							{
@@ -2656,16 +2682,16 @@ namespace TShockAPI
 								TShock.Log.ConsoleInfo(GetString("You may wish to consider removing the tshock.ignore.ssc permission or negating it for this player."));
 							}
 							args.Player.PlayerData.CopyCharacter(args.Player);
-							TShock.CharacterDB.InsertPlayerData(args.Player);
+							await CharacterManager.InsertPlayerData(args.Player);
 						}
 						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
 					args.Player.LoginFailsBySsi = false;
 
-					if (args.Player.HasPermission(Permissions.ignorestackhackdetection))
+					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
 						args.Player.IsDisabledForStackDetection = false;
 
-					if (args.Player.HasPermission(Permissions.usebanneditem))
+					if (await args.Player.HasPermission(Permissions.usebanneditem))
 						args.Player.IsDisabledForBannedWearable = false;
 
 					args.Player.SendSuccessMessage(GetString($"Authenticated as {account.Name} successfully."));
@@ -2693,13 +2719,13 @@ namespace TShockAPI
 			return true;
 		}
 
-		private static bool HandleGetSection(GetDataHandlerArgs args)
+		private static async Task<bool> HandleGetSection(GetDataHandlerArgs args)
 		{
 			if (OnGetSection(args.Player, args.Data, args.Data.ReadInt32(), args.Data.ReadInt32()))
 				return true;
 
 			if (TShock.Utils.GetActivePlayerCount() + 1 > TShock.Config.Settings.MaxSlots &&
-				!args.Player.HasPermission(Permissions.reservedslot))
+				!await args.Player.HasPermission(Permissions.reservedslot))
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleGetSection rejected reserve slot"));
 				args.Player.Kick(TShock.Config.Settings.ServerFullReason, true, true);
@@ -2800,7 +2826,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlayerHp(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlayerHp(GetDataHandlerArgs args)
 		{
 			var plr = args.Data.ReadInt8();
 			var cur = args.Data.ReadInt16();
@@ -2809,7 +2835,7 @@ namespace TShockAPI
 			if (OnPlayerHP(args.Player, args.Data, plr, cur, max) || cur <= 0 || max <= 0 || args.Player.IgnoreSSCPackets)
 				return true;
 
-			if (max > TShock.Config.Settings.MaxHP && !args.Player.HasPermission(Permissions.ignorehp))
+			if (max > TShock.Config.Settings.MaxHP && !await args.Player.HasPermission(Permissions.ignorehp))
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerHp rejected over max hp {0}", args.Player.Name));
 				args.Player.Disable("Maximum HP beyond limit", DisableFlags.WriteToLogAndConsole);
@@ -2983,7 +3009,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleNpcStrike(GetDataHandlerArgs args)
+		private static async Task<bool> HandleNpcStrike(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var dmg = args.Data.ReadInt16();
@@ -2994,7 +3020,7 @@ namespace TShockAPI
 			if (OnNPCStrike(args.Player, args.Data, id, direction, dmg, knockback, crit))
 				return true;
 
-			if (Main.npc[id].townNPC && !args.Player.HasPermission(Permissions.hurttownnpc))
+			if (Main.npc[id].townNPC && !await args.Player.HasPermission(Permissions.hurttownnpc))
 			{
 				args.Player.SendErrorMessage(GetString("You do not have permission to hurt Town NPCs."));
 				args.Player.SendData(PacketTypes.NpcUpdate, "", id);
@@ -3004,7 +3030,7 @@ namespace TShockAPI
 
 			if (Main.npc[id].netID == NPCID.EmpressButterfly)
 			{
-				if (!args.Player.HasPermission(Permissions.summonboss))
+				if (!await args.Player.HasPermission(Permissions.summonboss))
 				{
 					args.Player.SendErrorMessage(GetString("You do not have permission to summon the Empress of Light."));
 					args.Player.SendData(PacketTypes.NpcUpdate, "", id);
@@ -3021,7 +3047,7 @@ namespace TShockAPI
 
 			if (Main.npc[id].netID == NPCID.CultistDevote || Main.npc[id].netID == NPCID.CultistArcherBlue)
 			{
-				if (!args.Player.HasPermission(Permissions.summonboss))
+				if (!await args.Player.HasPermission(Permissions.summonboss))
 				{
 					args.Player.SendErrorMessage(GetString("You do not have permission to summon the Lunatic Cultist!"));
 					args.Player.SendData(PacketTypes.NpcUpdate, "", id);
@@ -3032,7 +3058,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleProjectileKill(GetDataHandlerArgs args)
+		private static async Task<bool> HandleProjectileKill(GetDataHandlerArgs args)
 		{
 			var ident = args.Data.ReadInt16();
 			var owner = args.Data.ReadInt8();
@@ -3055,7 +3081,7 @@ namespace TShockAPI
 				return true;
 			}
 
-			if (TShock.ProjectileBans.ProjectileIsBanned(type, args.Player) && !TShock.Config.Settings.IgnoreProjKill)
+			if (await ProjectileManager.ProjectileIsBanned(type, args.Player) && !TShock.Config.Settings.IgnoreProjKill)
 			{
 				// According to 2012 deathmax, this is a workaround to fix skeletron prime issues
 				// https://github.com/Pryaxis/TShock/commit/a5aa9231239926f361b7246651e32144bbf28dda
@@ -3197,7 +3223,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePassword(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePassword(GetDataHandlerArgs args)
 		{
 			if (!args.Player.RequiresPassword)
 				return true;
@@ -3207,21 +3233,21 @@ namespace TShockAPI
 			if (Hooks.PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, password))
 				return true;
 
-			var account = TShock.UserAccounts.GetUserAccountByName(args.Player.Name);
+			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name);
 			if (account != null && !TShock.Config.Settings.DisableLoginBeforeJoin)
 			{
 				if (account.VerifyPassword(password))
 				{
 					args.Player.RequiresPassword = false;
-					args.Player.PlayerData = TShock.CharacterDB.GetPlayerData(args.Player, account.ID);
+					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.ID);
 
 					if (args.Player.State == 1)
 						args.Player.State = 2;
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 
-					var group = TShock.Groups.GetGroupByName(account.Group);
+					var group = await GroupManager.GetGroupByName(account.Group);
 
-					if (!TShock.Groups.AssertGroupValid(args.Player, group, true))
+					if (!GroupManager.AssertGroupValid(args.Player, group, true))
 						return true;
 
 					args.Player.Group = group;
@@ -3232,29 +3258,29 @@ namespace TShockAPI
 
 					if (Main.ServerSideCharacter)
 					{
-						if (args.Player.HasPermission(Permissions.bypassssc))
+						if (await args.Player.HasPermission(Permissions.bypassssc))
 						{
 							args.Player.PlayerData.CopyCharacter(args.Player);
-							TShock.CharacterDB.InsertPlayerData(args.Player);
+							await CharacterManager.InsertPlayerData(args.Player);
 						}
 						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
 					args.Player.LoginFailsBySsi = false;
 
-					if (args.Player.HasPermission(Permissions.ignorestackhackdetection))
+					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
 						args.Player.IsDisabledForStackDetection = false;
 
-					if (args.Player.HasPermission(Permissions.usebanneditem))
+					if (await args.Player.HasPermission(Permissions.usebanneditem))
 						args.Player.IsDisabledForBannedWearable = false;
 
 
 					args.Player.SendMessage(GetString($"Authenticated as {args.Player.Name} successfully."), Color.LimeGreen);
 					TShock.Log.ConsoleInfo(GetString($"{args.Player.Name} authenticated successfully as user {args.Player.Name}."));
-					TShock.UserAccounts.SetUserAccountUUID(account, args.Player.UUID);
+					await UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 					return true;
 				}
-				args.Player.Kick(GetString("Your password did not match this character's password."), true, true);
+				await args.Player.Kick(GetString("Your password did not match this character's password."), true, true);
 				return true;
 			}
 
@@ -3268,11 +3294,11 @@ namespace TShockAPI
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 					return true;
 				}
-				args.Player.Kick(GetString("Invalid server password."), true, true);
+				await args.Player.Kick(GetString("Invalid server password."), true, true);
 				return true;
 			}
 
-			args.Player.Kick(GetParticularString("Likely non-vanilla client send zero-length password", "You have been Bounced for invalid password."), true, true);
+			await args.Player.Kick(GetParticularString("Likely non-vanilla client send zero-length password", "You have been Bounced for invalid password."), true, true);
 			return true;
 		}
 
@@ -3785,7 +3811,7 @@ namespace TShockAPI
 			if (type == 0 && !args.Player.HasPermission(Permissions.rod))
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected rod type {0} {1}", args.Player.Name, type));
-				args.Player.SendErrorMessage(GetString("You do not have permission to teleport using items.")); // Was going to write using RoD but Hook of Disonnance and Potion of Return both use the same teleport packet as RoD. 
+				args.Player.SendErrorMessage(GetString("You do not have permission to teleport using items.")); // Was going to write using RoD but Hook of Disonnance and Potion of Return both use the same teleport packet as RoD.
 				args.Player.Teleport(args.TPlayer.position.X, args.TPlayer.position.Y); // Suggest renaming rod permission unless someone plans to add separate perms for the other 2 tp items.
 				return true;
 			}

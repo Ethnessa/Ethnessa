@@ -1,4 +1,5 @@
-﻿using static TShockAPI.GetDataHandlers;
+﻿using System.Threading.Tasks;
+using static TShockAPI.GetDataHandlers;
 
 namespace TShockAPI.Handlers
 {
@@ -12,14 +13,16 @@ namespace TShockAPI.Handlers
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public void OnReceive(object sender, EmojiEventArgs args)
+		public async Task OnReceive(EmojiEventArgs args)
 		{
-			if (!args.Player.HasPermission(Permissions.sendemoji))
+			if (!(await args.Player.HasPermission(Permissions.sendemoji)))
 			{
 				args.Player.SendErrorMessage(GetString("You do not have permission to send emotes!"));
 				args.Handled = true;
 				return;
 			}
+
+			await Task.CompletedTask;
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Streams;
+using System.Threading.Tasks;
 using Terraria.GameContent;
 using static Terraria.GameContent.NetModules.NetTeleportPylonModule;
 
@@ -44,19 +45,18 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public void HandlePacket(TSPlayer player, out bool rejectPacket)
+		public async Task<bool> HandlePacket(TSPlayer player)
 		{
 			if (PylonEventType == SubPacketType.PlayerRequestsTeleport)
 			{
-				if (!player.HasPermission(Permissions.pylon))
+				if (!(await player.HasPermission(Permissions.pylon)))
 				{
-					rejectPacket = true;
 					player.SendErrorMessage(GetString("You do not have permission to teleport using pylons."));
-					return;
+					return true;
 				}
 			}
 
-			rejectPacket = false;
+			return false;
 		}
 	}
 }

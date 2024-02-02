@@ -193,7 +193,7 @@ namespace TShockAPI.Database
 		/// <returns>Whether the player can build at the given (x, y) coordinate</returns>
 		public static async Task<bool> CanBuild(int x, int y, TSPlayer ply)
 		{
-			if (!ply.HasPermission(Permissions.canbuild))
+			if (!(await ply.HasPermission(Permissions.canbuild)))
 			{
 				return false;
 			}
@@ -210,7 +210,7 @@ namespace TShockAPI.Database
 						top = region;
 				}
 			}
-			return top == null || top.HasPermissionToBuildInRegion(ply);
+			return top == null || await top.HasPermissionToBuildInRegion(ply);
 		}
 
 		/// <summary>
@@ -625,7 +625,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player has permission</returns>
-		public bool HasPermissionToBuildInRegion(TSPlayer ply)
+		public async Task<bool> HasPermissionToBuildInRegion(TSPlayer ply)
 		{
 			if (!DisableBuild)
 			{
@@ -641,7 +641,7 @@ namespace TShockAPI.Database
 				return false;
 			}
 
-			return ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.ID) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
+			return await ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.ID) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
 		}
 
 		/// <summary>

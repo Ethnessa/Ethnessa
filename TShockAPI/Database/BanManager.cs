@@ -140,13 +140,13 @@ namespace TShockAPI.Database
 			};
 		}
 
-		public static async Task<Ban> CreateBan(BanType type, string value, string reason, UserAccount banningUser, DateTime start,
+		public static async Task<Ban> CreateBan(BanType type, string value, string reason, string banningUser, DateTime start,
 			DateTime? endDate = null)
 		{
 			Ban ban = new()
 			{
 				Reason = reason,
-				BanningUser = banningUser.Name,
+				BanningUser = banningUser,
 				BanDateTime = start,
 				ExpirationDateTime = endDate ?? DateTime.MaxValue
 			};

@@ -1,8 +1,10 @@
 ﻿using System.IO;
 using System.IO.Streams;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameContent.NetModules;
 using Terraria.Net;
+using TShockAPI.Database;
 
 namespace TShockAPI.Handlers.NetModules
 {
@@ -47,7 +49,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public void HandlePacket(TSPlayer player, out bool rejectPacket)
+		public async Task<bool> HandlePacket(TSPlayer player)
 		{
 			if (!Main.GameModeInfo.IsJourneyMode)
 			{
@@ -55,8 +57,7 @@ namespace TShockAPI.Handlers.NetModules
 					GetString($"NetModuleHandler received attempt to unlock sacrifice while not in journey mode from {player.Name}")
 				);
 
-				rejectPacket = true;
-				return;
+				return true;
 			}
 
 			if (UnknownField != 0)
@@ -65,23 +66,21 @@ namespace TShockAPI.Handlers.NetModules
 					GetString($"CreativeUnlocksHandler received non-vanilla unlock request. Random field value: {UnknownField} but should be 0 from {player.Name}")
 				);
 
-				rejectPacket = true;
-				return;
+				return true;
 			}
 
-			if (!player.HasPermission(Permissions.journey_contributeresearch))
+			if (!(await player.HasPermission(Permissions.journey_contributeresearch)))
 			{
 				player.SendErrorMessage(GetString("You do not have permission to contribute research."));
-				rejectPacket = true;
-				return;
+				return true;
 			}
 
-			var totalSacrificed = TShock.ResearchDatastore.SacrificeItem(ItemId, Amount, player);
+			var totalSacrificed = await ResearchDatastore.SacrificeItem(ItemId, Amount, player);
 
 			var response = NetCreativeUnlocksModule.SerializeItemSacrifice(ItemId, totalSacrificed);
 			NetManager.Instance.Broadcast(response);
 
-			rejectPacket = false;
+			return false;
 		}
 	}
 }

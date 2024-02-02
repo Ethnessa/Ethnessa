@@ -32,6 +32,10 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class GroupManager
 	{
+		public static async Task<List<Group>> GetGroupsAsync()
+		{
+			return await DB.Find<Group>().ExecuteAsync();
+		}
 
 		public static async Task EnsureDefaultGroups()
 		{

@@ -35,8 +35,10 @@ using Terraria.GameContent.Events;
 using Microsoft.Xna.Framework;
 using TShockAPI.Localization;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Terraria.DataStructures;
 using Terraria.GameContent.Creative;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {
@@ -176,13 +178,13 @@ namespace TShockAPI
 			return Names.Contains(name);
 		}
 
-		public bool CanRun(TSPlayer ply)
+		public async Task<bool> CanRun(TSPlayer ply)
 		{
 			if (Permissions == null || Permissions.Count < 1)
 				return true;
 			foreach (var Permission in Permissions)
 			{
-				if (ply.HasPermission(Permission))
+				if (await ply.HasPermission(Permission))
 					return true;
 			}
 			return false;
@@ -991,7 +993,7 @@ namespace TShockAPI
 					args.Player.SendErrorMessage(GetString("Not logged in or Invalid syntax. Proper syntax: {0}password <oldpassword> <newpassword>.", Specifier));
 				}
 			}
-			catch (UserAccountManagerException ex)
+			catch (UserAccountManager.UserAccountManagerException ex)
 			{
 				args.Player.SendErrorMessage(GetString("Sorry, an error occurred: {0}.", ex.Message));
 				TShock.Log.ConsoleError(GetString("PasswordUser returned an error: {0}.", ex));
@@ -1064,7 +1066,7 @@ namespace TShockAPI
 					TShock.Log.ConsoleInfo(GetString("{0} attempted to register for the account {1} but it was already taken.", args.Player.Name, account.Name));
 				}
 			}
-			catch (UserAccountManagerException ex)
+			catch (UserAccountManager.UserAccountManagerException ex)
 			{
 				args.Player.SendErrorMessage(GetString("Sorry, an error occurred: {0}.", ex.Message));
 				TShock.Log.ConsoleError(GetString("RegisterUser returned an error: {0}.", ex));
@@ -1105,15 +1107,15 @@ namespace TShockAPI
 					args.Player.SendSuccessMessage(GetString("Account {0} has been added to group {1}.", account.Name, account.Group));
 					TShock.Log.ConsoleInfo(GetString("{0} added account {1} to group {2}.", args.Player.Name, account.Name, account.Group));
 				}
-				catch (GroupNotExistsException)
+				catch (UserAccountManager.GroupNotExistsException)
 				{
 					args.Player.SendErrorMessage(GetString("Group {0} does not exist.", account.Group));
 				}
-				catch (UserAccountExistsException)
+				catch (UserAccountManager.UserAccountExistsException)
 				{
 					args.Player.SendErrorMessage(GetString("User {0} already exists.", account.Name));
 				}
-				catch (UserAccountManagerException e)
+				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString("User {0} could not be added, check console for details.", account.Name));
 					TShock.Log.ConsoleError(e.ToString());
@@ -1131,11 +1133,11 @@ namespace TShockAPI
 					args.Player.SendSuccessMessage(GetString("Account removed successfully."));
 					TShock.Log.ConsoleInfo(GetString("{0} successfully deleted account: {1}.", args.Player.Name, args.Parameters[1]));
 				}
-				catch (UserAccountNotExistException)
+				catch (UserAccountManager.UserAccountNotExistException)
 				{
 					args.Player.SendErrorMessage(GetString("The user {0} does not exist! Therefore, the account was not deleted.", account.Name));
 				}
-				catch (UserAccountManagerException ex)
+				catch (UserAccountManager.UserAccountManagerException ex)
 				{
 					args.Player.SendErrorMessage(ex.Message);
 					TShock.Log.ConsoleError(ex.ToString());
@@ -1154,11 +1156,11 @@ namespace TShockAPI
 					TShock.Log.ConsoleInfo(GetString("{0} changed the password for account {1}", args.Player.Name, account.Name));
 					args.Player.SendSuccessMessage(GetString("Password change succeeded for {0}.", account.Name));
 				}
-				catch (UserAccountNotExistException)
+				catch (UserAccountManager.UserAccountNotExistException)
 				{
 					args.Player.SendErrorMessage(GetString("Account {0} does not exist! Therefore, the password cannot be changed.", account.Name));
 				}
-				catch (UserAccountManagerException e)
+				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString("Password change attempt for {0} failed for an unknown reason. Check the server console for more details.", account.Name));
 					TShock.Log.ConsoleError(e.ToString());
@@ -1185,15 +1187,15 @@ namespace TShockAPI
 					if (player != null && !args.Silent)
 						player.SendSuccessMessage(GetString($"{args.Player.Name} has changed your group to {args.Parameters[2]}."));
 				}
-				catch (GroupNotExistsException)
+				catch (UserAccountManager.GroupNotExistsException)
 				{
 					args.Player.SendErrorMessage(GetString("That group does not exist."));
 				}
-				catch (UserAccountNotExistException)
+				catch (UserAccountManager.UserAccountNotExistException)
 				{
 					args.Player.SendErrorMessage(GetString($"User {account.Name} does not exist."));
 				}
-				catch (UserAccountManagerException e)
+				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString($"User {account.Name} could not be added. Check console for details."));
 					TShock.Log.ConsoleError(e.ToString());

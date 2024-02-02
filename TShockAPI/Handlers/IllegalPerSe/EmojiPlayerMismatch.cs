@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using static TShockAPI.GetDataHandlers;
 
 namespace TShockAPI.Handlers.IllegalPerSe
@@ -12,7 +13,7 @@ namespace TShockAPI.Handlers.IllegalPerSe
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public void OnReceive(object sender, EmojiEventArgs args)
+		public async Task OnReceive(EmojiEventArgs args)
 		{
 			if (args.PlayerIndex != args.Player.Index)
 			{
@@ -20,6 +21,7 @@ namespace TShockAPI.Handlers.IllegalPerSe
 				args.Handled = true;
 				return;
 			}
+			await Task.CompletedTask;
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace TShockAPI.Handlers.NetModules
 {
@@ -21,9 +22,9 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public void HandlePacket(TSPlayer player, out bool rejectPacket)
+		public async Task<bool> HandlePacket(TSPlayer player)
 		{
-			rejectPacket = true;
+			return true;
 		}
 	}
 }

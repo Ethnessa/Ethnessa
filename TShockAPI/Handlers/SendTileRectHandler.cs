@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
-
+using TShockAPI.Database;
 using TShockAPI.Net;
 
 namespace TShockAPI.Handlers
@@ -179,7 +179,7 @@ namespace TShockAPI.Handlers
 			/// <param name="player">The player the operation originates from.</param>
 			/// <param name="rect">The tile rectangle of the operation.</param>
 			/// <returns><see langword="true"/>, if the rect matches this operation and the changes have been applied, otherwise <see langword="false"/>.</returns>
-			public bool Matches(TSPlayer player, TileRect rect)
+			public async Task<bool> Matches(TSPlayer player, TileRect rect)
 			{
 				if (rect.Width != Width || rect.Height != Height)
 				{
@@ -233,7 +233,7 @@ namespace TShockAPI.Handlers
 				{
 					for (int y = rect.Y; y < rect.Y + rect.Height; y++)
 					{
-						if (!player.HasBuildPermission(x, y))
+						if (!await player.HasBuildPermission(x, y))
 						{
 							// for simplicity, let's pretend that the edit was valid, but do not execute it
 							return true;
@@ -245,7 +245,7 @@ namespace TShockAPI.Handlers
 				{
 					case MatchType.Placement:
 						{
-							return MatchPlacement(player, rect);
+							return await MatchPlacement(player, rect);
 						}
 					case MatchType.StateChange:
 						{
@@ -260,7 +260,7 @@ namespace TShockAPI.Handlers
 				return false;
 			}
 
-			private bool MatchPlacement(TSPlayer player, TileRect rect)
+			private async Task<bool> MatchPlacement(TSPlayer player, TileRect rect)
 			{
 				for (int x = rect.X; x < rect.Y + rect.Width; x++)
 				{
@@ -274,7 +274,7 @@ namespace TShockAPI.Handlers
 				}
 
 				// let's hope tile types never go out of short range (they use ushort in terraria's code)
-				if (TShock.TileBans.TileIsBanned((short)TileType, player))
+				if (await TileManager.TileIsBanned((short)TileType, player))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -405,10 +405,10 @@ namespace TShockAPI.Handlers
 		/// <summary>
 		/// Handles a packet receive event.
 		/// </summary>
-		public void OnReceive(object sender, GetDataHandlers.SendTileRectEventArgs args)
+		public async Task OnReceive(GetDataHandlers.SendTileRectEventArgs args)
 		{
 			// this permission bypasses all checks for direct access to the world
-			if (args.Player.HasPermission(Permissions.allowclientsideworldedit))
+			if (await args.Player.HasPermission(Permissions.allowclientsideworldedit))
 			{
 				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect accepted clientside world edit from {args.Player.Name}"));
 
@@ -463,7 +463,7 @@ namespace TShockAPI.Handlers
 			}
 
 			// a very special case, due to the clentaminator having a larger range than TSPlayer.IsInRange() allows
-			if (MatchesConversionSpread(args.Player, rect))
+			if (await MatchesConversionSpread(args.Player, rect))
 			{
 				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
@@ -483,7 +483,7 @@ namespace TShockAPI.Handlers
 			}
 
 			// a very special case, due to the flower seed check otherwise hijacking this
-			if (MatchesFlowerBoots(args.Player, rect))
+			if (await MatchesFlowerBoots(args.Player, rect))
 			{
 				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
@@ -495,7 +495,7 @@ namespace TShockAPI.Handlers
 			// check if the rect matches any valid operation
 			foreach (TileRectMatch match in Matches)
 			{
-				if (match.Matches(args.Player, rect))
+				if (await match.Matches(args.Player, rect))
 				{
 					TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
@@ -506,7 +506,7 @@ namespace TShockAPI.Handlers
 			}
 
 			// a few special cases
-			if (MatchesGrassMow(args.Player, rect) || MatchesChristmasTree(args.Player, rect))
+			if (await MatchesGrassMow(args.Player, rect) || await MatchesChristmasTree(args.Player, rect))
 			{
 				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
@@ -579,7 +579,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a conversion spread operation, otherwise <see langword="false"/>.</returns>
-		private static bool MatchesConversionSpread(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesConversionSpread(TSPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -593,12 +593,12 @@ namespace TShockAPI.Handlers
 
 			if (newTile.Type != oldTile.type && validTiles.Contains(newTile.Type))
 			{
-				if (TShock.TileBans.TileIsBanned((short)newTile.Type, player))
+				if (await TileManager.TileIsBanned((short)newTile.Type, player))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
 				}
-				else if (!player.HasBuildPermission(rect.X, rect.Y))
+				else if (!await player.HasBuildPermission(rect.X, rect.Y))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -617,7 +617,7 @@ namespace TShockAPI.Handlers
 			{
 				// wallbans when?
 
-				if (!player.HasBuildPermission(rect.X, rect.Y))
+				if (!await player.HasBuildPermission(rect.X, rect.Y))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -689,7 +689,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a Flower Boots placement, otherwise <see langword="false"/>.</returns>
-		private static bool MatchesFlowerBoots(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesFlowerBoots(TSPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -710,13 +710,13 @@ namespace TShockAPI.Handlers
 				GrassToStyleMap[newTile.Type].Contains((ushort)(newTile.FrameX / 18))
 			)
 			{
-				if (TShock.TileBans.TileIsBanned((short)newTile.Type, player))
+				if (await TileManager.TileIsBanned((short)newTile.Type, player))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
 				}
 
-				if (!player.HasBuildPermission(rect.X, rect.Y))
+				if (!await player.HasBuildPermission(rect.X, rect.Y))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -746,7 +746,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a grass mowing operation, otherwise <see langword="false"/>.</returns>
-		private static bool MatchesGrassMow(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesGrassMow(TSPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -758,13 +758,13 @@ namespace TShockAPI.Handlers
 
 			if (GrassToMowedMap.TryGetValue(oldTile.type, out ushort mowed) && newTile.Type == mowed)
 			{
-				if (TShock.TileBans.TileIsBanned((short)newTile.Type, player))
+				if (await TileManager.TileIsBanned((short)newTile.Type, player))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
 				}
 
-				if (!player.HasBuildPermission(rect.X, rect.Y))
+				if (!await player.HasBuildPermission(rect.X, rect.Y))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -797,7 +797,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a christmas tree operation, otherwise <see langword="false"/>.</returns>
-		private static bool MatchesChristmasTree(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesChristmasTree(TSPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -830,7 +830,7 @@ namespace TShockAPI.Handlers
 					return false;
 				}
 
-				if (!player.HasBuildPermission(rect.X, rect.Y))
+				if (!await player.HasBuildPermission(rect.X, rect.Y))
 				{
 					// for simplicity, let's pretend that the edit was valid, but do not execute it
 					return true;
@@ -910,7 +910,7 @@ namespace TShockAPI.Handlers
 			}
 		}
 
-		/* 
+		/*
 		 * This is a copy of the `WorldGen.Convert` method with the following precise changes:
 		 *  - Added a `MockTile tile` parameter
 		 *  - Changed the `i` and `j` parameters to `k` and `l`
@@ -921,7 +921,7 @@ namespace TShockAPI.Handlers
 		 *  - Removed the ifs checking the bounds of the tile and wall types
 		 *  - Removed branches that would call `WorldGen.KillTile`
 		 *  - Changed branches depending on randomness to instead set the property to both values after one another
-		 * 
+		 *
 		 * This overall leads to a method that can be called on a MockTile and real-world coordinates and will spit out the proper conversion changes into the MockTile.
 		 */
 

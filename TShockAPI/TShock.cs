@@ -28,7 +28,6 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using MaxMind;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Rests;
 using Terraria;
@@ -95,32 +94,8 @@ namespace TShockAPI
 		/// <summary>Players - Contains all TSPlayer objects for accessing TSPlayers currently on the server</summary>
 		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
 
-		/// <summary>Warps - Static reference to the warp manager for accessing the warp system.</summary>
-		public static WarpManager Warps;
-
-		/// <summary>Regions - Static reference to the region manager for accessing the region system.</summary>
-		public static RegionManager Regions;
-
 		/// <summary>Backups - Static reference to the backup manager for accessing the backup system.</summary>
 		public static BackupManager Backups;
-
-		/// <summary>Users - Static reference to the user manager for accessing the user database system.</summary>
-		public static UserAccountManager UserAccounts;
-
-		/// <summary>ProjectileBans - Static reference to the projectile ban system.</summary>
-		public static ProjectileManager ProjectileBans;
-
-		/// <summary>TileBans - Static reference to the tile ban system.</summary>
-		public static TileManager TileBans;
-
-		/// <summary>RememberedPos - Static reference to the remembered position manager.</summary>
-		public static RememberedPosManager RememberedPos;
-
-		/// <summary>CharacterDB - Static reference to the SSC character manager.</summary>
-		public static CharacterManager CharacterDB;
-
-		/// <summary>Contains the information about what research has been performed in Journey mode.</summary>
-		public static ResearchDatastore ResearchDatastore;
 
 		/// <summary>Config - Static reference to the config system, for accessing values set in users' config files.</summary>
 		public static TShockConfig Config { get; set; }
@@ -399,17 +374,11 @@ namespace TShockAPI
 
 				await GroupManager.EnsureDefaultGroups();
 
-				Warps = new WarpManager();
-				Regions = new RegionManager();
-				UserAccounts = new UserAccountManager();
-				TileBans = new TileManager();
-				RememberedPos = new RememberedPosManager();
-				ResearchDatastore = new ResearchDatastore();
 				RestApi = new SecureRest(Netplay.ServerIP, Config.Settings.RestApiPort);
 				RestManager = new RestManager(RestApi);
 				RestManager.RegisterRestfulCommands();
 				Bouncer = new Bouncer();
-				RegionSystem = new RegionHandler(Regions);
+				RegionSystem = new RegionHandler();
 				ItemBans = new ItemBans(this);
 
 				var geoIpData = "GeoIP.dat";

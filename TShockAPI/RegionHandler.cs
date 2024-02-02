@@ -16,7 +16,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Nito.AsyncEx;
+using Terraria;
 using TShockAPI.Database;
 using TShockAPI.Hooks;
 
@@ -28,19 +31,17 @@ namespace TShockAPI
 	/// </summary>
 	internal sealed class RegionHandler : IDisposable
 	{
-		private readonly RegionManager _regionManager;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RegionHandler"/> class with the specified <see cref="RegionManager"/> instance.
 		/// </summary>
 		/// <param name="regionManager">The <see cref="RegionManager"/> instance.</param>
-		public RegionHandler(RegionManager regionManager)
+		public RegionHandler()
 		{
-			_regionManager = regionManager;
 
-			GetDataHandlers.GemLockToggle += OnGemLockToggle;
-			GetDataHandlers.PlayerUpdate += OnPlayerUpdate;
-			GetDataHandlers.TileEdit += OnTileEdit;
+			GetDataHandlers.GemLockToggle += (x,e) => AsyncContext.Run(() => OnGemLockToggle(x,e));
+			GetDataHandlers.PlayerUpdate += (x,e) => AsyncContext.Run(() => OnPlayerUpdate(x,e));
+			GetDataHandlers.TileEdit += (x,e) => AsyncContext.Run(() => OnTileEdit(x,e));
 		}
 
 		/// <summary>
@@ -48,29 +49,30 @@ namespace TShockAPI
 		/// </summary>
 		public void Dispose()
 		{
-			GetDataHandlers.GemLockToggle -= OnGemLockToggle;
-			GetDataHandlers.PlayerUpdate -= OnPlayerUpdate;
-			GetDataHandlers.TileEdit -= OnTileEdit;
+			GetDataHandlers.GemLockToggle -= (x,e) => AsyncContext.Run(() => OnGemLockToggle(x,e));
+			GetDataHandlers.PlayerUpdate -= (x,e) => AsyncContext.Run(() => OnPlayerUpdate(x,e));
+			GetDataHandlers.TileEdit -= (x,e) => AsyncContext.Run(() => OnTileEdit(x,e));
 		}
 
-		private void OnGemLockToggle(object sender, GetDataHandlers.GemLockToggleEventArgs e)
+		private async Task OnGemLockToggle(object sender, GetDataHandlers.GemLockToggleEventArgs e)
 		{
 			if (TShock.Config.Settings.RegionProtectGemLocks)
 			{
-				if (!_regionManager.CanBuild(e.X, e.Y, e.Player))
+				if (!(await RegionManager.CanBuild(e.X, e.Y, e.Player)))
 				{
 					e.Handled = true;
 				}
 			}
 		}
 
-		private void OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs e)
+		private async Task OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs e)
 		{
 			var player = e.Player;
 
 			// Store the player's last known region and update the current based on known regions at their coordinates.
 			var oldRegion = player.CurrentRegion;
-			player.CurrentRegion = _regionManager.GetTopRegion(_regionManager.InAreaRegion(player.TileX, player.TileY));
+			player.CurrentRegion =
+				(await RegionManager.GetTopRegion(await RegionManager.InAreaRegion(player.TileX, player.TileY)));
 
 			// Do not fire any hooks if the player has not left and/or entered a region.
 			if (player.CurrentRegion == oldRegion)
@@ -84,14 +86,14 @@ namespace TShockAPI
 				RegionHooks.OnRegionLeft(player, oldRegion);
 			}
 
-			// Ensure that the player has entered a valid region before invoking the RegionEntered event 
+			// Ensure that the player has entered a valid region before invoking the RegionEntered event
 			if (player.CurrentRegion != null)
 			{
 				RegionHooks.OnRegionEntered(player, player.CurrentRegion);
 			}
 		}
 
-		private void OnTileEdit(object sender, GetDataHandlers.TileEditEventArgs e)
+		private async Task OnTileEdit(object sender, GetDataHandlers.TileEditEventArgs e)
 		{
 			var player = e.Player;
 
@@ -126,7 +128,8 @@ namespace TShockAPI
 				}
 
 				var output = new List<string>();
-				foreach (Region region in _regionManager.Regions.OrderBy(r => r.Z).Reverse())
+				var regions = (await RegionManager.ListAllRegions(Main.worldID.ToString())).OrderBy(r => r.Z).Reverse();
+				foreach (Region region in regions)
 				{
 					// Ensure that the specified tile is region protected
 					if (e.X < region.Area.Left || e.X > region.Area.Right)

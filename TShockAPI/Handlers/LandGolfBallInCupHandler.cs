@@ -85,7 +85,7 @@ namespace TShockAPI.Handlers
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public void OnReceive(object sender, LandGolfBallInCupEventArgs args)
+		public async Task OnReceive(LandGolfBallInCupEventArgs args)
 		{
 			if (args.PlayerIndex != args.Player.Index)
 			{
@@ -131,6 +131,7 @@ namespace TShockAPI.Handlers
 				args.Handled = true;
 				return;
 			}
+			await Task.CompletedTask;
 		}
 	}
 }

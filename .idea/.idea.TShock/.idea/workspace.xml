@@ -9,22 +9,40 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="270e07cd-11a2-4564-8334-4f153bba4dd7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/RememberedPosition.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/SacrificedItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/UserAccount.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/.name" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Bouncer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Bouncer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Commands.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Commands.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ItemBanManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ItemBanManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/RememberedPosManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/RememberedPosManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/WarpsManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/WarpsManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/AccountHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/AccountHooks.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/DisplayDollItemSyncHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/DisplayDollItemSyncHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/EmojiHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/EmojiHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/IPacketHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/IPacketHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/IllegalPerSe/EmojiPlayerMismatch.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/IllegalPerSe/EmojiPlayerMismatch.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/LandGolfBallInCupHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/LandGolfBallInCupHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/AmbienceHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/AmbienceHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/BestiaryHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/BestiaryHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativePowerHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativePowerHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativeUnlocksHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativeUnlocksHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/INetModuleHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/INetModuleHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/LiquidHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/LiquidHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/NetModulePacketHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/NetModulePacketHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/PylonHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/PylonHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/RequestTileEntityInteractionHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/RequestTileEntityInteractionHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/SendTileRectHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/SendTileRectHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/SyncTilePickingHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/SyncTilePickingHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/RegionHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/RegionHandler.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/TShockAPI.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShockAPI.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/SecureRest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/SecureRest.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/TSPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TSPlayer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/TShock.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShock.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Utils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Utils.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,11 +53,13 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/d654b5ec3b254f06a1caab79a9e992ea12ad800/d9/fb788998/WindowsLaunch.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/87aae3481234c935c2a758f2169e3560ff13885cea8b933f94cc65f10221356/Watcher.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/julia/Documents/GitHub/TShock/TShockAPI/Handlers/NetModules/AmbienceHandler.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -118,13 +138,15 @@
       <updated>1706669685380</updated>
       <workItem from="1706669687665" duration="6597000" />
       <workItem from="1706709458367" duration="4057000" />
-      <workItem from="1706804502037" duration="8457000" />
+      <workItem from="1706804502037" duration="13621000" />
+      <workItem from="1706822336357" duration="9824000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
   </component>

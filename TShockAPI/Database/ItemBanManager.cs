@@ -144,7 +144,7 @@ namespace TShockAPI.Database
 			if (ply == null)
 				return false;
 
-			if (ply.HasPermission(Permissions.usebanneditem))
+			if (await ply.HasPermission(Permissions.usebanneditem))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerItembanPermission(ply, this);

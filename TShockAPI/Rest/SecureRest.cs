@@ -26,6 +26,8 @@ using TShockAPI.Database;
 using Microsoft.Xna.Framework;
 using Terraria;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
+using TShockAPI.Database.Models;
 
 namespace Rests
 {
@@ -110,7 +112,7 @@ namespace Rests
 			return this.NewTokenInternal(user, pass, context);
 		}
 
-		private RestObject NewTokenInternal(string username, string password, IHttpContext context)
+		private async Task<RestObject> NewTokenInternal(string username, string password, IHttpContext context)
 		{
 			int tokens = 0;
 			if (tokenBucket.TryGetValue(context.RemoteEndPoint.Address.ToString(), out tokens))
@@ -131,7 +133,7 @@ namespace Rests
 				tokenBucket.Add(context.RemoteEndPoint.Address.ToString(), 1); // First time request, set to one and process request
 			}
 
-			UserAccount userAccount = TShock.UserAccounts.GetUserAccountByName(username);
+			var userAccount = await UserAccountManager.GetUserAccountByName(username);
 			if (userAccount == null)
 			{
 				AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
@@ -144,8 +146,8 @@ namespace Rests
 				return new RestObject("403") { Error = GetString("Username or password may be incorrect or this account may not have sufficient privileges.") };
 			}
 
-			Group userGroup = TShock.Groups.GetGroupByName(userAccount.Group);
-			if (!userGroup.HasPermission(RestPermissions.restapi) && userAccount.Group != "superadmin")
+			var userGroup = await GroupManager.GetGroupByName(userAccount.Group);
+			if (!await userGroup.HasPermission(RestPermissions.restapi) && userAccount.Group != "superadmin")
 			{
 				AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
 				return new RestObject("403")
@@ -169,7 +171,7 @@ namespace Rests
 			return response;
 		}
 
-		protected override object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, IRequest request, IHttpContext context)
+		protected override async Task<object> ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, IRequest request, IHttpContext context)
 		{
 			if (!cmd.RequiresToken)
 				return base.ExecuteCommand(cmd, verbs, parms, request, context);
@@ -185,7 +187,7 @@ namespace Rests
 				return new RestObject("403")
 				{ Error = GetString("Not authorized. The specified API endpoint requires a token, but the provided token was not valid.") };
 
-			Group userGroup = TShock.Groups.GetGroupByName(tokenData.UserGroupName);
+			var userGroup = await GroupManager.GetGroupByName(tokenData.UserGroupName);
 			if (userGroup == null)
 			{
 				Tokens.Remove(token);
@@ -194,10 +196,28 @@ namespace Rests
 				{ Error = GetString("Not authorized. The provided token became invalid due to group changes, please create a new token.") };
 			}
 
-			if (secureCmd.Permissions.Length > 0 && secureCmd.Permissions.All(perm => !userGroup.HasPermission(perm)))
+			if (secureCmd.Permissions.Length > 0)
 			{
-				return new RestObject("403")
-				{ Error = GetString("Not authorized. User \"{0}\" has no access to use the specified API endpoint.", tokenData.Username) };
+				bool hasPermission = true;
+
+				foreach (var perm in secureCmd.Permissions)
+				{
+					var allowed = await userGroup.HasPermission(perm);
+					if (!allowed)
+					{
+						hasPermission = false;
+					}
+				}
+
+				if (hasPermission is false)
+				{
+					return new RestObject("403")
+					{
+						Error = GetString(
+							"Not authorized. User \"{0}\" has no access to use the specified API endpoint.",
+							tokenData.Username)
+					};
+				}
 			}
 
 			//Main.rand being null can cause issues in command execution.

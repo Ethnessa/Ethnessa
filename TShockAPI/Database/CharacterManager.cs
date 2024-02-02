@@ -85,7 +85,7 @@ namespace TShockAPI.Database
 			if (player.State < 10)
 				return false;
 
-			if (player.HasPermission(Permissions.bypassssc) && !fromCommand)
+			if (await player.HasPermission(Permissions.bypassssc) && !fromCommand)
 			{
 				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
@@ -145,7 +145,7 @@ namespace TShockAPI.Database
 			if (!player.IsLoggedIn)
 				return false;
 
-			if (player.HasPermission(Permissions.bypassssc))
+			if (await player.HasPermission(Permissions.bypassssc))
 			{
 				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
