@@ -58,7 +58,7 @@ namespace TShockAPI.Database
 			return await DB.CountAsync<ProjectileBan>(x => x.Type == id) > 0;
 		}
 
-		public static async Task<bool> ProjectileIsBanned(short id, TSPlayer ply)
+		public static async Task<bool> ProjectileIsBanned(short id, ServerPlayer ply)
 		{
 			if (await ProjectileIsBanned(id))
 			{
@@ -140,7 +140,7 @@ namespace TShockAPI.Database
 			return Type == other.Type;
 		}
 
-		public async Task<bool> HasPermissionToCreateProjectile(TSPlayer ply)
+		public async Task<bool> HasPermissionToCreateProjectile(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;

@@ -49,7 +49,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public async Task<bool> HandlePacket(TSPlayer player)
+		public async Task<bool> HandlePacket(ServerPlayer player)
 		{
 			if (!Main.GameModeInfo.IsJourneyMode)
 			{

@@ -20,8 +20,8 @@ namespace TShockAPI.Hooks
 {
     public class ReloadEventArgs
     {
-        public TSPlayer Player { get; set; }
-        public ReloadEventArgs(TSPlayer ply)
+        public ServerPlayer Player { get; set; }
+        public ReloadEventArgs(ServerPlayer ply)
         {
             Player = ply;
         }
@@ -32,7 +32,7 @@ namespace TShockAPI.Hooks
         public delegate void ReloadEventD(ReloadEventArgs e);
         public static event ReloadEventD ReloadEvent;
 
-        public static void OnReloadEvent(TSPlayer ply)
+        public static void OnReloadEvent(ServerPlayer ply)
         {
             if(ReloadEvent == null)
                 return;

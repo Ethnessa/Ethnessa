@@ -179,7 +179,7 @@ namespace TShockAPI.Handlers
 			/// <param name="player">The player the operation originates from.</param>
 			/// <param name="rect">The tile rectangle of the operation.</param>
 			/// <returns><see langword="true"/>, if the rect matches this operation and the changes have been applied, otherwise <see langword="false"/>.</returns>
-			public async Task<bool> Matches(TSPlayer player, TileRect rect)
+			public async Task<bool> Matches(ServerPlayer player, TileRect rect)
 			{
 				if (rect.Width != Width || rect.Height != Height)
 				{
@@ -260,7 +260,7 @@ namespace TShockAPI.Handlers
 				return false;
 			}
 
-			private async Task<bool> MatchPlacement(TSPlayer player, TileRect rect)
+			private async Task<bool> MatchPlacement(ServerPlayer player, TileRect rect)
 			{
 				for (int x = rect.X; x < rect.Y + rect.Width; x++)
 				{
@@ -294,7 +294,7 @@ namespace TShockAPI.Handlers
 				return true;
 			}
 
-			private bool MatchStateChange(TSPlayer player, TileRect rect)
+			private bool MatchStateChange(ServerPlayer player, TileRect rect)
 			{
 				for (int x = rect.X; x < rect.Y + rect.Width; x++)
 				{
@@ -325,7 +325,7 @@ namespace TShockAPI.Handlers
 				return true;
 			}
 
-			private bool MatchRemoval(TSPlayer player, TileRect rect)
+			private bool MatchRemoval(ServerPlayer player, TileRect rect)
 			{
 				for (int x = rect.X; x < rect.Y + rect.Width; x++)
 				{
@@ -462,7 +462,7 @@ namespace TShockAPI.Handlers
 				return;
 			}
 
-			// a very special case, due to the clentaminator having a larger range than TSPlayer.IsInRange() allows
+			// a very special case, due to the clentaminator having a larger range than ServerPlayer.IsInRange() allows
 			if (await MatchesConversionSpread(args.Player, rect))
 			{
 				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
@@ -528,7 +528,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect at a valid position, otherwise <see langword="false"/>.</returns>
-		private static bool IsRectPositionValid(TSPlayer player, TileRect rect)
+		private static bool IsRectPositionValid(ServerPlayer player, TileRect rect)
 		{
 			for (int x = 0; x < rect.Width; x++)
 			{
@@ -553,7 +553,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect at a valid distance, otherwise <see langword="false"/>.</returns>
-		private static bool IsRectDistanceValid(TSPlayer player, TileRect rect)
+		private static bool IsRectDistanceValid(ServerPlayer player, TileRect rect)
 		{
 			for (int x = 0; x < rect.Width; x++)
 			{
@@ -579,7 +579,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a conversion spread operation, otherwise <see langword="false"/>.</returns>
-		private static async Task<bool> MatchesConversionSpread(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesConversionSpread(ServerPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -689,7 +689,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a Flower Boots placement, otherwise <see langword="false"/>.</returns>
-		private static async Task<bool> MatchesFlowerBoots(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesFlowerBoots(ServerPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -746,7 +746,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a grass mowing operation, otherwise <see langword="false"/>.</returns>
-		private static async Task<bool> MatchesGrassMow(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesGrassMow(ServerPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{
@@ -797,7 +797,7 @@ namespace TShockAPI.Handlers
 		/// <param name="player">The player the operation originates from.</param>
 		/// <param name="rect">The tile rectangle of the operation.</param>
 		/// <returns><see langword="true"/>, if the rect matches a christmas tree operation, otherwise <see langword="false"/>.</returns>
-		private static async Task<bool> MatchesChristmasTree(TSPlayer player, TileRect rect)
+		private static async Task<bool> MatchesChristmasTree(ServerPlayer player, TileRect rect)
 		{
 			if (rect.Width != 1 || rect.Height != 1)
 			{

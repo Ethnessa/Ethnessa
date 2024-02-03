@@ -30,12 +30,12 @@ using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {
-	public class TSServerPlayer : TSPlayer
+	public class ServerServerPlayer : ServerPlayer
 	{
 		public static string AccountName = GetParticularString("The account name of server console.", "ServerConsole");
 
-		public TSServerPlayer()
-			: base("Server")
+		public ServerServerPlayer()
+			: base("ServerServer")
 		{
 			Group = new SuperAdminGroup();
 			Account = new UserAccount { Name = AccountName };
@@ -97,7 +97,7 @@ namespace TShockAPI
 			Main.dayTime = false;
 			Main.moonPhase = 0;
 			Main.time = 0.0;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		public void SetBloodMoon(bool bloodMoon)
@@ -110,7 +110,7 @@ namespace TShockAPI
 			}
 			else
 				Main.bloodMoon = false;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		public void SetFrostMoon(bool snowMoon)
@@ -123,7 +123,7 @@ namespace TShockAPI
 			}
 			else
 				Main.snowMoon = false;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		public void SetPumpkinMoon(bool pumpkinMoon)
@@ -136,7 +136,7 @@ namespace TShockAPI
 			}
 			else
 				Main.pumpkinMoon = false;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		public void SetEclipse(bool eclipse)
@@ -148,14 +148,14 @@ namespace TShockAPI
 			}
 			else
 				Main.eclipse = false;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		public void SetTime(bool dayTime, double time)
 		{
 			Main.dayTime = dayTime;
 			Main.time = time;
-			TSPlayer.All.SendData(PacketTypes.TimeSet, "", dayTime ? 1 : 0, (int)time, Main.sunModY, Main.moonModY);
+			ServerPlayer.All.SendData(PacketTypes.TimeSet, "", dayTime ? 1 : 0, (int)time, Main.sunModY, Main.moonModY);
 		}
 
 		public void SpawnNPC(int type, string name, int amount, int startTileX, int startTileY, int tileXRange = 100,

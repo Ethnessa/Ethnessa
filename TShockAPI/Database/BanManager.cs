@@ -56,7 +56,7 @@ namespace TShockAPI.Database
 		public static event Action<Ban> OnBanRemove;
 
 
-		internal static async Task<bool> IsPlayerBanned(TSPlayer player)
+		internal static async Task<bool> IsPlayerBanned(ServerPlayer player)
 		{
 			// Attempt to find a ban by account name if the player is logged in,
 			// otherwise, find by IP address or UUID.
@@ -252,7 +252,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Player ban is being applied to
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// Whether or not the operation should be considered to be valid
@@ -309,7 +309,7 @@ namespace TShockAPI.Database
 	public class Ban : MongoDB.Entities.Entity
 	{
 		/// <summary>
-		/// A unique AccountId assigned to this ban
+		/// A unique id assigned to this ban
 		/// </summary>
 		public int BanId { get; set; }
 

@@ -185,7 +185,7 @@ namespace TShockAPI
 		/// </summary>
 		public void RegisterRestfulCommands()
 		{
-			// Server Commands
+			// ServerServer Commands
 			if (TShock.Config.Settings.EnableTokenEndpointAuthentication)
 			{
 				Rest.Register(new SecureRestCommand("/v2/server/status", ServerStatusV2));
@@ -298,7 +298,7 @@ namespace TShockAPI
 			Rest.Register(new SecureRestCommand("/v2/groups/update", GroupUpdate, RestPermissions.restmanagegroups));
 		}
 
-		#region Rest Server Methods
+		#region Rest ServerServer Methods
 
 		[Description("Executes a remote command on the server, and returns the output of the command.")]
 		[RouteAttribute("/v3/server/rawcmd")]
@@ -313,7 +313,7 @@ namespace TShockAPI
 			var restPlayerGroup = await GroupManager.GetGroupByName(args.TokenData.UserGroupName);
 
 
-			TSRestPlayer tr = new TSRestPlayer(args.TokenData.Username, restPlayerGroup);
+			ServerRestPlayer tr = new ServerRestPlayer(args.TokenData.Username, restPlayerGroup);
 			Commands.HandleCommand(tr, args.Parameters["cmd"]);
 			return new RestObject()
 			{
@@ -334,7 +334,7 @@ namespace TShockAPI
 				return RestInvalidParam("confirm");
 
 			// Inform players the server is shutting down
-			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "Server is shutting down" : args.Parameters["message"];
+			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "ServerServer is shutting down" : args.Parameters["message"];
 			TShock.Utils.StopServer(!GetBool(args.Parameters["nosave"], false), reason);
 
 			return RestResponse("The server is shutting down");
@@ -347,7 +347,7 @@ namespace TShockAPI
 		private async Task<object> ServerReload(RestRequestArgs args)
 		{
 			TShock.Utils.Reload();
-			Hooks.GeneralHooks.OnReloadEvent(new TSRestPlayer(args.TokenData.Username, await GroupManager.GetGroupByName(args.TokenData.UserGroupName)));
+			Hooks.GeneralHooks.OnReloadEvent(new ServerRestPlayer(args.TokenData.Username, await GroupManager.GetGroupByName(args.TokenData.UserGroupName)));
 
 			return RestResponse("Configuration, permissions, and regions reload complete. Some changes may require a server restart.");
 		}
@@ -361,7 +361,7 @@ namespace TShockAPI
 			var msg = args.Parameters["msg"];
 			if (string.IsNullOrWhiteSpace(msg))
 				return RestMissingParam("msg");
-			TSPlayer.All.SendInfoMessage(msg);
+			ServerPlayer.All.SendInfoMessage(msg);
 			return RestResponse("The message was broadcasted successfully");
 		}
 
@@ -416,7 +416,7 @@ namespace TShockAPI
 			if (GetBool(args.Parameters["players"], false))
 			{
 				var players = new ArrayList();
-				foreach (TSPlayer tsPlayer in TShock.Players.Where(p => null != p))
+				foreach (ServerPlayer tsPlayer in TShock.Players.Where(p => null != p))
 				{
 					var p = PlayerFilter(tsPlayer, args.Parameters, (!string.IsNullOrEmpty(args.TokenData.UserGroupName) && (await (await GroupManager.GetGroupByName(args.TokenData.UserGroupName))?.HasPermission(RestPermissions.viewips))));
 					if (null != p)
@@ -777,7 +777,7 @@ namespace TShockAPI
 			{
 				if (Main.npc[i].active && Main.npc[i].type != 0 && !Main.npc[i].townNPC && (!Main.npc[i].friendly || killFriendly))
 				{
-					TSPlayer.Server.StrikeNPC(i, 99999, 90f, 1);
+					ServerPlayer.ServerServer.StrikeNPC(i, 99999, 90f, 1);
 					killcount++;
 				}
 			}
@@ -892,7 +892,7 @@ namespace TShockAPI
 		private object PlayerListV2(RestRequestArgs args)
 		{
 			var playerList = new ArrayList();
-			foreach (TSPlayer tsPlayer in TShock.Players.Where(p => null != p))
+			foreach (ServerPlayer tsPlayer in TShock.Players.Where(p => null != p))
 			{
 				var p = PlayerFilter(tsPlayer, args.Parameters);
 				if (null != p)
@@ -912,7 +912,7 @@ namespace TShockAPI
 			if (ret is RestObject)
 				return ret;
 
-			TSPlayer player = (TSPlayer)ret;
+			ServerPlayer player = (ServerPlayer)ret;
 			var inventory = player.TPlayer.inventory.Where(p => p.active).ToList();
 			var equipment = player.TPlayer.armor.Where(p => p.active).ToList();
 			var dyes = player.TPlayer.dye.Where(p => p.active).ToList();
@@ -945,7 +945,7 @@ namespace TShockAPI
 				return ret;
 			}
 
-			TSPlayer player = (TSPlayer)ret;
+			ServerPlayer player = (ServerPlayer)ret;
 
 			object items = new
 			{
@@ -983,7 +983,7 @@ namespace TShockAPI
 			if (ret is RestObject)
 				return ret;
 
-			TSPlayer player = (TSPlayer)ret;
+			ServerPlayer player = (ServerPlayer)ret;
 			player.Kick(null == args.Parameters["reason"] ? GetString("Kicked via web") : args.Parameters["reason"], false, true, null, true);
 			return RestResponse($"Player {player.Name} was kicked");
 		}
@@ -1000,9 +1000,9 @@ namespace TShockAPI
 			if (ret is RestObject)
 				return ret;
 
-			TSPlayer player = (TSPlayer)ret;
+			ServerPlayer player = (ServerPlayer)ret;
 			player.DamagePlayer(999999);
-			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "Server Admin" : args.Parameters["from"];
+			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "ServerServer Admin" : args.Parameters["from"];
 			player.SendInfoMessage(GetString($"{from} just killed you!"));
 			return RestResponse(GetString($"Player {player.Name} was killed"));
 		}
@@ -1235,7 +1235,7 @@ namespace TShockAPI
 			if (string.IsNullOrWhiteSpace(name))
 				return RestMissingParam("player");
 
-			var found = TSPlayer.FindByNameOrID(name);
+			var found = ServerPlayer.FindByNameOrId(name);
 			switch (found.Count)
 			{
 				case 1:
@@ -1295,21 +1295,21 @@ namespace TShockAPI
 			return group;
 		}
 
-		private Dictionary<string, object> PlayerFilter(TSPlayer tsPlayer, EscapedParameterCollection parameters, bool viewips = false)
+		private Dictionary<string, object> PlayerFilter(ServerPlayer serverPlayer, EscapedParameterCollection parameters, bool viewips = false)
 		{
 			var player = new Dictionary<string, object>
 				{
-					{"nickname", tsPlayer.Name},
-					{"username", tsPlayer.Account == null ? "" : tsPlayer.Account.Name},
-					{"group", tsPlayer.Group.Name},
-					{"active", tsPlayer.Active},
-					{"state", tsPlayer.State},
-					{"team", tsPlayer.Team},
+					{"nickname", serverPlayer.Name},
+					{"username", serverPlayer.Account == null ? "" : serverPlayer.Account.Name},
+					{"group", serverPlayer.Group.Name},
+					{"active", serverPlayer.Active},
+					{"state", serverPlayer.State},
+					{"team", serverPlayer.Team},
 				};
 
 			if (viewips)
 			{
-				player.Add("ip", tsPlayer.IP);
+				player.Add("ip", serverPlayer.IP);
 			}
 			foreach (EscapedParameter filter in parameters)
 			{
@@ -1325,7 +1325,7 @@ namespace TShockAPI
 			if (ret is RestObject)
 				return ret;
 
-			TSPlayer player = (TSPlayer)ret;
+			ServerPlayer player = (ServerPlayer)ret;
 			player.mute = mute;
 			if (mute)
 			{

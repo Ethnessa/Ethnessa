@@ -22,7 +22,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Timers;
 using Terraria;
@@ -41,7 +40,7 @@ using TShockAPI.Database.Models;
 namespace TShockAPI
 {
 	/// <summary>
-	/// Bitflags used with the <see cref="Disable(string, DisableFlags)"></see> method
+	/// Bitflags used with the <see cref="ServerPlayer.Disable(string, DisableFlags)"></see> method
 	/// </summary>
 	[Flags]
 	public enum DisableFlags
@@ -64,31 +63,35 @@ namespace TShockAPI
 		WriteToLogAndConsole
 	}
 
-	public class TSPlayer
+	/// <summary>
+	/// A wrapper for the Terraria player class. (FKA: TSPlayer)
+	/// </summary>
+	public class ServerPlayer
 	{
 		/// <summary>
 		/// This represents the server as a player.
 		/// </summary>
-		public static readonly TSServerPlayer Server = new TSServerPlayer();
+		public static readonly ServerServerPlayer ServerServer = new ServerServerPlayer();
 
 		/// <summary>
 		/// This player represents all the players.
 		/// </summary>
-		public static readonly TSPlayer All = new TSPlayer("All");
+		public static readonly ServerPlayer All = new ServerPlayer("All");
 
 		/// <summary>
-		/// Finds a TSPlayer based on name or AccountId.
+		/// Finds a ServerPlayer based on name or AccountId.
 		/// If the string comes with tsi: or tsn:, we'll only return a list with one element,
 		/// either the player with the matching AccountId or name, respectively.
 		/// </summary>
-		/// <param name="plr">Player name or AccountId</param>
+		/// <param name="search">Player name or AccountId</param>
 		/// <returns>A list of matching players</returns>
-		public static List<TSPlayer> FindByNameOrID(string search)
+		public static List<ServerPlayer> FindByNameOrId(string search)
 		{
-			var found = new List<TSPlayer>();
+			var found = new List<ServerPlayer>();
 
 			search = search.Trim();
 
+			// TODO: Is this necessary?
 			// tsi: and tsn: are used to disambiguate between usernames and not
 			// and are also both 3 characters to remove them from the search
 			// (the goal was to pick prefixes unlikely to be used by names)
@@ -100,28 +103,29 @@ namespace TShockAPI
 				search = search.Remove(0, 4);
 
 			// Avoid errors caused by null search
-			if (search == null || search == "")
+			if (string.IsNullOrWhiteSpace(search))
 				return found;
 
-			byte searchID;
-			if (byte.TryParse(search, out searchID) && searchID < Main.maxPlayers)
+			if (byte.TryParse(search, out var searchId) && searchId < Main.maxPlayers)
 			{
-				TSPlayer player = TShock.Players[searchID];
-				if (player != null && player.Active)
+				var player = TShock.Players.ElementAtOrDefault(searchId);
+				if (player is { Active: true })
 				{
 					if (exactIndexOnly)
-						return new List<TSPlayer> { player };
+					{
+						return new List<ServerPlayer> { player };
+					}
 					found.Add(player);
 				}
 			}
 
-			string searchLower = search.ToLower();
-			foreach (TSPlayer player in TShock.Players)
+			var searchLower = search.ToLower();
+			foreach (var player in TShock.Players)
 			{
 				if (player != null)
 				{
 					if ((search == player.Name) && exactNameOnly)
-						return new List<TSPlayer> { player };
+						return new List<ServerPlayer> { player };
 					if (player.Name.ToLower().StartsWith(searchLower))
 						found.Add(player);
 				}
@@ -132,7 +136,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Used in preventing players from seeing the npc spawnrate permission error on join.
 		/// </summary>
-		internal bool HasReceivedNPCPermissionError { get; set; }
+		internal bool HasReceivedNpcPermissionError { get; set; }
 
 		/// <summary>
 		/// The amount of tiles that the player has killed in the last second.
@@ -172,12 +176,12 @@ namespace TShockAPI
 		/// <summary>
 		/// Whether to ignore packets that are SSC-relevant.
 		/// </summary>
-		public bool IgnoreSSCPackets { get; set; }
+		public bool IgnoreSscPackets { get; set; }
 
 		/// <summary>
 		/// A system to delay Remembered Position Teleports a few seconds
 		/// </summary>
-		public int RPPending = 0;
+		public int RememberedPositionPending = 0;
 
 		public int sX = -1;
 		public int sY = -1;
@@ -197,19 +201,14 @@ namespace TShockAPI
 		/// </summary>
 		public Group Group
 		{
-			get
-			{
-				if (tempGroup != null)
-					return tempGroup;
-				return group;
-			}
-			set { group = value; }
+			get => TempGroup ?? group;
+			set => group = value;
 		}
 
 		/// <summary>
 		/// The player's temporary group.  This overrides the user's actual group.
 		/// </summary>
-		public Group tempGroup = null;
+		public Group? TempGroup = null;
 
 		public Timer tempGroupTimer;
 
@@ -259,7 +258,7 @@ namespace TShockAPI
 		/// <summary>
 		/// The last player that the player whispered with (to or from).
 		/// </summary>
-		public TSPlayer LastWhisper;
+		public ServerPlayer LastWhisper;
 
 		/// <summary>
 		/// The number of unsuccessful login attempts.
@@ -977,47 +976,33 @@ namespace TShockAPI
 		/// <summary>
 		/// Whether the player is a real, human, player on the server.
 		/// </summary>
-		public bool RealPlayer
-		{
-			get { return Index >= 0 && Index < Main.maxNetPlayers && Main.player[Index] != null; }
-		}
+		public bool RealPlayer => Index >= 0 && Index < Main.maxNetPlayers && Main.player[Index] != null;
 
 		/// <summary>
 		/// Checks if the player is active and not pending termination.
 		/// </summary>
-		public bool ConnectionAlive
-		{
-			get
-			{
-				return RealPlayer
-					   && (Client != null && Client.IsActive && !Client.PendingTermination);
-			}
-		}
+		public bool ConnectionAlive =>
+			RealPlayer
+			&& (Client != null && Client.IsActive && !Client.PendingTermination);
 
 		/// <summary>
 		/// Gets the item that the player is currently holding.
 		/// </summary>
-		public Item SelectedItem
-		{
-			get { return TPlayer.inventory[TPlayer.selectedItem]; }
-		}
+		public Item SelectedItem => TPlayer.inventory[TPlayer.selectedItem];
 
 		/// <summary>
 		/// Gets the player's Client State.
 		/// </summary>
 		public int State
 		{
-			get { return Client.State; }
-			set { Client.State = value; }
+			get => Client.State;
+			set => Client.State = value;
 		}
 
 		/// <summary>
 		/// Gets the player's UUID.
 		/// </summary>
-		public string UUID
-		{
-			get { return RealPlayer ? Client.ClientUUID : ""; }
-		}
+		public string UUID => RealPlayer ? Client.ClientUUID : "";
 
 		/// <summary>
 		/// Gets the player's IP.
@@ -1120,34 +1105,22 @@ namespace TShockAPI
 		/// <summary>
 		/// Gets the Terraria Player object associated with the player.
 		/// </summary>
-		public Player TPlayer
-		{
-			get { return FakePlayer ?? Main.player[Index]; }
-		}
+		public Player TPlayer => FakePlayer ?? Main.player[Index];
 
 		/// <summary>
 		/// Gets the player's name.
 		/// </summary>
-		public string Name
-		{
-			get { return TPlayer.name; }
-		}
+		public string Name => TPlayer.name;
 
 		/// <summary>
 		/// Gets the player's active state.
 		/// </summary>
-		public bool Active
-		{
-			get { return TPlayer != null && TPlayer.active; }
-		}
+		public bool Active => TPlayer != null && TPlayer.active;
 
 		/// <summary>
 		/// Gets the player's team.
 		/// </summary>
-		public int Team
-		{
-			get { return TPlayer.team; }
-		}
+		public int Team => TPlayer.team;
 
 		/// <summary>
 		/// Gets PvP player mode.
@@ -1157,34 +1130,22 @@ namespace TShockAPI
 		/// <summary>
 		/// Gets the player's X coordinate.
 		/// </summary>
-		public float X
-		{
-			get { return RealPlayer ? TPlayer.position.X : Main.spawnTileX * 16; }
-		}
+		public float X => RealPlayer ? TPlayer.position.X : Main.spawnTileX * 16;
 
 		/// <summary>
 		/// Gets the player's Y coordinate.
 		/// </summary>
-		public float Y
-		{
-			get { return RealPlayer ? TPlayer.position.Y : Main.spawnTileY * 16; }
-		}
+		public float Y => RealPlayer ? TPlayer.position.Y : Main.spawnTileY * 16;
 
 		/// <summary>
 		/// Player X coordinate divided by 16. Supposed X world coordinate.
 		/// </summary>
-		public int TileX
-		{
-			get { return (int)(X / 16); }
-		}
+		public int TileX => (int)(X / 16);
 
 		/// <summary>
 		/// Player Y coordinate divided by 16. Supposed Y world coordinate.
 		/// </summary>
-		public int TileY
-		{
-			get { return (int)(Y / 16); }
-		}
+		public int TileY => (int)(Y / 16);
 
 		/// <summary>
 		/// Checks if the player has any inventory slots available.
@@ -1288,7 +1249,7 @@ namespace TShockAPI
 
 			PlayerData = new PlayerData(this);
 			Group = await GroupManager.GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
-			tempGroup = null;
+			TempGroup = null;
 			if (tempGroupTimer != null)
 			{
 				tempGroupTimer.Stop();
@@ -1298,10 +1259,10 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="TSPlayer"/> class.
+		/// Initializes a new instance of the <see cref="ServerPlayer"/> class.
 		/// </summary>
 		/// <param name="index">The player's index in the.</param>
-		public TSPlayer(int index)
+		public ServerPlayer(int index)
 		{
 			TilesDestroyed = new Dictionary<Vector2, ITile>();
 			TilesCreated = new Dictionary<Vector2, ITile>();
@@ -1312,10 +1273,10 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="TSPlayer"/> class.
+		/// Initializes a new instance of the <see cref="ServerPlayer"/> class.
 		/// </summary>
 		/// <param name="playerName">The player's name.</param>
-		protected TSPlayer(String playerName)
+		protected ServerPlayer(String playerName)
 		{
 			TilesDestroyed = new Dictionary<Vector2, ITile>();
 			TilesCreated = new Dictionary<Vector2, ITile>();
@@ -1343,7 +1304,7 @@ namespace TShockAPI
 		{
 			SendWarningMessage(GetString("Your temporary group access has expired."));
 
-			tempGroup = null;
+			TempGroup = null;
 			if (sender != null)
 			{
 				((Timer)sender).Stop();
@@ -1800,7 +1761,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (this.Index == -1) //-1 is our broadcast index - this implies we're using TSPlayer.All.SendMessage and broadcasting to all clients
+			if (this.Index == -1) //-1 is our broadcast index - this implies we're using ServerPlayer.All.SendMessage and broadcasting to all clients
 			{
 				Terraria.Chat.ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(msg), new Color(red, green, blue));
 			}
@@ -1853,7 +1814,7 @@ namespace TShockAPI
 
 					var players = new List<string>();
 
-					foreach (TSPlayer ply in TShock.Players)
+					foreach (ServerPlayer ply in TShock.Players)
 					{
 						if (ply != null && ply.Active)
 						{
@@ -1930,7 +1891,7 @@ namespace TShockAPI
 			Main.player[Index].hostile = mode;
 			NetMessage.SendData((int)PacketTypes.TogglePvp, -1, -1, NetworkText.Empty, Index);
 			if (withMsg)
-				TSPlayer.All.SendMessage(Language.GetTextValue(mode ? "LegacyMultiplayer.11" : "LegacyMultiplayer.12", Name), Main.teamColor[Team]);
+				ServerPlayer.All.SendMessage(Language.GetTextValue(mode ? "LegacyMultiplayer.11" : "LegacyMultiplayer.12", Name), Main.teamColor[Team]);
 		}
 
 		private DateTime LastDisableNotification = DateTime.UtcNow;
@@ -1973,7 +1934,7 @@ namespace TShockAPI
 						}
 						else
 						{
-							Server.SendInfoMessage(GetString("Player {0} has been disabled for {1}.", Name, reason));
+							ServerServer.SendInfoMessage(GetString("Player {0} has been disabled for {1}.", Name, reason));
 						}
 					}
 
@@ -1995,28 +1956,38 @@ namespace TShockAPI
 		/// <param name="force">If the kick should happen regardless of immunity to kick permissions.</param>
 		/// <param name="silent">If no message should be broadcasted to the server.</param>
 		/// <param name="adminUserName">The originator of the kick, for display purposes.</param>
-		/// <param name="saveSSI">If the player's server side character should be saved on kick.</param>
-		public async Task<bool> Kick(string reason, bool force = false, bool silent = false, string adminUserName = null, bool saveSSI = false)
+		/// <param name="saveServerSideInventory">If the player's server side character should be saved on kick.</param>
+		public async Task<bool> Kick(string reason, bool force = false, bool silent = false, string? adminUserName = null, bool saveServerSideInventory = false)
 		{
 			if (!ConnectionAlive)
-				return true;
-			if (force || !await HasPermission(Permissions.immunetokick))
 			{
-				SilentKickInProgress = silent;
-				if (IsLoggedIn && saveSSI)
-					SaveServerCharacter();
-				Disconnect(GetString("Kicked: {0}", reason));
-				TShock.Log.ConsoleInfo(GetString("Kicked {0} for : '{1}'", Name, reason));
-				if (!silent)
-				{
-					if (string.IsNullOrWhiteSpace(adminUserName))
-						TShock.Utils.Broadcast(GetString("{0} was kicked for '{1}'", Name, reason), Color.Green);
-					else
-						TShock.Utils.Broadcast(GetString("{0} kicked {1} for '{2}'", adminUserName, Name, reason), Color.Green);
-				}
 				return true;
 			}
-			return false;
+
+			if (!force && await HasPermission(Permissions.immunetokick))
+			{
+				return false;
+			}
+
+			SilentKickInProgress = silent;
+			if (IsLoggedIn && saveServerSideInventory)
+			{
+				await SaveServerCharacter();
+			}
+
+			Disconnect(GetString("Kicked: {0}", reason));
+			TShock.Log.ConsoleInfo(GetString("Kicked {0} for : '{1}'", Name, reason));
+			if (silent)
+			{
+				return true;
+			}
+
+			TShock.Utils.Broadcast(
+				string.IsNullOrWhiteSpace(adminUserName)
+					? GetString("{0} was kicked for '{1}'", Name, reason)
+					: GetString("{0} kicked {1} for '{2}'", adminUserName, Name, reason), Color.Green);
+
+			return true;
 		}
 
 		/// <summary>
@@ -2024,7 +1995,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="reason">The reason to be displayed to the server.</param>
 		/// <param name="adminUserName">The player who initiated the ban.</param>
-		public async Task<bool> Ban(string reason, string adminUserName = null)
+		public async Task<bool> Ban(string reason, string adminUserName = "ServerServer")
 		{
 			if (!ConnectionAlive)
 				return true;
@@ -2037,10 +2008,9 @@ namespace TShockAPI
 
 			Disconnect(GetString("Banned: {0}", reason));
 
-			if (string.IsNullOrWhiteSpace(adminUserName))
-				TSPlayer.All.SendInfoMessage(GetString("{0} was banned for '{1}'.", Name, reason));
-			else
-				TSPlayer.All.SendInfoMessage(GetString("{0} banned {1} for '{2}'.", adminUserName, Name, reason));
+			ServerPlayer.All.SendInfoMessage(string.IsNullOrWhiteSpace(adminUserName)
+				? GetString("{0} was banned for '{1}'.", Name, reason)
+				: GetString("{0} banned {1} for '{2}'.", adminUserName, Name, reason));
 			return true;
 		}
 
@@ -2070,6 +2040,7 @@ namespace TShockAPI
 				TShock.Log.Debug(frame.GetMethod().DeclaringType.Name + " called Disable().");
 		}
 
+		//TODO: Could remove this
 		/// <summary>
 		/// Annoys the player for a specified amount of time.
 		/// </summary>
@@ -2181,8 +2152,8 @@ namespace TShockAPI
 			if (hookResult != PermissionHookResult.Unhandled)
 				return hookResult == PermissionHookResult.Granted;
 
-			if (tempGroup != null)
-				return await tempGroup.HasPermission(permission);
+			if (TempGroup != null)
+				return await TempGroup.HasPermission(permission);
 			else
 				return await Group.HasPermission(permission);
 		}
@@ -2216,15 +2187,15 @@ namespace TShockAPI
 		/// <returns>True if the player has permission to use the banned tile.</returns>
 		public async Task<bool> HasPermission(TileBan bannedTile)
 		{
-			return await TileManager.TileIsBanned(bannedTile.ID, this);
+			return await TileManager.TileIsBanned(bannedTile.Type, this);
 		}
 	}
 
-	public class TSRestPlayer : TSPlayer
+	public class ServerRestPlayer : ServerPlayer
 	{
 		internal List<string> CommandOutput = new List<string>();
 
-		public TSRestPlayer(string playerName, Group playerGroup) : base(playerName)
+		public ServerRestPlayer(string playerName, Group playerGroup) : base(playerName)
 		{
 			Group = playerGroup;
 			AwaitingResponse = new Dictionary<string, Action<object>>();

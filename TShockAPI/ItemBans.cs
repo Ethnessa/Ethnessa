@@ -73,7 +73,7 @@ namespace TShockAPI
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 
-			foreach (TSPlayer player in TShock.Players)
+			foreach (ServerPlayer player in TShock.Players)
 			{
 				if (player == null || !player.Active)
 				{
@@ -150,7 +150,7 @@ namespace TShockAPI
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 			bool useItem = args.Control.IsUsingItem;
-			TSPlayer player = args.Player;
+			ServerPlayer player = args.Player;
 			string itemName = player.TPlayer.inventory[args.SelectedItem].Name;
 
 			if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[args.SelectedItem].netID), args.Player))
@@ -209,12 +209,12 @@ namespace TShockAPI
 			}
 		}
 
-		private void UnTaint(TSPlayer player)
+		private void UnTaint(ServerPlayer player)
 		{
 			player.IsDisabledForBannedWearable = false;
 		}
 
-		private void Taint(TSPlayer player)
+		private void Taint(ServerPlayer player)
 		{
 			// Arbitrarily does things to the player
 			player.SetBuff(BuffID.Frozen, 330, true);
@@ -225,7 +225,7 @@ namespace TShockAPI
 			player.IsDisabledForBannedWearable = true;
 		}
 
-		private void SendCorrectiveMessage(TSPlayer player, string itemName)
+		private void SendCorrectiveMessage(ServerPlayer player, string itemName)
 		{
 			player.SendErrorMessage(GetString("{0} is banned! Remove it!", itemName));
 		}

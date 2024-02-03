@@ -117,7 +117,7 @@ namespace TShockAPI
 		#endregion
 
 		public static void SendPage(
-		  TSPlayer player, int pageNumber, IEnumerable dataToPaginate, int dataToPaginateCount, Settings settings = null)
+		  ServerPlayer player, int pageNumber, IEnumerable dataToPaginate, int dataToPaginateCount, Settings settings = null)
 		{
 			if (settings == null)
 				settings = new Settings();
@@ -218,7 +218,7 @@ namespace TShockAPI
 			}
 		}
 
-		public static void SendPage(TSPlayer player, int pageNumber, IList dataToPaginate, Settings settings = null)
+		public static void SendPage(ServerPlayer player, int pageNumber, IList dataToPaginate, Settings settings = null)
 		{
 			PaginationTools.SendPage(player, pageNumber, dataToPaginate, dataToPaginate.Count, settings);
 		}
@@ -270,7 +270,7 @@ namespace TShockAPI
 			return lines;
 		}
 
-		public static bool TryParsePageNumber(List<string> commandParameters, int expectedParameterIndex, TSPlayer errorMessageReceiver, out int pageNumber)
+		public static bool TryParsePageNumber(List<string> commandParameters, int expectedParameterIndex, ServerPlayer errorMessageReceiver, out int pageNumber)
 		{
 			pageNumber = 1;
 			if (commandParameters.Count <= expectedParameterIndex)

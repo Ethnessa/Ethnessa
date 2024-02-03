@@ -66,7 +66,7 @@ namespace TShockAPI
 		public int unlockedSuperCart;
 		public int enabledSuperCart;
 
-		public PlayerData(TSPlayer player)
+		public PlayerData(ServerPlayer player)
 		{
 			for (int i = 0; i < NetItem.MaxInventory; i++)
 			{
@@ -103,7 +103,7 @@ namespace TShockAPI
 		/// Copies a characters data to this object
 		/// </summary>
 		/// <param name="player"></param>
-		public void CopyCharacter(TSPlayer player)
+		public void CopyCharacter(ServerPlayer player)
 		{
 			this.health = player.TPlayer.statLife > 0 ? player.TPlayer.statLife : 1;
 			this.maxHealth = player.TPlayer.statLifeMax;
@@ -260,10 +260,10 @@ namespace TShockAPI
 		/// Restores a player's character to the state stored in the database
 		/// </summary>
 		/// <param name="player"></param>
-		public async Task RestoreCharacter(TSPlayer player)
+		public async Task RestoreCharacter(ServerPlayer player)
 		{
 			// Start ignoring SSC-related packets! This is critical so that we don't send or receive dirty data!
-			player.IgnoreSSCPackets = true;
+			player.IgnoreSscPackets = true;
 
 			player.TPlayer.statLife = this.health;
 			player.TPlayer.statLifeMax = this.maxHealth;

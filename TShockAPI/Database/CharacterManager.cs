@@ -75,7 +75,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="player">player to take data from</param>
 		/// <returns>true if inserted successfully</returns>
-		public static async Task<bool> InsertPlayerData(TSPlayer player, bool fromCommand = false)
+		public static async Task<bool> InsertPlayerData(ServerPlayer player, bool fromCommand = false)
 		{
 			PlayerData playerData = player.PlayerData;
 
@@ -138,7 +138,7 @@ namespace TShockAPI.Database
 		/// <param name="player">The player to store the data for.</param>
 		/// <param name="data">The player data to store.</param>
 		/// <returns>If the command succeeds.</returns>
-		public static async Task<bool> InsertSpecificPlayerData(TSPlayer player, PlayerData data)
+		public static async Task<bool> InsertSpecificPlayerData(ServerPlayer player, PlayerData data)
 		{
 			PlayerData playerData = data;
 

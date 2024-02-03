@@ -52,7 +52,7 @@ namespace TShockAPI.Database
 				return;
 			try
 			{
-				await DB.DeleteAsync<TileBan>(x => x.Eq(y=>y.ID, id));
+				await DB.DeleteAsync<TileBan>(x => x.Eq(y=>y.Type, id));
 			}
 			catch (Exception ex)
 			{
@@ -62,10 +62,10 @@ namespace TShockAPI.Database
 
 		public static async Task<bool> TileIsBanned(short id)
 		{
-			return (await DB.CountAsync<TileBan>(x=>x.ID==id)) > 0;
+			return (await DB.CountAsync<TileBan>(x=>x.Type==id)) > 0;
 		}
 
-		public static async Task<bool> TileIsBanned(short id, TSPlayer ply)
+		public static async Task<bool> TileIsBanned(short id, ServerPlayer ply)
 		{
 			TileBan b = await GetBanById(id);
 			return !(await b.HasPermissionToPlaceTile(ply));
@@ -108,34 +108,34 @@ namespace TShockAPI.Database
 
 		public static async Task<TileBan?> GetBanById(short id)
 		{
-			return await DB.Find<TileBan>().Match(x=>x.ID==id).ExecuteFirstAsync();
+			return await DB.Find<TileBan>().Match(x=>x.Type==id).ExecuteFirstAsync();
 		}
 	}
 
 	public class TileBan : MongoDB.Entities.Entity, IEquatable<TileBan>
 	{
-		public short ID { get; set; }
+		public short Type { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
-		public TileBan(short id)
+		public TileBan(short type)
 			: this()
 		{
-			ID = id;
+			Type = type;
 			AllowedGroups = new List<string>();
 		}
 
 		public TileBan()
 		{
-			ID = 0;
+			Type = 0;
 			AllowedGroups = new List<string>();
 		}
 
 		public bool Equals(TileBan other)
 		{
-			return ID == other.ID;
+			return Type == other.Type;
 		}
 
-		public async Task<bool> HasPermissionToPlaceTile(TSPlayer ply)
+		public async Task<bool> HasPermissionToPlaceTile(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;
@@ -189,7 +189,7 @@ namespace TShockAPI.Database
 
 		public override string ToString()
 		{
-			return ID + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
+			return Type + (AllowedGroups.Count > 0 ? " (" + String.Join(",", AllowedGroups) + ")" : "");
 		}
 	}
 }

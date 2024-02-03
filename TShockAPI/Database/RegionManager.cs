@@ -48,7 +48,7 @@ namespace TShockAPI.Database
 		/// <param name="height">Height of the region in tiles.</param>
 		/// <param name="regionname">The name of the region.</param>
 		/// <param name="owner">The User Account Name of the person who created this region.</param>
-		/// <param name="worldid">The world id that this region is in.</param>
+		/// <param name="worldid">The world regionId that this region is in.</param>
 		/// <param name="z">The Z index of the region.</param>
 		/// <returns>Whether the region was created and added successfully.</returns>
 		public static async Task<bool> AddRegion(int tx, int ty, int width, int height, string regionname, string owner, string worldid, int z = 0)
@@ -82,7 +82,7 @@ namespace TShockAPI.Database
 			{
 				var worldid = Main.worldID.ToString();
 
-				var region = await DB.Find<Region>().Match(x=>x.ID == id && x.WorldID == worldid)
+				var region = await DB.Find<Region>().Match(x=>x.RegionId == id && x.WorldID == worldid)
 					.ExecuteFirstAsync();
 
 				if (region is not null)
@@ -141,7 +141,7 @@ namespace TShockAPI.Database
 			{
 				var worldId = Main.worldID.ToString();
 
-				var region = await DB.Find<Region>().Match(x=>x.ID == id && x.WorldID == worldId)
+				var region = await DB.Find<Region>().Match(x=>x.RegionId == id && x.WorldID == worldId)
 					.ExecuteFirstAsync();
 
 				if (region is not null)
@@ -191,7 +191,7 @@ namespace TShockAPI.Database
 		/// <param name="y">Y coordinate</param>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player can build at the given (x, y) coordinate</returns>
-		public static async Task<bool> CanBuild(int x, int y, TSPlayer ply)
+		public static async Task<bool> CanBuild(int x, int y, ServerPlayer ply)
 		{
 			if (!(await ply.HasPermission(Permissions.canbuild)))
 			{
@@ -447,7 +447,7 @@ namespace TShockAPI.Database
 		/// <returns>The region with the given AccountId, or null if not found</returns>
 		public static async Task<Region?> GetRegionByID(int id)
 		{
-			return await DB.Find<Region>().Match(x => x.ID == id && x.WorldID == Main.worldID.ToString())
+			return await DB.Find<Region>().Match(x => x.RegionId == id && x.WorldID == Main.worldID.ToString())
 				.ExecuteFirstAsync();
 		}
 
@@ -561,7 +561,7 @@ namespace TShockAPI.Database
 
 	public class Region : Entity
 	{
-		public int ID { get; set; }
+		public int RegionId { get; set; }
 		public Rectangle Area { get; set; }
 		public string Name { get; set; }
 		public string Owner { get; set; }
@@ -571,10 +571,10 @@ namespace TShockAPI.Database
 		public List<string> AllowedGroups { get; set; }
 		public int Z { get; set; }
 
-		public Region(int id, Rectangle region, string name, string owner, bool disablebuild, string RegionWorldIDz, int z)
+		public Region(int regionId, Rectangle region, string name, string owner, bool disablebuild, string RegionWorldIDz, int z)
 			: this()
 		{
-			ID = id;
+			RegionId = regionId;
 			Area = region;
 			Name = name;
 			Owner = owner;
@@ -625,7 +625,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player has permission</returns>
-		public async Task<bool> HasPermissionToBuildInRegion(TSPlayer ply)
+		public async Task<bool> HasPermissionToBuildInRegion(ServerPlayer ply)
 		{
 			if (!DisableBuild)
 			{

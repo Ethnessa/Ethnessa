@@ -117,7 +117,7 @@ namespace TShockAPI
 				{
 					reason = "none";
 				}
-				throw new WebException(GetString($"Update server did not respond with an OK. Server message: [error {resp.StatusCode}] {reason}"));
+				throw new WebException(GetString($"Update server did not respond with an OK. ServerServer message: [error {resp.StatusCode}] {reason}"));
 			}
 
 			string json = await resp.Content.ReadAsStringAsync();
@@ -135,8 +135,8 @@ namespace TShockAPI
 		private async Task NotifyAdministrators(Dictionary<string, string> update)
 		{
 			var changes = update["changes"].Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-			NotifyAdministrator(TSPlayer.Server, changes);
-			foreach (TSPlayer player in TShock.Players)
+			NotifyAdministrator(ServerPlayer.ServerServer, changes);
+			foreach (ServerPlayer player in TShock.Players)
 			{
 				if (player != null && player.Active && await player.HasPermission(Permissions.maintenance))
 				{
@@ -145,7 +145,7 @@ namespace TShockAPI
 			}
 		}
 
-		private void NotifyAdministrator(TSPlayer player, string[] changes)
+		private void NotifyAdministrator(ServerPlayer player, string[] changes)
 		{
 			player.SendMessage(GetString("The server is out of date. Latest version: "), Color.Red);
 			for (int j = 0; j < changes.Length; j++)

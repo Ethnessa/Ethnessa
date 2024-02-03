@@ -24,11 +24,11 @@ namespace TShockAPI.Hooks
 	{
 		public class RegionEnteredEventArgs
 		{
-			public TSPlayer Player { get; private set; }
+			public ServerPlayer Player { get; private set; }
 
 			public Region Region { get; private set; }
 
-			public RegionEnteredEventArgs(TSPlayer ply, Region region)
+			public RegionEnteredEventArgs(ServerPlayer ply, Region region)
 			{
 				Player = ply;
 				Region = region;
@@ -37,7 +37,7 @@ namespace TShockAPI.Hooks
 
 		public delegate void RegionEnteredD(RegionEnteredEventArgs args);
 		public static event RegionEnteredD RegionEntered;
-		public static void OnRegionEntered(TSPlayer player, Region region)
+		public static void OnRegionEntered(ServerPlayer player, Region region)
 		{
 			if (RegionEntered == null)
 			{
@@ -49,10 +49,10 @@ namespace TShockAPI.Hooks
 
 		public class RegionLeftEventArgs
 		{
-			public TSPlayer Player { get; private set; }
+			public ServerPlayer Player { get; private set; }
 			public Region Region { get; private set; }
 
-			public RegionLeftEventArgs(TSPlayer ply, Region region)
+			public RegionLeftEventArgs(ServerPlayer ply, Region region)
 			{
 				Player = ply;
 				Region = region;
@@ -61,7 +61,7 @@ namespace TShockAPI.Hooks
 
 		public delegate void RegionLeftD(RegionLeftEventArgs args);
 		public static event RegionLeftD RegionLeft;
-		public static void OnRegionLeft(TSPlayer player, Region region)
+		public static void OnRegionLeft(ServerPlayer player, Region region)
 		{
 			if (RegionLeft == null)
 			{

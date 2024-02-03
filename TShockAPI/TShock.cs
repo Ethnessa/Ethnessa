@@ -67,11 +67,8 @@ namespace TShockAPI
 		/// <summary>VersionNum - The version number the TerrariaAPI will return back to the API. We just use the Assembly info.</summary>
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
 
-		/// <summary>VersionCodename - The version codename is displayed when the server starts. Inspired by software codenames conventions.</summary>
-		public static readonly string VersionCodename = "Intensity";
-
-		/// <summary>SavePath - This is the path TShock saves its data in. This path is relative to the TerrariaServer.exe (not in ServerPlugins).</summary>
-		public static string SavePath = "tshock";
+		/// <summary>SavePath - This is the path TShock saves its data in. This path is relative to the root folder (not in ServerPlugins).</summary>
+		public static string SavePath = "data";
 
 		/// <summary>LogFormatDefault - This is the default log file naming format. Actually, this is the only log format, because it never gets set again.</summary>
 		private const string LogFormatDefault = "yyyy-MM-dd_HH-mm-ss";
@@ -92,8 +89,8 @@ namespace TShockAPI
 		/// <summary>Will be set to true once Utils.StopServer() is called.</summary>
 		public static bool ShuttingDown;
 
-		/// <summary>Players - Contains all TSPlayer objects for accessing TSPlayers currently on the server</summary>
-		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
+		/// <summary>Players - Contains all ServerPlayer objects for accessing TSPlayers currently on the server</summary>
+		public static ServerPlayer[] Players = new ServerPlayer[Main.maxPlayers];
 
 		/// <summary>Backups - Static reference to the backup manager for accessing the backup system.</summary>
 		public static BackupManager Backups;
@@ -301,14 +298,18 @@ namespace TShockAPI
 
 				Main.ServerSideCharacter = ServerSideCharacterConfig.Settings.Enabled;
 
-				//TSAPI previously would do this automatically, but the vanilla server wont
-				if (Netplay.ServerIP == null)
-					Netplay.ServerIP = IPAddress.Any;
+				// If the server IP is null, set it to any (0.0.0.0)
+				Netplay.ServerIP ??= IPAddress.Any;
 
-				DateTime now = DateTime.Now;
+				var now = DateTime.Now;
+
+				// TODO: Figure out what the hell this comment means and if we need this
 				// Log path was not already set by the command line parameter?
 				if (LogPath == LogPathDefault)
+				{
 					LogPath = Config.Settings.LogPath;
+				}
+
 				try
 				{
 					logFilename = Path.Combine(LogPath, now.ToString(LogFormat) + ".log");
@@ -358,21 +359,28 @@ namespace TShockAPI
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
-					Log.ConsoleInfo(GetString(
-						"TShock was improperly shut down. Please use the exit command in the future to prevent this."));
+					if (TShock.Config.Settings.DisplayClosedImproperlyWarning) // bcuz who gives a fuck
+					{
+						Log.ConsoleInfo(GetString(
+							"TShock was improperly shut down. Please use the exit command in the future to prevent this."));
+					}
+
 					File.Delete(Path.Combine(SavePath, "tshock.pid"));
 				}
 
-				File.WriteAllText(Path.Combine(SavePath, "tshock.pid"),
+				await File.WriteAllTextAsync(Path.Combine(SavePath, "tshock.pid"),
 					Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture));
 
 				CliParser.Reset();
 				HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
 
-				Backups = new BackupManager(Path.Combine(SavePath, "backups"));
-				Backups.KeepFor = Config.Settings.BackupKeepFor;
-				Backups.Interval = Config.Settings.BackupInterval;
+				Backups = new BackupManager(Path.Combine(SavePath, "backups"))
+				{
+					KeepFor = Config.Settings.BackupKeepFor,
+					Interval = Config.Settings.BackupInterval
+				};
 
+				// create 'guest' and 'default' user groups
 				await GroupManager.EnsureDefaultGroups();
 
 				RestApi = new SecureRest(Netplay.ServerIP, Config.Settings.RestApiPort);
@@ -402,8 +410,10 @@ namespace TShockAPI
 						break;
 				}
 
-				Log.ConsoleInfo(GetString("TShock {0} ({1}) now running.", Version, VersionCodename));
+				Log.ConsoleInfo(GetString("Paradox x TShock now running!"));
 
+				// TODO: We need a better way to do event handling with async methods... i dont like this at all
+				// we may possibly want to re-do the event system :shrug:
 				ServerApi.Hooks.GamePostInitialize.Register(this, async (x) => await OnPostInit(x));
 				ServerApi.Hooks.GameUpdate.Register(this, async (x) => await OnUpdate(x));
 				ServerApi.Hooks.GameHardmodeTileUpdate.Register(this, OnHardUpdate);
@@ -467,20 +477,9 @@ namespace TShockAPI
 				if (Config.Settings.RestApiEnabled)
 					RestApi.Start();
 
-				if (Config.Settings.AutoSave)
-					Log.ConsoleInfo(GetString("AutoSave Enabled"));
-				else
-					Log.ConsoleInfo(GetString("AutoSave Disabled"));
-				if (Backups.Interval > 0)
-					Log.ConsoleInfo(GetString("Backups Enabled"));
-				else
-					Log.ConsoleInfo(GetString("Backups Disabled"));
-
 				Initialized?.Invoke();
 
-				Log.ConsoleInfo(GetString("Welcome to TShock for Terraria!"));
-				Log.ConsoleInfo(GetString("TShock comes with no warranty & is free software."));
-				Log.ConsoleInfo(GetString("You can modify & distribute it under the terms of the GNU GPLv3."));
+				Log.ConsoleDebug(GetString("Fully initialized!"));
 			}
 			catch (Exception ex)
 			{
@@ -497,7 +496,7 @@ namespace TShockAPI
 
 		protected void CrashReporter_HeapshotRequesting(object sender, EventArgs e)
 		{
-			foreach (TSPlayer player in TShock.Players)
+			foreach (ServerPlayer player in TShock.Players)
 			{
 				player.Account = null;
 			}
@@ -665,7 +664,7 @@ namespace TShockAPI
 				return;
 			}
 
-			TSPlayer tsplr = Players[args.Player.whoAmI];
+			ServerPlayer tsplr = Players[args.Player.whoAmI];
 			if (tsplr == null)
 			{
 				args.Handled = true;
@@ -772,7 +771,7 @@ namespace TShockAPI
 			Log.ConsoleInfo(GetString("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again."));
 
 			// Perform a safe shutdown
-			TShock.Utils.StopServer(true, GetString("Server console interrupted!"));
+			TShock.Utils.StopServer(true, GetString("ServerServer console interrupted!"));
 		}
 
 		/// <summary>HandleCommandLine - Handles the command line parameters passed to the server.</summary>
@@ -1111,23 +1110,26 @@ namespace TShockAPI
 			}
 
 			if (Backups.IsBackupTime)
+			{
 				Backups.Backup();
+			}
+
 			//call these every second, not every update
 			if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
 			{
-				OnSecondUpdate();
+				await OnSecondUpdate();
 				LastCheck = DateTime.UtcNow;
 			}
 
 			if (Main.ServerSideCharacter && (DateTime.UtcNow - LastSave).TotalMinutes >=
 			    ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
 			{
-				foreach (TSPlayer player in Players)
+				foreach (var player in Players)
 				{
 					// prevent null point exceptions
-					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
+					if (player != null && player is { IsLoggedIn: true, IsDisabledPendingTrashRemoval: false })
 					{
-						CharacterManager.InsertPlayerData(player);
+						await CharacterManager.InsertPlayerData(player);
 					}
 				}
 
@@ -1147,15 +1149,15 @@ namespace TShockAPI
 				switch (Config.Settings.ForceTime)
 				{
 					case "day":
-						TSPlayer.Server.SetTime(true, 27000.0);
+						ServerPlayer.ServerServer.SetTime(true, 27000.0);
 						break;
 					case "night":
-						TSPlayer.Server.SetTime(false, 16200.0);
+						ServerPlayer.ServerServer.SetTime(false, 16200.0);
 						break;
 				}
 			}
 
-			foreach (TSPlayer player in Players)
+			foreach (ServerPlayer player in Players)
 			{
 				if (player != null && player.Active)
 				{
@@ -1164,7 +1166,7 @@ namespace TShockAPI
 						if (player.TileKillThreshold >= Config.Settings.TileKillThreshold)
 						{
 							player.Disable(GetString("Reached TileKill threshold."), flags);
-							TSPlayer.Server.RevertTiles(player.TilesDestroyed);
+							ServerPlayer.ServerServer.RevertTiles(player.TilesDestroyed);
 							player.TilesDestroyed.Clear();
 						}
 					}
@@ -1174,7 +1176,9 @@ namespace TShockAPI
 						player.TileKillThreshold = 0;
 						//We don't want to revert the entire map in case of a disable.
 						lock (player.TilesDestroyed)
+						{
 							player.TilesDestroyed.Clear();
+						}
 					}
 
 					if (player.TilesCreated != null)
@@ -1184,7 +1188,7 @@ namespace TShockAPI
 							player.Disable(GetString("Reached TilePlace threshold"), flags);
 							lock (player.TilesCreated)
 							{
-								TSPlayer.Server.RevertTiles(player.TilesCreated);
+								ServerPlayer.ServerServer.RevertTiles(player.TilesCreated);
 								player.TilesCreated.Clear();
 							}
 						}
@@ -1211,9 +1215,9 @@ namespace TShockAPI
 						player.TPlayer.SpawnY = player.sY;
 					}
 
-					if (player.RPPending > 0)
+					if (player.RememberedPositionPending > 0)
 					{
-						if (player.RPPending == 1)
+						if (player.RememberedPositionPending == 1)
 						{
 							var pos = await RememberedPosManager.GetLeavePos(player.Account.AccountId);
 							if (pos is null)
@@ -1222,11 +1226,11 @@ namespace TShockAPI
 							}
 
 							player.Teleport(pos.Value.X * 16, pos.Value.Y * 16);
-							player.RPPending = 0;
+							player.RememberedPositionPending = 0;
 						}
 						else
 						{
-							player.RPPending--;
+							player.RememberedPositionPending--;
 						}
 					}
 
@@ -1369,12 +1373,12 @@ namespace TShockAPI
 			if (ShuttingDown)
 			{
 				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1,
-					NetworkText.FromLiteral(GetString("Server is shutting down...")));
+					NetworkText.FromLiteral(GetString("ServerServer is shutting down...")));
 				args.Handled = true;
 				return;
 			}
 
-			var player = new TSPlayer(args.Who);
+			var player = new ServerPlayer(args.Who);
 
 			if (Utils.GetActivePlayerCount() + 1 > Config.Settings.MaxSlots + Config.Settings.ReservedSlots)
 			{
@@ -1491,7 +1495,7 @@ namespace TShockAPI
 				}
 			}
 
-			// Fire the OnPlayerLogout hook too, if the player was logged in and they have a TSPlayer object.
+			// Fire the OnPlayerLogout hook too, if the player was logged in and they have a ServerPlayer object.
 			if (tsplr.IsLoggedIn)
 			{
 				Hooks.PlayerHooks.OnPlayerLogout(tsplr);
@@ -1647,11 +1651,11 @@ namespace TShockAPI
 			}
 			else if (args.Command.StartsWith(Commands.Specifier) || args.Command.StartsWith(Commands.SilentSpecifier))
 			{
-				Commands.HandleCommand(TSPlayer.Server, args.Command);
+				Commands.HandleCommand(ServerPlayer.ServerServer, args.Command);
 			}
 			else
 			{
-				Commands.HandleCommand(TSPlayer.Server, "/" + args.Command);
+				Commands.HandleCommand(ServerPlayer.ServerServer, "/" + args.Command);
 			}
 
 			args.Handled = true;
@@ -1739,7 +1743,7 @@ namespace TShockAPI
 			{
 				player.TPlayer.hostile = true;
 				player.SendData(PacketTypes.TogglePvp, "", player.Index);
-				TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
+				ServerPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
 			}
 
 			if (!player.IsLoggedIn)
@@ -1748,7 +1752,7 @@ namespace TShockAPI
 				{
 					player.IsDisabledForSSC = true;
 					player.SendErrorMessage(GetString(
-						"Server side characters is enabled! Please {0}register or {0}login to play!",
+						"ServerServer side characters is enabled! Please {0}register or {0}login to play!",
 						Commands.Specifier));
 					player.LoginHarassed = true;
 				}
@@ -1765,7 +1769,7 @@ namespace TShockAPI
 			    (await RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
 			    !player.LoginHarassed)
 			{
-				player.RPPending = 3;
+				player.RememberedPositionPending = 3;
 				player.SendInfoMessage(GetString("You will be teleported to your last known location..."));
 			}
 

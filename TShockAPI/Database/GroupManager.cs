@@ -92,7 +92,7 @@ namespace TShockAPI.Database
 		/// <param name="group">The group we want to assign them</param>
 		/// <param name="kick">Whether or not failing this check disconnects the player.</param>
 		/// <returns></returns>
-		public static bool AssertGroupValid(TSPlayer player, Group group, bool kick)
+		public static bool AssertGroupValid(ServerPlayer player, Group group, bool kick)
 		{
 			if (group == null)
 			{
@@ -109,7 +109,7 @@ namespace TShockAPI.Database
 		private static async Task AddDefaultGroup(string name, string parent, List<string> permissions)
 		{
 			if (!(await GroupExists(name))){
-				await AddGroup(name, parent, permissions, Group.defaultChatColor);
+				await AddGroup(name, parent, permissions, Group.DefaultChatColor);
 			}
 		}
 
@@ -131,8 +131,13 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">The name.</param>
 		/// <returns>The group.</returns>
-		public static async Task<Group?> GetGroupByName(string name)
+		public static async Task<Group?> GetGroupByName(string? name)
 		{
+			if (name is null)
+			{
+				return null;
+			}
+			
 			var ret = await DB.Find<Group>().Match(x => x.Name == name).ExecuteFirstAsync();
 			return ret;
 		}

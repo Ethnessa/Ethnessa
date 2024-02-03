@@ -50,7 +50,7 @@ namespace TShockAPI
 
 	public class GetDataHandlerArgs : EventArgs
 	{
-		public TSPlayer Player { get; private set; }
+		public ServerPlayer Player { get; private set; }
 		public MemoryStream Data { get; private set; }
 
 		public Player TPlayer
@@ -58,7 +58,7 @@ namespace TShockAPI
 			get { return Player.TPlayer; }
 		}
 
-		public GetDataHandlerArgs(TSPlayer player, MemoryStream data)
+		public GetDataHandlerArgs(ServerPlayer player, MemoryStream data)
 		{
 			Player = player;
 			Data = data;
@@ -66,13 +66,13 @@ namespace TShockAPI
 	}
 
 	/// <summary>
-	/// A custom HandledEventArgs that contains TShock's TSPlayer for the triggering uesr and the Terraria MP data stream.
+	/// A custom HandledEventArgs that contains TShock's ServerPlayer for the triggering uesr and the Terraria MP data stream.
 	/// Differentiated by GetDataHandlerArgs because it can be handled and responds to being handled.
 	/// </summary>
 	public class GetDataHandledEventArgs : HandledEventArgs
 	{
-		/// <summary>The TSPlayer that triggered the event.</summary>
-		public TSPlayer Player { get; set; }
+		/// <summary>The ServerPlayer that triggered the event.</summary>
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>The raw MP packet data associated with the event.</summary>
 		public MemoryStream Data { get; set; }
@@ -164,7 +164,7 @@ namespace TShockAPI
 			};
 		}
 
-		public static bool HandlerGetData(PacketTypes type, TSPlayer player, MemoryStream data)
+		public static bool HandlerGetData(PacketTypes type, ServerPlayer player, MemoryStream data)
 		{
 			GetDataHandlerDelegate handler;
 			GetDataHandlerDelegateAsync asyncHandler;
@@ -232,7 +232,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerInfoEventArgs> PlayerInfo = new HandlerList<PlayerInfoEventArgs>();
 
-		private static bool OnPlayerInfo(TSPlayer player, MemoryStream data, byte _plrid, byte _hair, int _style,
+		private static bool OnPlayerInfo(ServerPlayer player, MemoryStream data, byte _plrid, byte _hair, int _style,
 			byte _difficulty, string _name)
 		{
 			if (PlayerInfo == null)
@@ -288,7 +288,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerSlotEventArgs> PlayerSlot = new HandlerList<PlayerSlotEventArgs>();
 
-		private static bool OnPlayerSlot(TSPlayer player, MemoryStream data, byte _plr, short _slot, short _stack,
+		private static bool OnPlayerSlot(ServerPlayer player, MemoryStream data, byte _plr, short _slot, short _stack,
 			byte _prefix, short _type)
 		{
 			if (PlayerSlot == null)
@@ -321,7 +321,7 @@ namespace TShockAPI
 		/// <summary>The hook for a GetSection event.</summary>
 		public static event AsyncEventHandler<GetSectionEventArgs>? GetSection;
 
-		private static bool OnGetSection(TSPlayer player, MemoryStream data, int x, int y)
+		private static bool OnGetSection(ServerPlayer player, MemoryStream data, int x, int y)
 		{
 			if (GetSection == null)
 				return false;
@@ -400,7 +400,7 @@ namespace TShockAPI
 		public static event AsyncEventHandler<PlayerUpdateEventArgs>? PlayerUpdate;
 
 		private static bool OnPlayerUpdate(
-			TSPlayer player,
+			ServerPlayer player,
 			MemoryStream data,
 			byte plr,
 			ControlSet control,
@@ -461,7 +461,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerHPEventArgs> PlayerHP = new HandlerList<PlayerHPEventArgs>();
 
-		private static bool OnPlayerHP(TSPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
+		private static bool OnPlayerHP(ServerPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
 		{
 			if (PlayerHP == null)
 				return false;
@@ -520,7 +520,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<TileEditEventArgs>? TileEdit;
 
-		private static bool OnTileEdit(TSPlayer ply, MemoryStream data, int x, int y, EditAction action,
+		private static bool OnTileEdit(ServerPlayer ply, MemoryStream data, int x, int y, EditAction action,
 			EditType editDetail, short editData, byte style)
 		{
 			if (TileEdit == null)
@@ -572,7 +572,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<DoorUseEventArgs> DoorUse = new HandlerList<DoorUseEventArgs>();
 
-		private static bool OnDoorUse(TSPlayer ply, MemoryStream data, short x, short y, byte direction,
+		private static bool OnDoorUse(ServerPlayer ply, MemoryStream data, short x, short y, byte direction,
 			DoorAction action)
 		{
 			if (DoorUse == null)
@@ -626,7 +626,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<SendTileRectEventArgs>? SendTileRect;
 
-		private static bool OnSendTileRect(TSPlayer player, MemoryStream data, short tilex, short tiley, byte width,
+		private static bool OnSendTileRect(ServerPlayer player, MemoryStream data, short tilex, short tiley, byte width,
 			byte length, TileChangeType changeType = TileChangeType.None)
 		{
 			if (SendTileRect == null)
@@ -694,7 +694,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<ItemDropEventArgs>? ItemDrop;
 
-		private static bool OnItemDrop(TSPlayer player, MemoryStream data, short id, Vector2 pos, Vector2 vel,
+		private static bool OnItemDrop(ServerPlayer player, MemoryStream data, short id, Vector2 pos, Vector2 vel,
 			short stacks, byte prefix, bool noDelay, short type)
 		{
 			if (ItemDrop == null)
@@ -773,7 +773,7 @@ namespace TShockAPI
 		public static event AsyncEventHandler<NewProjectileEventArgs>? NewProjectile;
 
 		private static bool OnNewProjectile(MemoryStream data, short ident, Vector2 pos, Vector2 vel, float knockback,
-			short dmg, byte owner, short type, int index, TSPlayer player, float[] ai)
+			short dmg, byte owner, short type, int index, ServerPlayer player, float[] ai)
 		{
 			if (NewProjectile == null)
 				return false;
@@ -832,7 +832,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<NPCStrikeEventArgs> NPCStrike;
 
-		private static bool OnNPCStrike(TSPlayer player, MemoryStream data, short id, byte dir, short dmg,
+		private static bool OnNPCStrike(ServerPlayer player, MemoryStream data, short id, byte dir, short dmg,
 			float knockback, byte crit)
 		{
 			if (NPCStrike == null)
@@ -869,13 +869,13 @@ namespace TShockAPI
 		public static HandlerList<ProjectileKillEventArgs> ProjectileKill = new HandlerList<ProjectileKillEventArgs>();
 
 		/// <summary>Fires the ProjectileKill event.</summary>
-		/// <param name="player">The TSPlayer that caused the event.</param>
+		/// <param name="player">The ServerPlayer that caused the event.</param>
 		/// <param name="data">The MemoryStream containing the raw event data.</param>
 		/// <param name="identity">The projectile identity (from the packet).</param>
 		/// <param name="owner">The projectile's owner (from the packet).</param>
 		/// <param name="index">The projectile's index (from Main.projectiles).</param>
 		/// <returns>bool</returns>
-		private static bool OnProjectileKill(TSPlayer player, MemoryStream data, int identity, byte owner, int index)
+		private static bool OnProjectileKill(ServerPlayer player, MemoryStream data, int identity, byte owner, int index)
 		{
 			if (ProjectileKill == null)
 				return false;
@@ -914,7 +914,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<TogglePvpEventArgs> TogglePvp = new HandlerList<TogglePvpEventArgs>();
 
-		private static bool OnPvpToggled(TSPlayer player, MemoryStream data, byte _id, bool _pvp)
+		private static bool OnPvpToggled(ServerPlayer player, MemoryStream data, byte _id, bool _pvp)
 		{
 			if (TogglePvp == null)
 				return false;
@@ -977,7 +977,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<SpawnEventArgs> PlayerSpawn = new HandlerList<SpawnEventArgs>();
 
-		private static bool OnPlayerSpawn(TSPlayer player, MemoryStream data, byte pid, int spawnX, int spawnY,
+		private static bool OnPlayerSpawn(ServerPlayer player, MemoryStream data, byte pid, int spawnX, int spawnY,
 			int respawnTimer, int numberOfDeathsPVE, int numberOfDeathsPVP, PlayerSpawnContext spawnContext)
 		{
 			if (PlayerSpawn == null)
@@ -1035,7 +1035,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<ChestItemEventArgs>? ChestItemChange;
 
-		private static bool OnChestItemChange(TSPlayer player, MemoryStream data, short id, byte slot, short stacks,
+		private static bool OnChestItemChange(ServerPlayer player, MemoryStream data, short id, byte slot, short stacks,
 			byte prefix, short type)
 		{
 			if (ChestItemChange == null)
@@ -1076,7 +1076,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<ChestOpenEventArgs> ChestOpen;
 
-		private static bool OnChestOpen(MemoryStream data, int x, int y, TSPlayer player)
+		private static bool OnChestOpen(MemoryStream data, int x, int y, ServerPlayer player)
 		{
 			if (ChestOpen == null)
 				return false;
@@ -1121,7 +1121,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<PlaceChestEventArgs> PlaceChest;
 
-		private static bool OnPlaceChest(TSPlayer player, MemoryStream data, int flag, int tilex, int tiley,
+		private static bool OnPlaceChest(ServerPlayer player, MemoryStream data, int flag, int tilex, int tiley,
 			short style)
 		{
 			if (PlaceChest == null)
@@ -1181,7 +1181,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerZoneEventArgs> PlayerZone = new HandlerList<PlayerZoneEventArgs>();
 
-		private static bool OnPlayerZone(TSPlayer player, MemoryStream data, byte plr, BitsByte zone1, BitsByte zone2,
+		private static bool OnPlayerZone(ServerPlayer player, MemoryStream data, byte plr, BitsByte zone1, BitsByte zone2,
 			BitsByte zone3, BitsByte zone4, BitsByte zone5)
 		{
 			if (PlayerZone == null)
@@ -1220,7 +1220,7 @@ namespace TShockAPI
 
 		public static HandlerList<NpcTalkEventArgs> NpcTalk = new HandlerList<NpcTalkEventArgs>();
 
-		private static bool OnNpcTalk(TSPlayer player, MemoryStream data, byte _plr, short _npctarget)
+		private static bool OnNpcTalk(ServerPlayer player, MemoryStream data, byte _plr, short _npctarget)
 		{
 			if (NpcTalk == null)
 			{
@@ -1251,7 +1251,7 @@ namespace TShockAPI
 		public static HandlerList<PlayerAnimationEventArgs> PlayerAnimation =
 			new HandlerList<PlayerAnimationEventArgs>();
 
-		private static bool OnPlayerAnimation(TSPlayer player, MemoryStream data)
+		private static bool OnPlayerAnimation(ServerPlayer player, MemoryStream data)
 		{
 			if (PlayerAnimation == null)
 				return false;
@@ -1280,7 +1280,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerManaEventArgs> PlayerMana = new HandlerList<PlayerManaEventArgs>();
 
-		private static bool OnPlayerMana(TSPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
+		private static bool OnPlayerMana(ServerPlayer player, MemoryStream data, byte _plr, short _cur, short _max)
 		{
 			if (PlayerMana == null)
 				return false;
@@ -1318,7 +1318,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerTeamEventArgs> PlayerTeam = new HandlerList<PlayerTeamEventArgs>();
 
-		private static bool OnPlayerTeam(TSPlayer player, MemoryStream data, byte _id, byte _team)
+		private static bool OnPlayerTeam(ServerPlayer player, MemoryStream data, byte _id, byte _team)
 		{
 			if (PlayerTeam == null)
 				return false;
@@ -1355,7 +1355,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<SignReadEventArgs> SignRead = new HandlerList<SignReadEventArgs>();
 
-		private static bool OnSignRead(TSPlayer player, MemoryStream data, int x, int y)
+		private static bool OnSignRead(ServerPlayer player, MemoryStream data, int x, int y)
 		{
 			if (SignRead == null)
 				return false;
@@ -1397,7 +1397,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<SignEventArgs> Sign = new HandlerList<SignEventArgs>();
 
-		private static bool OnSignEvent(TSPlayer player, MemoryStream data, short id, int x, int y)
+		private static bool OnSignEvent(ServerPlayer player, MemoryStream data, short id, int x, int y)
 		{
 			if (Sign == null)
 				return false;
@@ -1457,7 +1457,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<LiquidSetEventArgs> LiquidSet;
 
-		private static bool OnLiquidSet(TSPlayer player, MemoryStream data, int tilex, int tiley, byte amount,
+		private static bool OnLiquidSet(ServerPlayer player, MemoryStream data, int tilex, int tiley, byte amount,
 			byte type)
 		{
 			if (LiquidSet == null)
@@ -1493,7 +1493,7 @@ namespace TShockAPI
 		public static HandlerList<PlayerBuffUpdateEventArgs> PlayerBuffUpdate =
 			new HandlerList<PlayerBuffUpdateEventArgs>();
 
-		private static bool OnPlayerBuffUpdate(TSPlayer player, MemoryStream data, byte id)
+		private static bool OnPlayerBuffUpdate(ServerPlayer player, MemoryStream data, byte id)
 		{
 			if (PlayerBuffUpdate == null)
 				return false;
@@ -1529,7 +1529,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<NPCSpecialEventArgs> NPCSpecial = new HandlerList<NPCSpecialEventArgs>();
 
-		private static bool OnNPCSpecial(TSPlayer player, MemoryStream data, byte id, byte type)
+		private static bool OnNPCSpecial(ServerPlayer player, MemoryStream data, byte id, byte type)
 		{
 			if (NPCSpecial == null)
 				return false;
@@ -1571,7 +1571,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<NPCAddBuffEventArgs> NPCAddBuff;
 
-		private static bool OnNPCAddBuff(TSPlayer player, MemoryStream data, short id, int type, short time)
+		private static bool OnNPCAddBuff(ServerPlayer player, MemoryStream data, short id, int type, short time)
 		{
 			if (NPCAddBuff == null)
 				return false;
@@ -1614,7 +1614,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PlayerBuffEventArgs> PlayerBuff = new HandlerList<PlayerBuffEventArgs>();
 
-		private static bool OnPlayerBuff(TSPlayer player, MemoryStream data, byte id, int type, int time)
+		private static bool OnPlayerBuff(ServerPlayer player, MemoryStream data, byte id, int type, int time)
 		{
 			if (PlayerBuff == null)
 				return false;
@@ -1669,7 +1669,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<NPCHomeChangeEventArgs> NPCHome;
 
-		private static bool OnUpdateNPCHome(TSPlayer player, MemoryStream data, short id, short x, short y,
+		private static bool OnUpdateNPCHome(ServerPlayer player, MemoryStream data, short id, short x, short y,
 			byte houseHoldStatus)
 		{
 			if (NPCHome == null)
@@ -1719,7 +1719,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PaintTileEventArgs> PaintTile = new HandlerList<PaintTileEventArgs>();
 
-		private static bool OnPaintTile(TSPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte ct)
+		private static bool OnPaintTile(ServerPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte ct)
 		{
 			if (PaintTile == null)
 				return false;
@@ -1768,7 +1768,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<PaintWallEventArgs> PaintWall = new HandlerList<PaintWallEventArgs>();
 
-		private static bool OnPaintWall(TSPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte cw)
+		private static bool OnPaintWall(ServerPlayer player, MemoryStream data, Int32 x, Int32 y, byte t, byte cw)
 		{
 			if (PaintWall == null)
 				return false;
@@ -1831,7 +1831,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<TeleportEventArgs> Teleport = new HandlerList<TeleportEventArgs>();
 
-		private static bool OnTeleport(TSPlayer player, MemoryStream data, Int16 id, byte f, float x, float y,
+		private static bool OnTeleport(ServerPlayer player, MemoryStream data, Int16 id, byte f, float x, float y,
 			byte style, int extraInfo)
 		{
 			if (Teleport == null)
@@ -1865,7 +1865,7 @@ namespace TShockAPI
 		/// <summary>When a player heals another player</summary>
 		public static event AsyncEventHandler<HealOtherPlayerEventArgs> HealOtherPlayer;
 
-		private static bool OnHealOtherPlayer(TSPlayer player, MemoryStream data, byte targetPlayerIndex, short amount)
+		private static bool OnHealOtherPlayer(ServerPlayer player, MemoryStream data, byte targetPlayerIndex, short amount)
 		{
 			if (HealOtherPlayer == null)
 				return false;
@@ -1913,7 +1913,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<ReleaseNpcEventArgs> ReleaseNPC = new HandlerList<ReleaseNpcEventArgs>();
 
-		private static bool OnReleaseNpc(TSPlayer player, MemoryStream data, int _x, int _y, short _type, byte _style)
+		private static bool OnReleaseNpc(ServerPlayer player, MemoryStream data, int _x, int _y, short _type, byte _style)
 		{
 			if (ReleaseNPC == null)
 			{
@@ -1961,7 +1961,7 @@ namespace TShockAPI
 		/// <summary>Fired when an object is placed in the world.</summary>
 		public static event AsyncEventHandler<PlaceObjectEventArgs> PlaceObject;
 
-		private static bool OnPlaceObject(TSPlayer player, MemoryStream data, short x, short y, short type, short style,
+		private static bool OnPlaceObject(ServerPlayer player, MemoryStream data, short x, short y, short type, short style,
 			byte alternate, sbyte random, bool direction)
 		{
 			if (PlaceObject == null)
@@ -2000,7 +2000,7 @@ namespace TShockAPI
 		/// <summary>Fired when a PlaceTileEntity event occurs.</summary>
 		public static event AsyncEventHandler<PlaceTileEntityEventArgs> PlaceTileEntity;
 
-		private static bool OnPlaceTileEntity(TSPlayer player, MemoryStream data, short x, short y, byte type)
+		private static bool OnPlaceTileEntity(ServerPlayer player, MemoryStream data, short x, short y, byte type)
 		{
 			if (PlaceTileEntity == null)
 				return false;
@@ -2043,7 +2043,7 @@ namespace TShockAPI
 		/// <summary>Fired when an ItemFrame is placed.</summary>
 		public static event AsyncEventHandler<PlaceItemFrameEventArgs> PlaceItemFrame;
 
-		private static bool OnPlaceItemFrame(TSPlayer player, MemoryStream data, short x, short y, short itemID,
+		private static bool OnPlaceItemFrame(ServerPlayer player, MemoryStream data, short x, short y, short itemID,
 			byte prefix, short stack, TEItemFrame itemFrame)
 		{
 			if (PlaceItemFrame == null)
@@ -2091,7 +2091,7 @@ namespace TShockAPI
 		public static HandlerList<TeleportThroughPortalEventArgs> PortalTeleport =
 			new HandlerList<TeleportThroughPortalEventArgs>();
 
-		private static bool OnPlayerTeleportThroughPortal(TSPlayer sender, byte targetPlayerIndex, MemoryStream data,
+		private static bool OnPlayerTeleportThroughPortal(ServerPlayer sender, byte targetPlayerIndex, MemoryStream data,
 			Vector2 position, Vector2 velocity, int colorIndex)
 		{
 			TeleportThroughPortalEventArgs args = new TeleportThroughPortalEventArgs
@@ -2135,7 +2135,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<GemLockToggleEventArgs> GemLockToggle;
 
-		private static bool OnGemLockToggle(TSPlayer player, MemoryStream data, short x, short y, bool on)
+		private static bool OnGemLockToggle(ServerPlayer player, MemoryStream data, short x, short y, bool on)
 		{
 			if (GemLockToggle == null)
 				return false;
@@ -2174,7 +2174,7 @@ namespace TShockAPI
 		/// <summary>Fired on a mass wire edit operation.</summary>
 		public static event AsyncEventHandler<MassWireOperationEventArgs> MassWireOperation;
 
-		private static bool OnMassWireOperation(TSPlayer player, MemoryStream data, short startX, short startY,
+		private static bool OnMassWireOperation(ServerPlayer player, MemoryStream data, short startX, short startY,
 			short endX, short endY, byte toolMode)
 		{
 			if (MassWireOperation == null)
@@ -2239,7 +2239,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<PlayerDamageEventArgs> PlayerDamage;
 
-		private static bool OnPlayerDamage(TSPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp,
+		private static bool OnPlayerDamage(ServerPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp,
 			bool crit, sbyte cooldownCounter, PlayerDeathReason playerDeathReason)
 		{
 			if (PlayerDamage == null)
@@ -2295,7 +2295,7 @@ namespace TShockAPI
 		/// </summary>
 		public static HandlerList<KillMeEventArgs> KillMe = new HandlerList<KillMeEventArgs>();
 
-		private static bool OnKillMe(TSPlayer player, MemoryStream data, byte plr, byte direction, short damage,
+		private static bool OnKillMe(ServerPlayer player, MemoryStream data, byte plr, byte direction, short damage,
 			bool pvp, PlayerDeathReason playerDeathReason)
 		{
 			if (KillMe == null)
@@ -2336,7 +2336,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<EmojiEventArgs>? Emoji;
 
-		private static bool OnEmoji(TSPlayer player, MemoryStream data, byte playerIndex, byte emojiID)
+		private static bool OnEmoji(ServerPlayer player, MemoryStream data, byte playerIndex, byte emojiID)
 		{
 			if (Emoji == null)
 				return false;
@@ -2398,7 +2398,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<DisplayDollItemSyncEventArgs>? DisplayDollItemSync;
 
-		private static bool OnDisplayDollItemSync(TSPlayer player, MemoryStream data, byte playerIndex,
+		private static bool OnDisplayDollItemSync(ServerPlayer player, MemoryStream data, byte playerIndex,
 			int tileEntityID, TEDisplayDoll displayDollEntity, int slot, bool isDye, Item oldItem, Item newItem)
 		{
 			if (DisplayDollItemSync == null)
@@ -2441,7 +2441,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<RequestTileEntityInteractionEventArgs>? RequestTileEntityInteraction;
 
-		private static bool OnRequestTileEntityInteraction(TSPlayer player, MemoryStream data, TileEntity tileEntity,
+		private static bool OnRequestTileEntityInteraction(ServerPlayer player, MemoryStream data, TileEntity tileEntity,
 			byte playerIndex)
 		{
 			if (RequestTileEntityInteraction == null)
@@ -2489,7 +2489,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<SyncTilePickingEventArgs>? SyncTilePicking;
 
-		private static bool OnSyncTilePicking(TSPlayer player, MemoryStream data, byte playerIndex, short tileX,
+		private static bool OnSyncTilePicking(ServerPlayer player, MemoryStream data, byte playerIndex, short tileX,
 			short tileY, byte tileDamage)
 		{
 			if (SyncTilePicking == null)
@@ -2543,7 +2543,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<LandGolfBallInCupEventArgs>? LandGolfBallInCup;
 
-		private static bool OnLandGolfBallInCup(TSPlayer player, MemoryStream data, byte playerIndex, ushort tileX,
+		private static bool OnLandGolfBallInCup(ServerPlayer player, MemoryStream data, byte playerIndex, ushort tileX,
 			ushort tileY, ushort hits, ushort projectileType)
 		{
 			if (LandGolfBallInCup == null)
@@ -2589,7 +2589,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<FishOutNPCEventArgs> FishOutNPC;
 
-		private static bool OnFishOutNPC(TSPlayer player, MemoryStream data, ushort tileX, ushort tileY, short npcID)
+		private static bool OnFishOutNPC(ServerPlayer player, MemoryStream data, ushort tileX, ushort tileY, short npcID)
 		{
 			if (FishOutNPC == null)
 				return false;
@@ -2639,7 +2639,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<FoodPlatterTryPlacingEventArgs> FoodPlatterTryPlacing;
 
-		private static bool OnFoodPlatterTryPlacing(TSPlayer player, MemoryStream data, short tileX, short tileY,
+		private static bool OnFoodPlatterTryPlacing(ServerPlayer player, MemoryStream data, short tileX, short tileY,
 			short itemID, byte prefix, short stack)
 		{
 			if (FoodPlatterTryPlacing == null)
@@ -2675,7 +2675,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<ReadNetModuleEventArgs>? ReadNetModule;
 
-		private static bool OnReadNetModule(TSPlayer player, MemoryStream data, NetModuleType moduleType)
+		private static bool OnReadNetModule(ServerPlayer player, MemoryStream data, NetModuleType moduleType)
 		{
 			if (ReadNetModule == null)
 			{
@@ -2859,7 +2859,7 @@ namespace TShockAPI
 			    slot < 0 ||
 			    slot > NetItem.MaxInventory)
 				return true;
-			if (args.Player.IgnoreSSCPackets)
+			if (args.Player.IgnoreSscPackets)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerSlot rejected ignore ssc packets"));
 				args.Player.SendData(PacketTypes.PlayerSlot, "", args.Player.Index, slot, prefix);
@@ -2916,7 +2916,7 @@ namespace TShockAPI
 					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Group = group;
-					args.Player.tempGroup = null;
+					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
@@ -3106,7 +3106,7 @@ namespace TShockAPI
 			var max = args.Data.ReadInt16();
 
 			if (OnPlayerHP(args.Player, args.Data, plr, cur, max) || cur <= 0 || max <= 0 ||
-			    args.Player.IgnoreSSCPackets)
+			    args.Player.IgnoreSscPackets)
 				return true;
 
 			if (max > TShock.Config.Settings.MaxHP && !await args.Player.HasPermission(Permissions.ignorehp))
@@ -3240,7 +3240,7 @@ namespace TShockAPI
 
 			if (id == 400 && owner == 255)
 			{
-				args.Player.IgnoreSSCPackets = false;
+				args.Player.IgnoreSscPackets = false;
 				return true;
 			}
 
@@ -3557,7 +3557,7 @@ namespace TShockAPI
 						return true;
 
 					args.Player.Group = group;
-					args.Player.tempGroup = null;
+					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
@@ -3666,7 +3666,7 @@ namespace TShockAPI
 			var max = args.Data.ReadInt16();
 
 			if (OnPlayerMana(args.Player, args.Data, plr, cur, max) || cur < 0 || max < 0 ||
-			    args.Player.IgnoreSSCPackets)
+			    args.Player.IgnoreSscPackets)
 				return true;
 
 			if (max > TShock.Config.Settings.MaxMP && !await args.Player.HasPermission(Permissions.ignoremp))

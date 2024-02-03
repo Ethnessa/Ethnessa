@@ -63,7 +63,7 @@ namespace TShockAPI.Database
 		/// <param name="amount">The amount of items being sacrificed.</param>
 		/// <param name="player">The player who sacrificed the item for research.</param>
 		/// <returns>The cumulative total sacrifices for this item.</returns>
-		public static async Task<int> SacrificeItem(int itemId, int amount, TSPlayer player)
+		public static async Task<int> SacrificeItem(int itemId, int amount, ServerPlayer player)
 		{
 			var itemsSacrificed = await GetSacrificedItems();
 			if (!(itemsSacrificed.ContainsKey(itemId)))

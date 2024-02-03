@@ -1,22 +1,4 @@
-﻿/*
-TShock, a server mod for Terraria
-Copyright (C) 2011-2019 Pryaxis & TShock Contributors
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -29,17 +11,15 @@ namespace TShockAPI
 	/// </summary>
 	public class Group : MongoDB.Entities.Entity
 	{
-		// NOTE: Using a const still suffers from needing to recompile to change the default
-		// ideally we would use a static but this means it can't be used for the default parameter :(
 		/// <summary>
 		/// Default chat color.
 		/// </summary>
-		public const string defaultChatColor = "255,255,255";
+		public const string DefaultChatColor = "255,255,255";
 
 		/// <summary>
 		/// List of permissions available to the group.
 		/// </summary>
-		public virtual List<string> Permissions { get; set; }= new List<string>();
+		public virtual List<string> Permissions { get; set; } = new List<string>();
 
 		/// <summary>
 		/// List of permissions that the group is explicitly barred from.
@@ -62,38 +42,39 @@ namespace TShockAPI
 		public string Suffix { get; set; }
 
 		/// <summary>
-		/// The name of the parent, not particularly sure why this is here.
-		/// We can use group.Parent.Name and not have this second reference.
-		/// This was added for rest, so a discussion with Shank is necessary.
+		/// The name of the parent group, if any.
 		/// </summary>
 		public string? ParentGroupName { get; set; }
 
 		/// <summary>
-		/// The chat color of the group.
-		/// Returns "255,255,255", sets "255,255,255"
+		/// The chat color of the group in "R,G,B" format. Each component should be in the range 0-255.
 		/// </summary>
 		public string ChatColor
 		{
-			get { return string.Format("{0},{1},{2}", R.ToString("D3"), G.ToString("D3"), B.ToString("D3")); }
+			get => $"{R:D3},{G:D3},{B:D3}";
 			set
 			{
-				if (null != value)
+				if (value == null) throw new ArgumentNullException(nameof(value), "ChatColor cannot be null.");
+
+				var parts = value.Split(',');
+				if (parts.Length != 3)
+					throw new ArgumentException("ChatColor must be in the format \"R,G,B\".", nameof(value));
+
+				if (byte.TryParse(parts[0], out var r) && byte.TryParse(parts[1], out var g) &&
+				    byte.TryParse(parts[2], out var b))
 				{
-					string[] parts = value.Split(',');
-					if (3 == parts.Length)
-					{
-						byte r, g, b;
-						if (byte.TryParse(parts[0], out r) && byte.TryParse(parts[1], out g) && byte.TryParse(parts[2], out b))
-						{
-							R = r;
-							G = g;
-							B = b;
-							return;
-						}
-					}
+					R = r;
+					G = g;
+					B = b;
+				}
+				else
+				{
+					throw new ArgumentException(
+						"Each component of ChatColor must be a valid byte value in the range 0-255.", nameof(value));
 				}
 			}
 		}
+
 
 		/// <summary>
 		/// The permissions of this group and all that it inherits from.
@@ -102,7 +83,7 @@ namespace TShockAPI
 		{
 			var cur = this;
 			var traversed = new List<Group>();
-			HashSet<string> all = new HashSet<string>();
+			var all = new HashSet<string>();
 			while (cur != null)
 			{
 				foreach (var perm in cur.Permissions)
@@ -119,21 +100,24 @@ namespace TShockAPI
 				{
 					throw new Exception("Infinite group parenting ({0})".SFormat(cur.Name));
 				}
+
 				traversed.Add(cur);
 				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
-			return all.ToList();
 
+			return all.ToList();
 		}
 
 		/// <summary>
 		/// The group's chat color red byte.
 		/// </summary>
 		public byte R = 255;
+
 		/// <summary>
 		/// The group's chat color green byte.
 		/// </summary>
 		public byte G = 255;
+
 		/// <summary>
 		/// The group's chat color blue byte.
 		/// </summary>
@@ -142,7 +126,7 @@ namespace TShockAPI
 		/// <summary>
 		/// The default group attributed to unregistered users.
 		/// </summary>
-		public static Group DefaultGroup = null;
+		public static Group? DefaultGroup = null;
 
 		/// <summary>
 		/// Initializes a new instance of the group class.
@@ -151,7 +135,8 @@ namespace TShockAPI
 		/// <param name="parentgroup">The parent group, if any.</param>
 		/// <param name="chatcolor">The chat color, in "RRR,GGG,BBB" format.</param>
 		/// <param name="permissions">The list of permissions associated with this group, separated by commas.</param>
-		public Group(string groupname, Group? parentgroup = null, string chatcolor = "255,255,255", List<string> permissions = null)
+		public Group(string groupname, Group? parentgroup = null, string chatcolor = "255,255,255",
+			List<string> permissions = null)
 		{
 			Name = groupname;
 			ParentGroupName = parentgroup?.Name;
@@ -184,8 +169,10 @@ namespace TShockAPI
 					return !negated;
 				}
 			}
+
 			return false;
 		}
+
 		private async Task<bool> RealHasPermission(string permission)
 		{
 			if (string.IsNullOrEmpty(permission))
@@ -199,15 +186,18 @@ namespace TShockAPI
 				{
 					return false;
 				}
+
 				if (cur.Permissions.Contains(permission))
 					return true;
 				if (traversed.Contains(cur))
 				{
 					throw new InvalidOperationException("Infinite group parenting ({0})".SFormat(cur.Name));
 				}
+
 				traversed.Add(cur);
 				cur = await GroupManager.GetGroupByName(cur?.ParentGroupName);
 			}
+
 			return false;
 		}
 
@@ -236,6 +226,7 @@ namespace TShockAPI
 				NegatePermission(permission.Substring(1));
 				return;
 			}
+
 			// Avoid duplicates
 			if (!Permissions.Contains(permission))
 			{
@@ -268,6 +259,7 @@ namespace TShockAPI
 				NegatedPermissions.Remove(permission.Substring(1));
 				return;
 			}
+
 			Permissions.Remove(permission);
 		}
 
@@ -299,7 +291,7 @@ namespace TShockAPI
 	public class SuperAdminGroup : Group
 	{
 		/// <summary>
-		/// The superadmin class has every permission, represented by '*'.
+		/// The super admin class has every permission, represented by '*'.
 		/// </summary>
 		public override List<string> Permissions { get; set; } = new() { "*" };
 
@@ -324,7 +316,7 @@ namespace TShockAPI
 		/// <returns>True</returns>
 		public override async Task<bool> HasPermission(string permission)
 		{
-			return true;
+			return await Task.FromResult(true);
 		}
 	}
 }

@@ -134,8 +134,8 @@ namespace TShockAPI
 		/// <param name="blue">blue - The amount of blue (0-255) in the color for the supported destinations.</param>
 		public void Broadcast(string msg, byte red, byte green, byte blue)
 		{
-			TSPlayer.All.SendMessage(msg, red, green, blue);
-			TSPlayer.Server.SendMessage(msg, red, green, blue);
+			ServerPlayer.All.SendMessage(msg, red, green, blue);
+			ServerPlayer.ServerServer.SendMessage(msg, red, green, blue);
 			TShock.Log.Info(GetString("Broadcast: {0}", msg));
 		}
 
@@ -157,8 +157,8 @@ namespace TShockAPI
 		/// <param name="blue">blue - The amount of blue (0-255) in the color for the supported destinations.</param>
 		public void Broadcast(int ply, string msg, byte red, byte green, byte blue)
 		{
-			TSPlayer.All.SendMessageFromPlayer(msg, red, green, blue, ply);
-			TSPlayer.Server.SendMessage(Main.player[ply].name + ": " + msg, red, green, blue);
+			ServerPlayer.All.SendMessageFromPlayer(msg, red, green, blue, ply);
+			ServerPlayer.ServerServer.SendMessage(Main.player[ply].name + ": " + msg, red, green, blue);
 			TShock.Log.Info(GetString("Broadcast: {0}: {1}", Main.player[ply].name, msg));
 		}
 
@@ -175,11 +175,11 @@ namespace TShockAPI
 		/// <param name="log">Message to send</param>
 		/// <param name="color">Color of the message</param>
 		/// <param name="excludedPlayer">The player to not send the message to.</param>
-		public async Task SendLogs(string log, Color color, TSPlayer excludedPlayer = null)
+		public async Task SendLogs(string log, Color color, ServerPlayer excludedPlayer = null)
 		{
 			TShock.Log.Info(log);
-			TSPlayer.Server.SendMessage(log, color);
-			foreach (TSPlayer player in TShock.Players)
+			ServerPlayer.ServerServer.SendMessage(log, color);
+			foreach (ServerPlayer player in TShock.Players)
 			{
 				if (player != null && player != excludedPlayer && player.Active && await player.HasPermission(Permissions.logs) &&
 						player.DisplayLogs && TShock.Config.Settings.DisableSpewLogs == false)
@@ -581,8 +581,8 @@ namespace TShockAPI
 		/// Stops the server after kicking all players with a reason message, and optionally saving the world
 		/// </summary>
 		/// <param name="save">bool perform a world save before stop (default: true)</param>
-		/// <param name="reason">string reason (default: "Server shutting down!")</param>
-		public void StopServer(bool save = true, string reason = "Server shutting down!")
+		/// <param name="reason">string reason (default: "ServerServer shutting down!")</param>
+		public void StopServer(bool save = true, string reason = "ServerServer shutting down!")
 		{
 			TShock.ShuttingDown = true;
 

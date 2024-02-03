@@ -221,7 +221,7 @@ namespace Rests
 			Ip = ip;
 			Port = port;
 			AssemblyName assembly = this.GetType().Assembly.GetName();
-			serverHeader = new StringHeader("Server", String.Format("{0}/{1}", assembly.Name, assembly.Version));
+			serverHeader = new StringHeader("ServerServer", String.Format("{0}/{1}", assembly.Name, assembly.Version));
 		}
 
 		/// <summary>

@@ -44,10 +44,12 @@ namespace TShockAPI
 {
 	public delegate void CommandDelegate(CommandArgs args);
 
+	// TODO: Make each command a class, and have a CommandManager class that handles all the commands.
+	// We want to make this disaster a bit more readable and easy to maintain in the future.
 	public class CommandArgs : EventArgs
 	{
 		public string Message { get; private set; }
-		public TSPlayer Player { get; private set; }
+		public ServerPlayer Player { get; private set; }
 		public bool Silent { get; private set; }
 
 		/// <summary>
@@ -61,7 +63,7 @@ namespace TShockAPI
 			get { return Player.TPlayer; }
 		}
 
-		public CommandArgs(string message, TSPlayer ply, List<string> args)
+		public CommandArgs(string message, ServerPlayer ply, List<string> args)
 		{
 			Message = message;
 			Player = ply;
@@ -69,7 +71,7 @@ namespace TShockAPI
 			Silent = false;
 		}
 
-		public CommandArgs(string message, bool silent, TSPlayer ply, List<string> args)
+		public CommandArgs(string message, bool silent, ServerPlayer ply, List<string> args)
 		{
 			Message = message;
 			Player = ply;
@@ -150,7 +152,7 @@ namespace TShockAPI
 			Permissions = new List<string>();
 		}
 
-		public async Task<bool> Run(string msg, bool silent, TSPlayer ply, List<string> parms)
+		public async Task<bool> Run(string msg, bool silent, ServerPlayer ply, List<string> parms)
 		{
 			if (!await CanRun(ply))
 				return false;
@@ -168,7 +170,7 @@ namespace TShockAPI
 			return true;
 		}
 
-		public async Task<bool> Run(string msg, TSPlayer ply, List<string> parms)
+		public async Task<bool> Run(string msg, ServerPlayer ply, List<string> parms)
 		{
 			return await Run(msg, false, ply, parms);
 		}
@@ -178,7 +180,7 @@ namespace TShockAPI
 			return Names.Contains(name);
 		}
 
-		public async Task<bool> CanRun(TSPlayer ply)
+		public async Task<bool> CanRun(ServerPlayer ply)
 		{
 			if (Permissions == null || Permissions.Count < 1)
 				return true;
@@ -193,8 +195,9 @@ namespace TShockAPI
 
 	public static class Commands
 	{
+		// TODO: Merge into one List
 		public static List<Command> ChatCommands = new List<Command>();
-		public static ReadOnlyCollection<Command> TShockCommands = new ReadOnlyCollection<Command>(new List<Command>());
+		public static List<Command> TShockCommands = new List<Command>(new List<Command>());
 
 		/// <summary>
 		/// The command specifier, defaults to "/"
@@ -255,7 +258,7 @@ namespace TShockAPI
 				DoLog = false,
 				HelpText = GetString("Logs you out of your current account.")
 			});
-			add(new Command(Permissions.canchangepassword, async(x) =>PasswordUser(x), "password")
+			add(new Command(Permissions.canchangepassword, async(x) =>ChangePassword(x), "password")
 			{
 				AllowServer = false,
 				DoLog = false,
@@ -323,7 +326,7 @@ namespace TShockAPI
 			});
 			add(new Command(Permissions.uploaddata, UploadJoinData, "uploadssc")
 			{
-				HelpText = GetString("Upload the account information when you joined the server as your Server Side Character data.")
+				HelpText = GetString("Upload the account information when you joined the server as your ServerServer Side Character data.")
 			});
 			add(new Command(Permissions.settempgroup, TempGroup, "tempgroup")
 			{
@@ -629,10 +632,10 @@ namespace TShockAPI
 				HelpText = GetString("Shows the server's rules.")
 			});*/
 
-			TShockCommands = new ReadOnlyCollection<Command>(tshockCommands);
+			TShockCommands = new List<Command>(tshockCommands);
 		}
 
-		public static async Task<bool> HandleCommand(TSPlayer player, string text)
+		public static async Task<bool> HandleCommand(ServerPlayer player, string text)
 		{
 			string cmdText = text.Remove(0, 1);
 			string cmdPrefix = text[0].ToString();
@@ -719,7 +722,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="str"></param>
 		/// <returns></returns>
-		private static List<String> ParseParameters(string str)
+		private static List<string> ParseParameters(string str)
 		{
 			var ret = new List<string>();
 			var sb = new StringBuilder();
@@ -882,7 +885,7 @@ namespace TShockAPI
 					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Group = group;
-					args.Player.tempGroup = null;
+					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
@@ -962,11 +965,11 @@ namespace TShockAPI
 			args.Player.SendSuccessMessage(GetString("You have been successfully logged out of your account."));
 			if (Main.ServerSideCharacter)
 			{
-				args.Player.SendWarningMessage(GetString("Server side characters are enabled. You need to be logged-in to play."));
+				args.Player.SendWarningMessage(GetString("ServerServer side characters are enabled. You need to be logged-in to play."));
 			}
 		}
 
-		private static async Task PasswordUser(CommandArgs args)
+		private static async Task ChangePassword(CommandArgs args)
 		{
 			try
 			{
@@ -1000,7 +1003,7 @@ namespace TShockAPI
 			catch (UserAccountManager.UserAccountManagerException ex)
 			{
 				args.Player.SendErrorMessage(GetString("Sorry, an error occurred: {0}.", ex.Message));
-				TShock.Log.ConsoleError(GetString("PasswordUser returned an error: {0}.", ex));
+				TShock.Log.ConsoleError(GetString("ChangePassword returned an error: {0}.", ex));
 			}
 		}
 
@@ -1047,7 +1050,7 @@ namespace TShockAPI
 				account.Group = TShock.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
 				account.UUID = args.Player.UUID;
 
-				if (await UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != TSServerPlayer.AccountName) // Cheap way of checking for existance of a user
+				if (await UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != ServerServerPlayer.AccountName) // Cheap way of checking for existance of a user
 				{
 					args.Player.SendSuccessMessage(GetString("Your account, \"{0}\", has been registered.", account.Name));
 					args.Player.SendSuccessMessage(GetString("Your password is {0}.", echoPassword));
@@ -1256,7 +1259,7 @@ namespace TShockAPI
 				return;
 			}
 
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count < 1)
 				args.Player.SendErrorMessage(GetString("Invalid player."));
 			else if (players.Count > 1)
@@ -1323,7 +1326,7 @@ namespace TShockAPI
 			}
 
 			string plStr = args.Parameters[0];
-			var players = TSPlayer.FindByNameOrID(plStr);
+			var players = ServerPlayer.FindByNameOrId(plStr);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString("Player not found. Unable to kick the player."));
@@ -1574,7 +1577,7 @@ namespace TShockAPI
 					return;
 				}
 
-				var players = TSPlayer.FindByNameOrID(target);
+				var players = ServerPlayer.FindByNameOrId(target);
 
 				if (players.Count > 1)
 				{
@@ -1763,7 +1766,7 @@ namespace TShockAPI
 			if (Main.ServerSideCharacter)
 			{
 				args.Player.SendSuccessMessage(GetString("Your server-side character data has been saved."));
-				foreach (TSPlayer player in TShock.Players)
+				foreach (ServerPlayer player in TShock.Players)
 				{
 					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
 					{
@@ -1777,7 +1780,7 @@ namespace TShockAPI
 		{
 			if (!Main.ServerSideCharacter)
 			{
-				args.Player.SendErrorMessage(GetString("Server-side characters is disabled."));
+				args.Player.SendErrorMessage(GetString("ServerServer-side characters is disabled."));
 				return;
 			}
 			if (args.Parameters.Count < 1)
@@ -1787,7 +1790,7 @@ namespace TShockAPI
 			}
 
 			string playerNameToMatch = string.Join(" ", args.Parameters);
-			var matchedPlayers = TSPlayer.FindByNameOrID(playerNameToMatch);
+			var matchedPlayers = ServerPlayer.FindByNameOrId(playerNameToMatch);
 			if (matchedPlayers.Count < 1)
 			{
 				args.Player.SendErrorMessage(GetString("No players matched \"{0}\".", playerNameToMatch));
@@ -1799,7 +1802,7 @@ namespace TShockAPI
 				return;
 			}
 
-			TSPlayer matchedPlayer = matchedPlayers[0];
+			ServerPlayer matchedPlayer = matchedPlayers[0];
 			if (matchedPlayer.IsLoggedIn)
 			{
 				args.Player.SendErrorMessage(GetString("Player \"{0}\" is already logged in.", matchedPlayer.Name));
@@ -1817,15 +1820,15 @@ namespace TShockAPI
 			}
 
 			await CharacterManager.InsertPlayerData(matchedPlayer);
-			args.Player.SendSuccessMessage(GetString("Server-side character data from \"{0}\" has been replaced by their current local data.", matchedPlayer.Name));
+			args.Player.SendSuccessMessage(GetString("ServerServer-side character data from \"{0}\" has been replaced by their current local data.", matchedPlayer.Name));
 		}
 /*
 		private static void UploadJoinData(CommandArgs args)
 		{
-			TSPlayer targetPlayer = args.Player;
+			ServerPlayer targetPlayer = args.Player;
 			if (args.Parameters.Count == 1 && args.Player.HasPermission(Permissions.uploadothersdata))
 			{
-				List<TSPlayer> players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+				List<ServerPlayer> players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 				if (players.Count > 1)
 				{
 					args.Player.SendMultipleMatchError(players.Select(p => p.Name));
@@ -1851,7 +1854,7 @@ namespace TShockAPI
 				args.Player.SendErrorMessage(GetString("Usage: /uploadssc [playername]."));
 				return;
 			}
-			else if (args.Parameters.Count == 0 && args.Player is TSServerPlayer)
+			else if (args.Parameters.Count == 0 && args.Player is ServerServerPlayer)
 			{
 				args.Player.SendErrorMessage(GetString("The targeted user cannot have their data uploaded, because they are not a player."));
 				args.Player.SendErrorMessage(GetString("Usage: /uploadssc [playername]."));
@@ -1890,9 +1893,9 @@ namespace TShockAPI
 			else
 			{
 				if (TShock.Config.Settings.ForceHalloween)
-					TSPlayer.All.SendInfoMessage(GetString("{0} enabled halloween mode.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} enabled halloween mode.", args.Player.Name));
 				else
-					TSPlayer.All.SendInfoMessage(GetString("{0} disabled halloween mode.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} disabled halloween mode.", args.Player.Name));
 			}
 		}
 
@@ -1910,9 +1913,9 @@ namespace TShockAPI
 			else
 			{
 				if (TShock.Config.Settings.ForceXmas)
-					TSPlayer.All.SendInfoMessage(GetString("{0} enabled xmas mode.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} enabled xmas mode.", args.Player.Name));
 				else
-					TSPlayer.All.SendInfoMessage(GetString("{0} disabled xmas mode.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} disabled xmas mode.", args.Player.Name));
 			}
 		}
 /*
@@ -1925,7 +1928,7 @@ namespace TShockAPI
 				return;
 			}
 
-			List<TSPlayer> ply = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			List<ServerPlayer> ply = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (ply.Count < 1)
 			{
 				args.Player.SendErrorMessage(GetString("Could not find player {0}.", args.Parameters[0]));
@@ -1960,7 +1963,7 @@ namespace TShockAPI
 
 			Group g = TShock.Groups.GetGroupByName(args.Parameters[1]);
 
-			ply[0].tempGroup = g;
+			ply[0].TempGroup = g;
 
 			if (args.Parameters.Count < 3)
 			{
@@ -1980,16 +1983,16 @@ namespace TShockAPI
 		private static void SubstituteUser(CommandArgs args)
 		{
 
-			if (args.Player.tempGroup != null)
+			if (args.Player.TempGroup != null)
 			{
-				args.Player.tempGroup = null;
+				args.Player.TempGroup = null;
 				args.Player.tempGroupTimer.Stop();
 				args.Player.SendSuccessMessage(GetString("Your previous permission set has been restored."));
 				return;
 			}
 			else
 			{
-				args.Player.tempGroup = new SuperAdminGroup();
+				args.Player.TempGroup = new SuperAdminGroup();
 				args.Player.tempGroupTimer = new System.Timers.Timer(600 * 1000);
 				args.Player.tempGroupTimer.Elapsed += args.Player.TempGroupTimerElapsed;
 				args.Player.tempGroupTimer.Start();
@@ -2000,7 +2003,7 @@ namespace TShockAPI
 
 		#endregion Player Management Commands
 
-		#region Server Maintenence Commands
+		#region ServerServer Maintenence Commands
 
 		// Executes a command as a superuser if you have sudo rights.
 		private static void SubstituteUserDo(CommandArgs args)
@@ -2013,9 +2016,9 @@ namespace TShockAPI
 			}
 
 			string replacementCommand = String.Join(" ", args.Parameters.Select(p => p.Contains(" ") ? $"\"{p}\"" : p));
-			args.Player.tempGroup = new SuperAdminGroup();
+			args.Player.TempGroup = new SuperAdminGroup();
 			HandleCommand(args.Player, replacementCommand);
-			args.Player.tempGroup = null;
+			args.Player.TempGroup = null;
 			return;
 		}
 
@@ -2026,7 +2029,7 @@ namespace TShockAPI
 				string message = string.Join(" ", args.Parameters);
 
 				TShock.Utils.Broadcast(
-					GetString("(Server Broadcast) ") + message,
+					GetString("(ServerServer Broadcast) ") + message,
 					Convert.ToByte(TShock.Config.Settings.BroadcastRGB[0]), Convert.ToByte(TShock.Config.Settings.BroadcastRGB[1]),
 					Convert.ToByte(TShock.Config.Settings.BroadcastRGB[2]));
 			}
@@ -2037,7 +2040,7 @@ namespace TShockAPI
 
 			if (Main.ServerSideCharacter)
 			{
-				foreach (TSPlayer player in TShock.Players)
+				foreach (ServerPlayer player in TShock.Players)
 				{
 					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
 					{
@@ -2046,13 +2049,13 @@ namespace TShockAPI
 				}
 			}
 
-			string reason = ((args.Parameters.Count > 0) ? GetString("Server shutting down: ") + String.Join(" ", args.Parameters) : GetString("Server shutting down!"));
+			string reason = ((args.Parameters.Count > 0) ? GetString("ServerServer shutting down: ") + String.Join(" ", args.Parameters) : GetString("ServerServer shutting down!"));
 			TShock.Utils.StopServer(true, reason);
 		}
 
 		private static void OffNoSave(CommandArgs args)
 		{
-			string reason = ((args.Parameters.Count > 0) ? GetString("Server shutting down: ") + String.Join(" ", args.Parameters) : GetString("Server shutting down."));
+			string reason = ((args.Parameters.Count > 0) ? GetString("ServerServer shutting down: ") + String.Join(" ", args.Parameters) : GetString("ServerServer shutting down."));
 			TShock.Utils.StopServer(false, reason);
 		}
 
@@ -2180,7 +2183,7 @@ namespace TShockAPI
 			}
 		}
 
-		#endregion Server Maintenence Commands
+		#endregion ServerServer Maintenence Commands
 
 		/*
 		#region Cause Events and Spawn Monsters Commands
@@ -2319,26 +2322,26 @@ namespace TShockAPI
 			}
 			else
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} triggered a meteor.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} triggered a meteor.", args.Player.Name));
 			}
 		}
 
 		private static void Fullmoon(CommandArgs args)
 		{
-			TSPlayer.Server.SetFullMoon();
+			ServerPlayer.ServerServer.SetFullMoon();
 			if (args.Silent)
 			{
 				args.Player.SendInfoMessage(GetString("Started a full moon event."));
 			}
 			else
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} started a full moon event.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} started a full moon event.", args.Player.Name));
 			}
 		}
 
 		private static void Bloodmoon(CommandArgs args)
 		{
-			TSPlayer.Server.SetBloodMoon(!Main.bloodMoon);
+			ServerPlayer.ServerServer.SetBloodMoon(!Main.bloodMoon);
 			if (args.Silent)
 			{
 				if (Main.bloodMoon)
@@ -2354,18 +2357,18 @@ namespace TShockAPI
 			{
 				if (Main.bloodMoon)
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} started a blood moon event.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} started a blood moon event.", args.Player.Name));
 				}
 				else
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} stopped the current blood moon.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} stopped the current blood moon.", args.Player.Name));
 				}
 			}
 		}
 
 		private static void Eclipse(CommandArgs args)
 		{
-			TSPlayer.Server.SetEclipse(!Main.eclipse);
+			ServerPlayer.ServerServer.SetEclipse(!Main.eclipse);
 			if (args.Silent)
 			{
 				if (Main.eclipse)
@@ -2381,11 +2384,11 @@ namespace TShockAPI
 			{
 				if (Main.eclipse)
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} started an eclipse.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} started an eclipse.", args.Player.Name));
 				}
 				else
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} stopped an eclipse.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} stopped an eclipse.", args.Player.Name));
 				}
 			}
 		}
@@ -2406,19 +2409,19 @@ namespace TShockAPI
 				{
 					case "goblin":
 					case "goblins":
-						TSPlayer.All.SendInfoMessage(GetString("{0} has started a goblin army invasion.", args.Player.Name));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} has started a goblin army invasion.", args.Player.Name));
 						TShock.Utils.StartInvasion(1);
 						break;
 
 					case "snowman":
 					case "snowmen":
-						TSPlayer.All.SendInfoMessage(GetString("{0} has started a snow legion invasion.", args.Player.Name));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} has started a snow legion invasion.", args.Player.Name));
 						TShock.Utils.StartInvasion(2);
 						break;
 
 					case "pirate":
 					case "pirates":
-						TSPlayer.All.SendInfoMessage(GetString("{0} has started a pirate invasion.", args.Player.Name));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} has started a pirate invasion.", args.Player.Name));
 						TShock.Utils.StartInvasion(3);
 						break;
 
@@ -2433,11 +2436,11 @@ namespace TShockAPI
 							}
 						}
 
-						TSPlayer.Server.SetPumpkinMoon(true);
+						ServerPlayer.ServerServer.SetPumpkinMoon(true);
 						Main.bloodMoon = false;
 						NPC.waveKills = 0f;
 						NPC.waveNumber = wave;
-						TSPlayer.All.SendInfoMessage(GetString("{0} started the pumpkin moon at wave {1}!", args.Player.Name, wave));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} started the pumpkin moon at wave {1}!", args.Player.Name, wave));
 						break;
 
 					case "frost":
@@ -2451,16 +2454,16 @@ namespace TShockAPI
 							}
 						}
 
-						TSPlayer.Server.SetFrostMoon(true);
+						ServerPlayer.ServerServer.SetFrostMoon(true);
 						Main.bloodMoon = false;
 						NPC.waveKills = 0f;
 						NPC.waveNumber = wave;
-						TSPlayer.All.SendInfoMessage(GetString("{0} started the frost moon at wave {1}!", args.Player.Name, wave));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} started the frost moon at wave {1}!", args.Player.Name, wave));
 						break;
 
 					case "martian":
 					case "martians":
-						TSPlayer.All.SendInfoMessage(GetString("{0} has started a martian invasion.", args.Player.Name));
+						ServerPlayer.All.SendInfoMessage(GetString("{0} has started a martian invasion.", args.Player.Name));
 						TShock.Utils.StartInvasion(4);
 						break;
 
@@ -2472,11 +2475,11 @@ namespace TShockAPI
 			else if (DD2Event.Ongoing)
 			{
 				DD2Event.StopInvasion();
-				TSPlayer.All.SendInfoMessage(GetString("{0} has ended the Old One's Army event.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} has ended the Old One's Army event.", args.Player.Name));
 			}
 			else
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} has ended the current invasion event.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} has ended the current invasion event.", args.Player.Name));
 				Main.invasionSize = 0;
 			}
 		}
@@ -2486,12 +2489,12 @@ namespace TShockAPI
 			if (Terraria.GameContent.Events.Sandstorm.Happening)
 			{
 				Terraria.GameContent.Events.Sandstorm.StopSandstorm();
-				TSPlayer.All.SendInfoMessage(GetString("{0} stopped the current sandstorm event.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} stopped the current sandstorm event.", args.Player.Name));
 			}
 			else
 			{
 				Terraria.GameContent.Events.Sandstorm.StartSandstorm();
-				TSPlayer.All.SendInfoMessage(GetString("{0} started a sandstorm event.", args.Player.Name));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} started a sandstorm event.", args.Player.Name));
 			}
 		}
 
@@ -2517,31 +2520,31 @@ namespace TShockAPI
 			if (slime && Main.slimeRain) //Toggle slime rain off
 			{
 				Main.StopSlimeRain(false);
-				TSPlayer.All.SendData(PacketTypes.WorldInfo);
-				TSPlayer.All.SendInfoMessage(GetString("{0} ended the slime rain.", args.Player.Name));
+				ServerPlayer.All.SendData(PacketTypes.WorldInfo);
+				ServerPlayer.All.SendInfoMessage(GetString("{0} ended the slime rain.", args.Player.Name));
 				return;
 			}
 
 			if (slime && !Main.slimeRain) //Toggle slime rain on
 			{
 				Main.StartSlimeRain(false);
-				TSPlayer.All.SendData(PacketTypes.WorldInfo);
-				TSPlayer.All.SendInfoMessage(GetString("{0} caused it to rain slime.", args.Player.Name));
+				ServerPlayer.All.SendData(PacketTypes.WorldInfo);
+				ServerPlayer.All.SendInfoMessage(GetString("{0} caused it to rain slime.", args.Player.Name));
 			}
 
 			if (Main.raining && !slime) //Toggle rain off
 			{
 				Main.StopRain();
-				TSPlayer.All.SendData(PacketTypes.WorldInfo);
-				TSPlayer.All.SendInfoMessage(GetString("{0} ended the rain.", args.Player.Name));
+				ServerPlayer.All.SendData(PacketTypes.WorldInfo);
+				ServerPlayer.All.SendInfoMessage(GetString("{0} ended the rain.", args.Player.Name));
 				return;
 			}
 
 			if (!Main.raining && !slime) //Toggle rain on
 			{
 				Main.StartRain();
-				TSPlayer.All.SendData(PacketTypes.WorldInfo);
-				TSPlayer.All.SendInfoMessage(GetString("{0} caused it to rain.", args.Player.Name));
+				ServerPlayer.All.SendData(PacketTypes.WorldInfo);
+				ServerPlayer.All.SendInfoMessage(GetString("{0} caused it to rain.", args.Player.Name));
 				return;
 			}
 		}
@@ -2564,11 +2567,11 @@ namespace TShockAPI
 			{
 				if (LanternNight.LanternsUp)
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} started a lantern night.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} started a lantern night.", args.Player.Name));
 				}
 				else
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} stopped the lantern night.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} stopped the lantern night.", args.Player.Name));
 				}
 			}
 		}
@@ -2580,7 +2583,7 @@ namespace TShockAPI
 				var result = Main.anglerWhoFinishedToday.RemoveAll(s => s.ToLower().Equals(args.Parameters[0].ToLower()));
 				if (result > 0)
 				{
-					foreach (TSPlayer ply in TShock.Players.Where(p => p != null && p.Active && p.TPlayer.name.ToLower().Equals(args.Parameters[0].ToLower())))
+					foreach (ServerPlayer ply in TShock.Players.Where(p => p != null && p.Active && p.TPlayer.name.ToLower().Equals(args.Parameters[0].ToLower())))
 					{
 						//this will always tell the client that they have not done the quest today.
 						ply.SendData((PacketTypes)74, "");
@@ -2639,7 +2642,7 @@ namespace TShockAPI
 
 			Main.GameMode = mode;
 			args.Player.SendSuccessMessage(GetString("World mode set to {0}.", _worldModes.Keys.ElementAt(mode)));
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 		}
 
 		private static void Hardmode(CommandArgs args)
@@ -2647,7 +2650,7 @@ namespace TShockAPI
 			if (Main.hardMode)
 			{
 				Main.hardMode = false;
-				TSPlayer.All.SendData(PacketTypes.WorldInfo);
+				ServerPlayer.All.SendData(PacketTypes.WorldInfo);
 				args.Player.SendSuccessMessage(GetString("Hardmode is now off."));
 			}
 			else if (!TShock.Config.Settings.DisableHardmode)
@@ -2684,11 +2687,11 @@ namespace TShockAPI
 				case "*":
 				case "all":
 					int[] npcIds = { 4, 13, 35, 50, 125, 126, 127, 134, 222, 245, 262, 266, 370, 398, 439, 636, 657 };
-					TSPlayer.Server.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
 					foreach (int i in npcIds)
 					{
 						npc.SetDefaults(i);
-						TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+						ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					}
 					spawnName = GetString("all bosses");
 					break;
@@ -2697,80 +2700,80 @@ namespace TShockAPI
 				case "brain of cthulhu":
 				case "boc":
 					npc.SetDefaults(266);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Brain of Cthulhu");
 					break;
 
 				case "destroyer":
 					npc.SetDefaults(134);
-					TSPlayer.Server.SetTime(false, 0.0);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Destroyer");
 					break;
 				case "duke":
 				case "duke fishron":
 				case "fishron":
 					npc.SetDefaults(370);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Duke Fishron");
 					break;
 				case "eater":
 				case "eater of worlds":
 				case "eow":
 					npc.SetDefaults(13);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Eater of Worlds");
 					break;
 				case "eye":
 				case "eye of cthulhu":
 				case "eoc":
 					npc.SetDefaults(4);
-					TSPlayer.Server.SetTime(false, 0.0);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Eye of Cthulhu");
 					break;
 				case "golem":
 					npc.SetDefaults(245);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Golem");
 					break;
 				case "king":
 				case "king slime":
 				case "ks":
 					npc.SetDefaults(50);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the King Slime");
 					break;
 				case "plantera":
 					npc.SetDefaults(262);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Plantera");
 					break;
 				case "prime":
 				case "skeletron prime":
 					npc.SetDefaults(127);
-					TSPlayer.Server.SetTime(false, 0.0);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Skeletron Prime");
 					break;
 				case "queen bee":
 				case "qb":
 					npc.SetDefaults(222);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Queen Bee");
 					break;
 				case "skeletron":
 					npc.SetDefaults(35);
-					TSPlayer.Server.SetTime(false, 0.0);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Skeletron");
 					break;
 				case "twins":
-					TSPlayer.Server.SetTime(false, 0.0);
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
 					npc.SetDefaults(125);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					npc.SetDefaults(126);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Twins");
 					break;
 				case "wof":
@@ -2792,20 +2795,20 @@ namespace TShockAPI
 				case "moon lord":
 				case "ml":
 					npc.SetDefaults(398);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Moon Lord");
 					break;
 				case "empress":
 				case "empress of light":
 				case "eol":
 					npc.SetDefaults(636);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Empress of Light");
 					break;
 				case "queen slime":
 				case "qs":
 					npc.SetDefaults(657);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Queen Slime");
 					break;
 				case "lunatic":
@@ -2813,75 +2816,75 @@ namespace TShockAPI
 				case "cultist":
 				case "lc":
 					npc.SetDefaults(439);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Lunatic Cultist");
 					break;
 				case "betsy":
 					npc.SetDefaults(551);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Betsy");
 					break;
 				case "flying dutchman":
 				case "flying":
 				case "dutchman":
 					npc.SetDefaults(491);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Flying Dutchman");
 					break;
 				case "mourning wood":
 					npc.SetDefaults(325);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Mourning Wood");
 					break;
 				case "pumpking":
 					npc.SetDefaults(327);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Pumpking");
 					break;
 				case "everscream":
 					npc.SetDefaults(344);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Everscream");
 					break;
 				case "santa-nk1":
 				case "santa":
 					npc.SetDefaults(346);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("Santa-NK1");
 					break;
 				case "ice queen":
 					npc.SetDefaults(345);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("the Ice Queen");
 					break;
 				case "martian saucer":
 					npc.SetDefaults(392);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Martian Saucer");
 					break;
 				case "solar pillar":
 					npc.SetDefaults(517);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Solar Pillar");
 					break;
 				case "nebula pillar":
 					npc.SetDefaults(507);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Nebula Pillar");
 					break;
 				case "vortex pillar":
 					npc.SetDefaults(422);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Vortex Pillar");
 					break;
 				case "stardust pillar":
 					npc.SetDefaults(493);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Stardust Pillar");
 					break;
 				case "deerclops":
 					npc.SetDefaults(668);
-					TSPlayer.Server.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
+					ServerPlayer.ServerServer.SpawnNPC(npc.type, npc.FullName, amount, args.Player.TileX, args.Player.TileY);
 					spawnName = GetString("a Deerclops");
 					break;
 				default:
@@ -2895,7 +2898,7 @@ namespace TShockAPI
 			}
 			else
 			{
-				TSPlayer.All.SendSuccessMessage(GetPluralString("{0} spawned {1} {2} time.", "{0} spawned {1} {2} times.", amount, args.Player.Name, spawnName, amount));
+				ServerPlayer.All.SendSuccessMessage(GetPluralString("{0} spawned {1} {2} time.", "{0} spawned {1} {2} times.", amount, args.Player.Name, spawnName, amount));
 			}
 		}
 
@@ -2935,14 +2938,14 @@ namespace TShockAPI
 				var npc = npcs[0];
 				if (npc.type >= 1 && npc.type < Terraria.AccountId.NPCID.Count && npc.type != 113)
 				{
-					TSPlayer.Server.SpawnNPC(npc.netID, npc.FullName, amount, args.Player.TileX, args.Player.TileY, 50, 20);
+					ServerPlayer.ServerServer.SpawnNPC(npc.netID, npc.FullName, amount, args.Player.TileX, args.Player.TileY, 50, 20);
 					if (args.Silent)
 					{
 						args.Player.SendSuccessMessage(GetPluralString("Spawned {0} {1} time.", "Spawned {0} {1} times.", amount, npc.FullName, amount));
 					}
 					else
 					{
-						TSPlayer.All.SendSuccessMessage(GetPluralString("{0} has spawned {1} {2} time.", "{0} has spawned {1} {2} times.", amount, args.Player.Name, npc.FullName, amount));
+						ServerPlayer.All.SendSuccessMessage(GetPluralString("{0} has spawned {1} {2} time.", "{0} has spawned {1} {2} times.", amount, args.Player.Name, npc.FullName, amount));
 					}
 				}
 				else if (npc.type == 113)
@@ -2959,7 +2962,7 @@ namespace TShockAPI
 					}
 					else
 					{
-						TSPlayer.All.SendSuccessMessage(GetString("{0} has spawned a Wall of Flesh.", args.Player.Name));
+						ServerPlayer.All.SendSuccessMessage(GetString("{0} has spawned a Wall of Flesh.", args.Player.Name));
 					}
 				}
 				else
@@ -3003,7 +3006,7 @@ namespace TShockAPI
 
 			if (args.Parameters.Count == 1)
 			{
-				var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+				var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 				if (players.Count == 0)
 					args.Player.SendErrorMessage(GetString("Invalid destination player."));
 				else if (players.Count > 1)
@@ -3032,8 +3035,8 @@ namespace TShockAPI
 					return;
 				}
 
-				var players1 = TSPlayer.FindByNameOrID(args.Parameters[0]);
-				var players2 = TSPlayer.FindByNameOrID(args.Parameters[1]);
+				var players1 = ServerPlayer.FindByNameOrId(args.Parameters[0]);
+				var players2 = ServerPlayer.FindByNameOrId(args.Parameters[1]);
 
 				if (players2.Count == 0)
 					args.Player.SendErrorMessage(GetString("Invalid destination player."));
@@ -3127,7 +3130,7 @@ namespace TShockAPI
 			}
 
 			string playerName = String.Join(" ", args.Parameters);
-			var players = TSPlayer.FindByNameOrID(playerName);
+			var players = ServerPlayer.FindByNameOrId(playerName);
 			if (players.Count == 0)
 			{
 				if (playerName == "*")
@@ -3212,7 +3215,7 @@ namespace TShockAPI
 				player = String.Join(" ", args.Parameters);
 			}
 
-			var players = TSPlayer.FindByNameOrID(player);
+			var players = ServerPlayer.FindByNameOrId(player);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString("Invalid target player."));
@@ -3373,7 +3376,7 @@ namespace TShockAPI
 					return;
 				}
 
-				var foundplr = TSPlayer.FindByNameOrID(args.Parameters[1]);
+				var foundplr = ServerPlayer.FindByNameOrId(args.Parameters[1]);
 				if (foundplr.Count == 0)
 				{
 					args.Player.SendErrorMessage(GetString("Invalid target player."));
@@ -4435,7 +4438,7 @@ namespace TShockAPI
 		}
 		#endregion Tile Management
 
-		#region Server Config Commands
+		#region ServerServer Config Commands
 
 		private static void SetSpawn(CommandArgs args)
 		{
@@ -4471,13 +4474,13 @@ namespace TShockAPI
 			}
 			string passwd = args.Parameters[0];
 			TShock.Config.Settings.ServerPassword = passwd;
-			args.Player.SendSuccessMessage(GetString("Server password has been changed to: {0}.", passwd));
+			args.Player.SendSuccessMessage(GetString("ServerServer password has been changed to: {0}.", passwd));
 		}
 
 		private static void Save(CommandArgs args)
 		{
 			SaveManager.Instance.SaveWorld(false);
-			foreach (TSPlayer tsply in TShock.Players.Where(tsply => tsply != null))
+			foreach (ServerPlayer tsply in TShock.Players.Where(tsply => tsply != null))
 			{
 				tsply.SaveServerCharacter();
 			}
@@ -4511,7 +4514,7 @@ namespace TShockAPI
 				}
 				else
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} changed the maximum spawns to 5.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} changed the maximum spawns to 5.", args.Player.Name));
 				}
 				return;
 			}
@@ -4530,7 +4533,7 @@ namespace TShockAPI
 			}
 			else
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} changed the maximum spawns to {1}.", args.Player.Name, maxSpawns));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} changed the maximum spawns to {1}.", args.Player.Name, maxSpawns));
 			}
 		}
 
@@ -4551,7 +4554,7 @@ namespace TShockAPI
 				}
 				else
 				{
-					TSPlayer.All.SendInfoMessage(GetString("{0} changed the spawn rate to 600.", args.Player.Name));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} changed the spawn rate to 600.", args.Player.Name));
 				}
 				return;
 			}
@@ -4569,11 +4572,11 @@ namespace TShockAPI
 			}
 			else
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} changed the spawn rate to {1}.", args.Player.Name, spawnRate));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} changed the spawn rate to {1}.", args.Player.Name, spawnRate));
 			}
 		}
 
-		#endregion Server Config Commands
+		#endregion ServerServer Config Commands
 
 		#region Time/PvpFun Commands
 
@@ -4593,20 +4596,20 @@ namespace TShockAPI
 			switch (args.Parameters[0].ToLower())
 			{
 				case "day":
-					TSPlayer.Server.SetTime(true, 0.0);
-					TSPlayer.All.SendInfoMessage(GetString("{0} set the time to 04:30.", args.Player.Name));
+					ServerPlayer.ServerServer.SetTime(true, 0.0);
+					ServerPlayer.All.SendInfoMessage(GetString("{0} set the time to 04:30.", args.Player.Name));
 					break;
 				case "night":
-					TSPlayer.Server.SetTime(false, 0.0);
-					TSPlayer.All.SendInfoMessage(GetString("{0} set the time to 19:30.", args.Player.Name));
+					ServerPlayer.ServerServer.SetTime(false, 0.0);
+					ServerPlayer.All.SendInfoMessage(GetString("{0} set the time to 19:30.", args.Player.Name));
 					break;
 				case "noon":
-					TSPlayer.Server.SetTime(true, 27000.0);
-					TSPlayer.All.SendInfoMessage(GetString("{0} set the time to 12:00.", args.Player.Name));
+					ServerPlayer.ServerServer.SetTime(true, 27000.0);
+					ServerPlayer.All.SendInfoMessage(GetString("{0} set the time to 12:00.", args.Player.Name));
 					break;
 				case "midnight":
-					TSPlayer.Server.SetTime(false, 16200.0);
-					TSPlayer.All.SendInfoMessage(GetString("{0} set the time to 00:00.", args.Player.Name));
+					ServerPlayer.ServerServer.SetTime(false, 16200.0);
+					ServerPlayer.All.SendInfoMessage(GetString("{0} set the time to 00:00.", args.Player.Name));
 					break;
 				default:
 					string[] array = args.Parameters[0].Split(':');
@@ -4632,13 +4635,13 @@ namespace TShockAPI
 
 					if (time >= 15.00m)
 					{
-						TSPlayer.Server.SetTime(false, (double)((time - 15.00m) * 3600.0m));
+						ServerPlayer.ServerServer.SetTime(false, (double)((time - 15.00m) * 3600.0m));
 					}
 					else
 					{
-						TSPlayer.Server.SetTime(true, (double)(time * 3600.0m));
+						ServerPlayer.ServerServer.SetTime(true, (double)(time * 3600.0m));
 					}
-					TSPlayer.All.SendInfoMessage(GetString("{0} set the time to {1}:{2:D2}.", args.Player.Name, hours, minutes));
+					ServerPlayer.All.SendInfoMessage(GetString("{0} set the time to {1}:{2:D2}.", args.Player.Name, hours, minutes));
 					break;
 			}
 		}
@@ -4658,7 +4661,7 @@ namespace TShockAPI
 			}
 
 			string plStr = args.Parameters[0];
-			var players = TSPlayer.FindByNameOrID(plStr);
+			var players = ServerPlayer.FindByNameOrId(plStr);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString("Invalid target player."));
@@ -4680,7 +4683,7 @@ namespace TShockAPI
 					damage = TShock.Utils.Clamp(damage, 15, 0);
 				}
 				plr.DamagePlayer(damage);
-				TSPlayer.All.SendInfoMessage(GetString("{0} slapped {1} for {2} damage.", args.Player.Name, plr.Name, damage));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} slapped {1} for {2} damage.", args.Player.Name, plr.Name, damage));
 				TShock.Log.Info(GetString("{0} slapped {1} for {2} damage.", args.Player.Name, plr.Name, damage));
 			}
 		}
@@ -4702,8 +4705,8 @@ namespace TShockAPI
 
 			Main.windSpeedCurrent = speed;
 			Main.windSpeedTarget = speed;
-			TSPlayer.All.SendData(PacketTypes.WorldInfo);
-			TSPlayer.All.SendInfoMessage(GetString("{0} changed the wind speed to {1}.", args.Player.Name, speed));
+			ServerPlayer.All.SendData(PacketTypes.WorldInfo);
+			ServerPlayer.All.SendInfoMessage(GetString("{0} changed the wind speed to {1}.", args.Player.Name, speed));
 		}
 
 		#endregion Time/PvpFun Commands
@@ -5288,13 +5291,13 @@ namespace TShockAPI
 		private static void ToggleAntiBuild(CommandArgs args)
 		{
 			TShock.Config.Settings.DisableBuild = !TShock.Config.Settings.DisableBuild;
-			TSPlayer.All.SendSuccessMessage(TShock.Config.Settings.DisableBuild ? GetString("Anti-build is now on.") : GetString("Anti-build is now off."));
+			ServerPlayer.All.SendSuccessMessage(TShock.Config.Settings.DisableBuild ? GetString("Anti-build is now on.") : GetString("Anti-build is now off."));
 		}
 
 		private static void ProtectSpawn(CommandArgs args)
 		{
 			TShock.Config.Settings.SpawnProtection = !TShock.Config.Settings.SpawnProtection;
-			TSPlayer.All.SendSuccessMessage(TShock.Config.Settings.SpawnProtection ? GetString("Spawn is now protected.") : GetString("Spawn is now open."));
+			ServerPlayer.All.SendSuccessMessage(TShock.Config.Settings.SpawnProtection ? GetString("Spawn is now protected.") : GetString("Spawn is now open."));
 		}
 
 		#endregion World Protection Commands
@@ -5354,7 +5357,7 @@ namespace TShockAPI
 
 			var players = new List<string>();
 
-			foreach (TSPlayer ply in TShock.Players)
+			foreach (ServerPlayer ply in TShock.Players)
 			{
 				if (ply != null && ply.Active)
 				{
@@ -5389,7 +5392,7 @@ namespace TShockAPI
 			}
 
 			// If the user account is already logged in, turn off the setup system
-			if (args.Player.IsLoggedIn && args.Player.tempGroup == null)
+			if (args.Player.IsLoggedIn && args.Player.TempGroup == null)
 			{
 				args.Player.SendSuccessMessage(GetString("Your new account has been verified, and the {0}setup system has been turned off.", Specifier));
 				args.Player.SendSuccessMessage(GetString("Share your server, talk with admins, and chill on GitHub & Discord. -- https://tshock.co/"));
@@ -5415,7 +5418,7 @@ namespace TShockAPI
 			}
 
 			if (args.Player.Group.Name != "superadmin")
-				args.Player.tempGroup = new SuperAdminGroup();
+				args.Player.TempGroup = new SuperAdminGroup();
 
 			args.Player.SendInfoMessage(GetString("Temporary system access has been given to you, so you can run one command."));
 			args.Player.SendWarningMessage(GetString("Please use the following to create a permanent account for you."));
@@ -5436,7 +5439,7 @@ namespace TShockAPI
 			if (args.Player.mute)
 				args.Player.SendErrorMessage(GetString("You are muted."));
 			else
-				TSPlayer.All.SendMessage(GetString("*{0} {1}", args.Player.Name, String.Join(" ", args.Parameters)), 205, 133, 63);
+				ServerPlayer.All.SendMessage(GetString("*{0} {1}", args.Player.Name, String.Join(" ", args.Parameters)), 205, 133, 63);
 		}
 
 		private static void PartyChat(CommandArgs args)
@@ -5453,7 +5456,7 @@ namespace TShockAPI
 			else if (playerTeam != 0)
 			{
 				string msg = GetString("<{0}> {1}", args.Player.Name, String.Join(" ", args.Parameters));
-				foreach (TSPlayer player in TShock.Players)
+				foreach (ServerPlayer player in TShock.Players)
 				{
 					if (player != null && player.Active && player.Team == playerTeam)
 						player.SendMessage(msg, Main.teamColor[playerTeam].R, Main.teamColor[playerTeam].G, Main.teamColor[playerTeam].B);
@@ -5474,7 +5477,7 @@ namespace TShockAPI
 				return;
 			}
 
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString($"Could not find any players named \"{args.Parameters[0]}\""));
@@ -5494,7 +5497,7 @@ namespace TShockAPI
 				if (args.Silent)
 					args.Player.SendSuccessMessage(GetString($"You have unmuted {plr.Name}."));
 				else
-					TSPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has unmuted {plr.Name}."));
+					ServerPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has unmuted {plr.Name}."));
 			}
 			else
 			{
@@ -5506,7 +5509,7 @@ namespace TShockAPI
 				if (args.Silent)
 					args.Player.SendSuccessMessage(GetString($"You have muted {plr.Name} for {reason}"));
 				else
-					TSPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has muted {plr.Name} for {reason}."));
+					ServerPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has muted {plr.Name} for {reason}."));
 			}
 		}
 
@@ -5529,7 +5532,7 @@ namespace TShockAPI
 				args.Player.SendMessage(GetString($"Example usage: {"w".Color(Utils.BoldHighlight)} {args.Player.Name.Color(Utils.RedHighlight)} {"We're no strangers to love, you know the rules, and so do I.".Color(Utils.PinkHighlight)}"), Color.White);
 				return;
 			}
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString($"Could not find any player named \"{args.Parameters[0]}\""));
@@ -5614,7 +5617,7 @@ namespace TShockAPI
 			int annoy = 5;
 			int.TryParse(args.Parameters[1], out annoy);
 
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count == 0)
 				args.Player.SendErrorMessage(GetString($"Could not find any player named \"{args.Parameters[0]}\""));
 			else if (players.Count > 1)
@@ -5639,7 +5642,7 @@ namespace TShockAPI
 				args.Player.SendMessage(GetString($"You can use {SilentSpecifier.Color(Utils.GreenHighlight)} instead of {Specifier.Color(Utils.RedHighlight)} to rocket a player silently."), Color.White);
 				return;
 			}
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count == 0)
 				args.Player.SendErrorMessage(GetString($"Could not find any player named \"{args.Parameters[0]}\""));
 			else if (players.Count > 1)
@@ -5651,17 +5654,17 @@ namespace TShockAPI
 				if (target.IsLoggedIn && Main.ServerSideCharacter)
 				{
 					target.TPlayer.velocity.Y = -50;
-					TSPlayer.All.SendData(PacketTypes.PlayerUpdate, "", target.Index);
+					ServerPlayer.All.SendData(PacketTypes.PlayerUpdate, "", target.Index);
 
 					if (!args.Silent)
 					{
 						if (target == args.Player)
 							if (args.Player.TPlayer.Male)
-								TSPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched himself into space."));
+								ServerPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched himself into space."));
 							else
-								TSPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched herself into space."));
+								ServerPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched herself into space."));
 						else
-							TSPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched {target.Name} into space."));
+							ServerPlayer.All.SendInfoMessage(GetString($"{args.Player.Name} has launched {target.Name} into space."));
 						return;
 					}
 
@@ -5695,7 +5698,7 @@ namespace TShockAPI
 				user.SendMessage(GetString($"You can use {SilentSpecifier.Color(Utils.GreenHighlight)} instead of {Specifier.Color(Utils.RedHighlight)} to launch a firework silently."), Color.White);
 				return;
 			}
-			var players = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (players.Count == 0)
 				user.SendErrorMessage(GetString($"Could not find any player named \"{args.Parameters[0]}\""));
 			else if (players.Count > 1)
@@ -5815,7 +5818,7 @@ namespace TShockAPI
 		private static void Clear(CommandArgs args)
 		{
 			var user = args.Player;
-			var everyone = TSPlayer.All;
+			var everyone = ServerPlayer.All;
 			int radius = 50;
 
 			if (args.Parameters.Count != 1 && args.Parameters.Count != 2)
@@ -5931,7 +5934,7 @@ namespace TShockAPI
 			}
 
 			string targetName = String.Join(" ", args.Parameters);
-			var players = TSPlayer.FindByNameOrID(targetName);
+			var players = ServerPlayer.FindByNameOrId(targetName);
 
 			if (players.Count == 0)
 				user.SendErrorMessage(GetString($"Could not find any player named \"{targetName}\"."));
@@ -5966,7 +5969,7 @@ namespace TShockAPI
 				args.Player.SendErrorMessage(GetString("You can't respawn the server console!"));
 				return;
 			}
-			TSPlayer playerToRespawn;
+			ServerPlayer playerToRespawn;
 			if (args.Parameters.Count > 0)
 			{
 				if (!args.Player.HasPermission(Permissions.respawnother))
@@ -5975,7 +5978,7 @@ namespace TShockAPI
 					return;
 				}
 				string plStr = String.Join(" ", args.Parameters);
-				var players = TSPlayer.FindByNameOrID(plStr);
+				var players = ServerPlayer.FindByNameOrId(plStr);
 				if (players.Count == 0)
 				{
 					args.Player.SendErrorMessage(GetString($"Could not find any player named \"{plStr}\""));
@@ -6049,7 +6052,7 @@ namespace TShockAPI
 			{
 				if (Main.npc[i].active && ((npcId == 0 && !Main.npc[i].townNPC && Main.npc[i].netID != NPCID.TargetDummy) || Main.npc[i].netID == npcId))
 				{
-					TSPlayer.Server.StrikeNPC(i, (int)(Main.npc[i].life + (Main.npc[i].defense * 0.6)), 0, 0);
+					ServerPlayer.ServerServer.StrikeNPC(i, (int)(Main.npc[i].life + (Main.npc[i].defense * 0.6)), 0, 0);
 					kills++;
 				}
 			}
@@ -6057,7 +6060,7 @@ namespace TShockAPI
 			if (args.Silent)
 				user.SendSuccessMessage(GetPluralString("You butchered {0} NPC.", "You butchered {0} NPCs.", kills, kills));
 			else
-				TSPlayer.All.SendInfoMessage(GetPluralString("{0} butchered {1} NPC.", "{0} butchered {1} NPCs.", kills, user.Name, kills));
+				ServerPlayer.All.SendInfoMessage(GetPluralString("{0} butchered {1} NPC.", "{0} butchered {1} NPCs.", kills, user.Name, kills));
 		}
 
 		private static void Item(CommandArgs args)
@@ -6202,7 +6205,7 @@ namespace TShockAPI
 			}
 			if (done > 0)
 			{
-				TSPlayer.All.SendInfoMessage(GetString("{0} renamed the {1}.", args.Player.Name, args.Parameters[0]));
+				ServerPlayer.All.SendInfoMessage(GetString("{0} renamed the {1}.", args.Player.Name, args.Parameters[0]));
 			}
 			else
 			{
@@ -6266,7 +6269,7 @@ namespace TShockAPI
 
 				if (item.type >= 1 && item.type < Terraria.AccountId.ItemID.Count)
 				{
-					var players = TSPlayer.FindByNameOrID(plStr);
+					var players = ServerPlayer.FindByNameOrId(plStr);
 					if (players.Count == 0)
 					{
 						args.Player.SendErrorMessage(GetString("Invalid player!"));
@@ -6327,7 +6330,7 @@ namespace TShockAPI
 			}
 
 			string targetName = args.Parameters[0];
-			var players = TSPlayer.FindByNameOrID(targetName);
+			var players = ServerPlayer.FindByNameOrId(targetName);
 			if (players.Count == 0)
 				user.SendErrorMessage(GetString($"Unable to find any players named \"{targetName}\""));
 			else if (players.Count > 1)
@@ -6358,11 +6361,11 @@ namespace TShockAPI
 				{
 					if (target == user)
 						if (target.TPlayer.Male)
-							TSPlayer.All.SendInfoMessage(GetString($"{user.Name} healed himself for {amount} HP."));
+							ServerPlayer.All.SendInfoMessage(GetString($"{user.Name} healed himself for {amount} HP."));
 						else
-							TSPlayer.All.SendInfoMessage(GetString($"{user.Name} healed herself for {amount} HP."));
+							ServerPlayer.All.SendInfoMessage(GetString($"{user.Name} healed herself for {amount} HP."));
 					else
-						TSPlayer.All.SendInfoMessage(GetString($"{user.Name} healed {target.Name} for {amount} HP."));
+						ServerPlayer.All.SendInfoMessage(GetString($"{user.Name} healed {target.Name} for {amount} HP."));
 				}
 			}
 		}
@@ -6432,7 +6435,7 @@ namespace TShockAPI
 			int id = 0;
 			int time = 60;
 			var timeLimit = (int.MaxValue / 60) - 1;
-			var foundplr = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			var foundplr = ServerPlayer.FindByNameOrId(args.Parameters[0]);
 			if (foundplr.Count == 0)
 			{
 				user.SendErrorMessage(GetString($"Unable to find any player named \"{args.Parameters[0]}\""));
@@ -6712,7 +6715,7 @@ namespace TShockAPI
 
 		private static void ToggleGodMode(CommandArgs args)
 		{
-			TSPlayer playerToGod;
+			ServerPlayer playerToGod;
 			if (args.Parameters.Count > 0)
 			{
 				if (!args.Player.HasPermission(Permissions.godmodeother))
@@ -6721,7 +6724,7 @@ namespace TShockAPI
 					return;
 				}
 				string plStr = String.Join(" ", args.Parameters);
-				var players = TSPlayer.FindByNameOrID(plStr);
+				var players = ServerPlayer.FindByNameOrId(plStr);
 				if (players.Count == 0)
 				{
 					args.Player.SendErrorMessage(GetString("Invalid player!"));

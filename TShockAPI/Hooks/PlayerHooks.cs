@@ -30,13 +30,13 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the PlayerPostLoginEventArgs class.
 		/// </summary>
 		/// <param name="ply">The player who fired the event.</param>
-		public PlayerPostLoginEventArgs(TSPlayer ply)
+		public PlayerPostLoginEventArgs(ServerPlayer ply)
 		{
 			Player = ply;
 		}
@@ -50,7 +50,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The player's login name.
@@ -71,13 +71,13 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the PlayerLogoutEventArgs class.
 		/// </summary>
 		/// <param name="player">The player who fired the event.</param>
-		public PlayerLogoutEventArgs(TSPlayer player)
+		public PlayerLogoutEventArgs(ServerPlayer player)
 		{
 			Player = player;
 		}
@@ -91,7 +91,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The command's name that follows the <see cref="Commands.Specifier"/>.
@@ -127,7 +127,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The raw chat text as received by the server.
@@ -148,7 +148,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The permission being checked.
@@ -165,7 +165,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player who fired the event.</param>
 		/// <param name="permission">The permission being checked.</param>
-		public PlayerPermissionEventArgs(TSPlayer player, string permission)
+		public PlayerPermissionEventArgs(ServerPlayer player, string permission)
 		{
 			Player = player;
 			Permission = permission;
@@ -181,7 +181,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The banned item being checked.
@@ -198,7 +198,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player who fired the event.</param>
 		/// <param name="bannedItem">The banned item being checked.</param>
-		public PlayerItembanPermissionEventArgs(TSPlayer player, ItemBan bannedItem)
+		public PlayerItembanPermissionEventArgs(ServerPlayer player, ItemBan bannedItem)
 		{
 			Player = player;
 			BannedItem = bannedItem;
@@ -214,7 +214,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The banned projectile being checked.
@@ -231,7 +231,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player who fired the event.</param>
 		/// <param name="checkedProjectile">The banned projectile being checked.</param>
-		public PlayerProjbanPermissionEventArgs(TSPlayer player, ProjectileBan checkedProjectile)
+		public PlayerProjbanPermissionEventArgs(ServerPlayer player, ProjectileBan checkedProjectile)
 		{
 			Player = player;
 			BannedProjectile = checkedProjectile;
@@ -247,7 +247,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The banned tile being checked.
@@ -264,7 +264,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player who fired the event.</param>
 		/// <param name="checkedTile">The banned tile being checked.</param>
-		public PlayerTilebanPermissionEventArgs(TSPlayer player, TileBan checkedTile)
+		public PlayerTilebanPermissionEventArgs(ServerPlayer player, TileBan checkedTile)
 		{
 			Player = player;
 			BannedTile = checkedTile;
@@ -280,7 +280,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// The player who fired the event.
 		/// </summary>
-		public TSPlayer Player { get; set; }
+		public ServerPlayer Player { get; set; }
 
 		/// <summary>
 		/// The X coordinate being checked.
@@ -409,7 +409,7 @@ namespace TShockAPI.Hooks
 		/// Fires the <see cref="PlayerPostLogin"/> event.
 		/// </summary>
 		/// <param name="ply">The player firing the event.</param>
-		public static void OnPlayerPostLogin(TSPlayer ply)
+		public static void OnPlayerPostLogin(ServerPlayer ply)
 		{
 			if (PlayerPostLogin == null)
 			{
@@ -430,7 +430,7 @@ namespace TShockAPI.Hooks
 		/// <param name="commands">The list of commands.</param>
 		/// <param name="cmdPrefix">The command specifier used.</param>
 		/// <returns>True if the event has been handled.</returns>
-		public static bool OnPlayerCommand(TSPlayer player, string cmdName, string cmdText, List<string> args, ref IEnumerable<Command> commands, string cmdPrefix)
+		public static bool OnPlayerCommand(ServerPlayer player, string cmdName, string cmdText, List<string> args, ref IEnumerable<Command> commands, string cmdPrefix)
 		{
 			if (PlayerCommand == null)
 			{
@@ -456,7 +456,7 @@ namespace TShockAPI.Hooks
 		/// <param name="name">The user name.</param>
 		/// <param name="pass">The password.</param>
 		/// <returns>True if the event has been handled.</returns>
-		public static bool OnPlayerPreLogin(TSPlayer ply, string name, string pass)
+		public static bool OnPlayerPreLogin(ServerPlayer ply, string name, string pass)
 		{
 			if (PlayerPreLogin == null)
 				return false;
@@ -470,7 +470,7 @@ namespace TShockAPI.Hooks
 		/// Fires the <see cref="PlayerLogout"/> event.
 		/// </summary>
 		/// <param name="ply">The player firing the event.</param>
-		public static void OnPlayerLogout(TSPlayer ply)
+		public static void OnPlayerLogout(ServerPlayer ply)
 		{
 			if (PlayerLogout == null)
 				return;
@@ -485,7 +485,7 @@ namespace TShockAPI.Hooks
 		/// <param name="ply">The player firing the event.</param>
 		/// <param name="rawtext">The raw chat text sent by the player.</param>
 		/// <param name="tshockText">The chat text after being formatted.</param>
-		public static bool OnPlayerChat(TSPlayer ply, string rawtext, ref string tshockText)
+		public static bool OnPlayerChat(ServerPlayer ply, string rawtext, ref string tshockText)
 		{
 			if (PlayerChat == null)
 				return false;
@@ -502,7 +502,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player firing the event.</param>
 		/// <returns>Event result if the event has been handled, otherwise <see cref="PermissionHookResult.Unhandled"/>.</returns>
-		public static PermissionHookResult OnPlayerPermission(TSPlayer player, string permission)
+		public static PermissionHookResult OnPlayerPermission(ServerPlayer player, string permission)
 		{
 			if (PlayerPermission == null)
 				return PermissionHookResult.Unhandled;
@@ -518,7 +518,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player firing the event.</param>
 		/// <returns>Event result if the event has been handled, otherwise <see cref="PermissionHookResult.Unhandled"/>.</returns>
-		public static PermissionHookResult OnPlayerItembanPermission(TSPlayer player, ItemBan bannedItem)
+		public static PermissionHookResult OnPlayerItembanPermission(ServerPlayer player, ItemBan bannedItem)
 		{
 			if (PlayerItembanPermission == null)
 				return PermissionHookResult.Unhandled;
@@ -534,7 +534,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player firing the event.</param>
 		/// <returns>Event result if the event has been handled, otherwise <see cref="PermissionHookResult.Unhandled"/>.</returns>
-		public static PermissionHookResult OnPlayerProjbanPermission(TSPlayer player, ProjectileBan bannedProj)
+		public static PermissionHookResult OnPlayerProjbanPermission(ServerPlayer player, ProjectileBan bannedProj)
 		{
 			if (PlayerProjbanPermission == null)
 				return PermissionHookResult.Unhandled;
@@ -550,7 +550,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player firing the event.</param>
 		/// <returns>Event result if the event has been handled, otherwise <see cref="PermissionHookResult.Unhandled"/>.</returns>
-		public static PermissionHookResult OnPlayerTilebanPermission(TSPlayer player, TileBan bannedTile)
+		public static PermissionHookResult OnPlayerTilebanPermission(ServerPlayer player, TileBan bannedTile)
 		{
 			if (PlayerTilebanPermission == null)
 				return PermissionHookResult.Unhandled;
@@ -566,7 +566,7 @@ namespace TShockAPI.Hooks
 		/// </summary>
 		/// <param name="player">The player firing the event.</param>
 		/// <returns>Event result if the event has been handled, otherwise <see cref="PermissionHookResult.Unhandled"/>.</returns>
-		public static PermissionHookResult OnPlayerHasBuildPermission(TSPlayer player, int x, int y)
+		public static PermissionHookResult OnPlayerHasBuildPermission(ServerPlayer player, int x, int y)
 		{
 			if (PlayerHasBuildPermission == null)
 				return PermissionHookResult.Unhandled;

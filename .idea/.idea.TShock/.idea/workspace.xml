@@ -9,29 +9,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="270e07cd-11a2-4564-8334-4f153bba4dd7" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/.name" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/TShockLauncher.Tests/PlayerArrayAccess.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Bouncer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Bouncer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/BackupManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/BackupManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Commands.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Commands.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Configuration/TShockConfig.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Configuration/TShockConfig.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/BanManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/CharacterManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/Models/UserAccount.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/Models/UserAccount.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/GroupManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ItemBanManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ItemBanManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ProjectileManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/RegionManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/ResearchDatastore.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/UserManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/GeoIPCountry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/GeoIPCountry.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Database/TileManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/IllegalPerSe/EmojiPlayerMismatch.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/IllegalPerSe/EmojiPlayerMismatch.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/LandGolfBallInCupHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/LandGolfBallInCupHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Group.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Group.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/AmbienceHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/AmbienceHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/BestiaryHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/BestiaryHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativePowerHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativePowerHandler.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativeUnlocksHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/CreativeUnlocksHandler.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Localization/EnglishLanguage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Localization/EnglishLanguage.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Net/BaseMsg.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Net/BaseMsg.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/NetItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/NetItem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/INetModuleHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/INetModuleHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/LiquidHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/LiquidHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/PylonHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/NetModules/PylonHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Handlers/SendTileRectHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Handlers/SendTileRectHandler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/GeneralHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/GeneralHooks.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/RegionHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/RegionHooks.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/PaginationTools.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/PaginationTools.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/PlayerData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/Rest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/Rest.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/TSPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TSPlayer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/TSPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ServerPlayer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/TSServerPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ServerServerPlayer.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/TShock.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShock.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/UpdateManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/UpdateManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Utils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Utils.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockLauncher.Tests/GroupTests.cs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,6 +56,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/172080a42c1a44ce9d36d8c1406e163693ae00/41/ab0bad68/Main.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a0c10032686b457e918965a67401afd3208a0/07/3960865c/TraceLevel.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/d654b5ec3b254f06a1caab79a9e992ea12ad800/d9/fb788998/WindowsLaunch.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/53774442fef36b6713814b21c891279e254fba17f1364b6c713524356511c/Entity.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/87aae3481234c935c2a758f2169e3560ff13885cea8b933f94cc65f10221356/Watcher.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -57,28 +74,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;general-devel&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;CodeLensConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    ".NET Project.TShockLauncher.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "general-devel",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "CodeLensConfigurable",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;rider.external.source.directories&quot;: [
-      &quot;C:\\Users\\julia\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\DecompilerCache&quot;,
-      &quot;C:\\Users\\julia\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\SourcesCache&quot;,
-      &quot;C:\\Users\\julia\\AppData\\Local\\Symbols\\src&quot;
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\julia\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\DecompilerCache",
+      "C:\\Users\\julia\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\SourcesCache",
+      "C:\\Users\\julia\\AppData\\Local\\Symbols\\src"
     ]
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected=".NET Project.TShockLauncher">
     <configuration name="TShockInstaller" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -130,7 +148,7 @@
       <workItem from="1706804502037" duration="13621000" />
       <workItem from="1706822336357" duration="9824000" />
       <workItem from="1706888788784" duration="1319000" />
-      <workItem from="1706892201786" duration="3837000" />
+      <workItem from="1706892201786" duration="8830000" />
     </task>
     <servers />
   </component>

@@ -63,7 +63,7 @@ namespace TShockAPI.Database
 			return await DB.CountAsync<ItemBan>(x => x.Name == name) > 0;
 		}
 
-		public static async Task<bool> ItemIsBanned(string name, TSPlayer ply)
+		public static async Task<bool> ItemIsBanned(string name, ServerPlayer ply)
 		{
 			ItemBan b = await GetItemBanByName(name);
 			return b != null &&!(await b.HasPermissionToUseItem(ply));
@@ -139,7 +139,7 @@ namespace TShockAPI.Database
 			return Name == other.Name;
 		}
 
-		public async Task<bool> HasPermissionToUseItem(TSPlayer ply)
+		public async Task<bool> HasPermissionToUseItem(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;
