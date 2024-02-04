@@ -117,7 +117,7 @@ namespace TShockAPI
 				{
 					reason = "none";
 				}
-				throw new WebException(GetString($"Update server did not respond with an OK. ServerServer message: [error {resp.StatusCode}] {reason}"));
+				throw new WebException(GetString($"Update server did not respond with an OK. ServerConsole message: [error {resp.StatusCode}] {reason}"));
 			}
 
 			string json = await resp.Content.ReadAsStringAsync();
@@ -135,7 +135,7 @@ namespace TShockAPI
 		private async Task NotifyAdministrators(Dictionary<string, string> update)
 		{
 			var changes = update["changes"].Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-			NotifyAdministrator(ServerPlayer.ServerServer, changes);
+			NotifyAdministrator(ServerPlayer.ServerConsole, changes);
 			foreach (ServerPlayer player in TShock.Players)
 			{
 				if (player != null && player.Active && await player.HasPermission(Permissions.maintenance))

@@ -71,7 +71,7 @@ namespace TShockAPI
 		/// <summary>
 		/// This represents the server as a player.
 		/// </summary>
-		public static readonly ServerServerPlayer ServerServer = new ServerServerPlayer();
+		public static readonly ServerConsolePlayer ServerConsole = new ServerConsolePlayer();
 
 		/// <summary>
 		/// This player represents all the players.
@@ -1934,7 +1934,7 @@ namespace TShockAPI
 						}
 						else
 						{
-							ServerServer.SendInfoMessage(GetString("Player {0} has been disabled for {1}.", Name, reason));
+							ServerConsole.SendInfoMessage(GetString("Player {0} has been disabled for {1}.", Name, reason));
 						}
 					}
 
@@ -1995,7 +1995,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="reason">The reason to be displayed to the server.</param>
 		/// <param name="adminUserName">The player who initiated the ban.</param>
-		public async Task<bool> Ban(string reason, string adminUserName = "ServerServer")
+		public async Task<bool> Ban(string reason, string adminUserName = "ServerConsole")
 		{
 			if (!ConnectionAlive)
 				return true;

@@ -59,11 +59,11 @@ namespace TShockAPI
 
 		/// <summary>Called on the game update loop (the XNA tickrate).</summary>
 		/// <param name="args">The standard event arguments.</param>
-		internal void OnGameUpdate(EventArgs args)
+		internal async Task OnGameUpdate(EventArgs args)
 		{
 			if ((DateTime.UtcNow - LastTimelyRun).TotalSeconds >= 1)
 			{
-				OnSecondlyUpdate(args);
+				await OnSecondlyUpdate(args);
 			}
 		}
 

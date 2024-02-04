@@ -13,7 +13,7 @@ namespace TShockAPI.Configuration
 	public class TShockSettings
 	{
 
-		#region ServerServer Settings
+		#region ServerConsole Settings
 
 		/// <summary>The server password required to join the server.</summary>
 		[Description("The server password required to join the server.")]
@@ -24,7 +24,7 @@ namespace TShockAPI.Configuration
 		public int ServerPort = 7777;
 
 		/// <summary>Maximum number of clients connected at once. If lower than Terraria's setting, the server will kick excess connections.</summary>
-		[Description("Maximum number of clients connected at once.\nIf you want people to be kicked with \"ServerServer is full\" set this to how many players you want max and then set Terraria max players to 2 higher.")]
+		[Description("Maximum number of clients connected at once.\nIf you want people to be kicked with \"ServerConsole is full\" set this to how many players you want max and then set Terraria max players to 2 higher.")]
 		public int MaxSlots = 8;
 
 		/// <summary>The number of reserved slots past your max server slots that can be joined by reserved players.</summary>
@@ -337,11 +337,11 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The reason given when kicking players that attempt to join while the server is full.</summary>
 		[Description("The reason given when kicking players that attempt to join while the server is full.")]
-		public string ServerFullReason = GetString("ServerServer is full");
+		public string ServerFullReason = GetString("ServerConsole is full");
 
 		/// <summary>The reason given when kicking players that attempt to join while the server is full with no reserved slots available.</summary>
 		[Description("The reason given when kicking players that attempt to join while the server is full with no reserved slots available.")]
-		public string ServerFullNoReservedReason = GetString("ServerServer is full. No reserved slots open.");
+		public string ServerFullNoReservedReason = GetString("ServerConsole is full. No reserved slots open.");
 
 		/// <summary>Whether or not to kick hardcore players on death.</summary>
 		[Description("Whether or not to kick hardcore players on death.")]

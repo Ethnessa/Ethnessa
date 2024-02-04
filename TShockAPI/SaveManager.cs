@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.IO;
 using TerrariaApi.Server;
@@ -47,7 +48,7 @@ namespace TShockAPI
 		/// <summary>
 		/// SaveWorld event handler which notifies users that the server may lag
 		/// </summary>
-		public void OnSaveWorld(WorldSaveEventArgs args)
+		public Task OnSaveWorld(WorldSaveEventArgs args)
 		{
 			if (TShock.Config.Settings.AnnounceSave)
 			{
@@ -63,6 +64,9 @@ namespace TShockAPI
 					TShock.Log.Error(ex.ToString());
 				}
 			}
+
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>

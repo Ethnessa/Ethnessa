@@ -70,7 +70,7 @@ namespace TShockAPI
 
 				if (TShock.Config.Settings.ShowBackupAutosaveMessages)
 				{
-					ServerPlayer.All.SendInfoMessage(GetString("ServerServer map saving..."));
+					ServerPlayer.All.SendInfoMessage(GetString("ServerConsole map saving..."));
 				}
 				Console.WriteLine(GetString("Backing up world..."));
 

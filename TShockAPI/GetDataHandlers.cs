@@ -44,9 +44,7 @@ using Terraria.GameContent.NetModules;
 
 namespace TShockAPI
 {
-	public delegate bool GetDataHandlerDelegate(GetDataHandlerArgs args);
-
-	public delegate Task<bool> GetDataHandlerDelegateAsync(GetDataHandlerArgs args);
+	public delegate Task<bool> GetDataHandlerDelegate(GetDataHandlerArgs args);
 
 	public class GetDataHandlerArgs : EventArgs
 	{
@@ -81,34 +79,9 @@ namespace TShockAPI
 	public static class GetDataHandlers
 	{
 		private static Dictionary<PacketTypes, GetDataHandlerDelegate> GetDataHandlerDelegates;
-		private static Dictionary<PacketTypes, GetDataHandlerDelegateAsync> GetDataHandlerDelegatesAsync;
 
 		public static void InitGetDataHandler()
 		{
-			GetDataHandlerDelegatesAsync = new Dictionary<PacketTypes, GetDataHandlerDelegateAsync>
-			{
-				{ PacketTypes.PlayerSlot, HandlePlayerSlot },
-				{ PacketTypes.ContinueConnecting2, HandleConnecting },
-				{ PacketTypes.TileGetSection, HandleGetSection },
-				{ PacketTypes.PlayerHp, HandlePlayerHp },
-				{ PacketTypes.NpcStrike, HandleNpcStrike },
-				{ PacketTypes.ProjectileDestroy, HandleProjectileKill },
-				{ PacketTypes.PasswordSend, HandlePassword },
-				{ PacketTypes.PlayerDeathV2, HandlePlayerKillMeV2 },
-				{ PacketTypes.ChestOpen, HandleChestActive },
-				{ PacketTypes.PlayerMana, HandlePlayerMana },
-				{ PacketTypes.PaintTile, HandlePaintTile },
-				{ PacketTypes.PaintWall, HandlePaintWall },
-				{ PacketTypes.Teleport, HandleTeleport },
-				{ PacketTypes.SignNew, HandleSign },
-				{ PacketTypes.UpdateNPCHome, HandleUpdateNPCHome },
-				{ PacketTypes.SpawnBossorInvasion, HandleSpawnBoss },
-				{ PacketTypes.TeleportationPotion, HandleTeleportationPotion },
-				{ PacketTypes.NpcSpecial, HandleSpecial },
-				{ PacketTypes.ToggleParty, HandleToggleParty },
-				{ PacketTypes.CrystalInvasionStart, HandleOldOnesArmy },
-				{ PacketTypes.PlaceTileEntity, HandlePlaceTileEntity },
-			};
 			GetDataHandlerDelegates = new Dictionary<PacketTypes, GetDataHandlerDelegate>
 			{
 				{ PacketTypes.PlayerInfo, HandlePlayerInfo },
@@ -148,9 +121,7 @@ namespace TShockAPI
 				{ PacketTypes.NpcTeleportPortal, HandleNpcTeleportPortal },
 				{ PacketTypes.GemLockToggle, HandleGemLockToggle },
 				{ PacketTypes.MassWireOperation, HandleMassWireOperation },
-
 				{ PacketTypes.PlayerHurtV2, HandlePlayerDamageV2 },
-
 				{ PacketTypes.Emoji, HandleEmoji },
 				{ PacketTypes.TileEntityDisplayDollItemSync, HandleTileEntityDisplayDollItemSync },
 				{ PacketTypes.RequestTileEntityInteraction, HandleRequestTileEntityInteraction },
@@ -160,31 +131,39 @@ namespace TShockAPI
 				{ PacketTypes.FishOutNPC, HandleFishOutNPC },
 				{ PacketTypes.FoodPlatterTryPlacing, HandleFoodPlatterTryPlacing },
 				{ PacketTypes.SyncCavernMonsterType, HandleSyncCavernMonsterType },
-				{ PacketTypes.SyncLoadout, HandleSyncLoadout }
+				{ PacketTypes.SyncLoadout, HandleSyncLoadout },
+				{ PacketTypes.PlayerSlot, HandlePlayerSlot },
+				{ PacketTypes.ContinueConnecting2, HandleConnecting },
+				{ PacketTypes.TileGetSection, HandleGetSection },
+				{ PacketTypes.PlayerHp, HandlePlayerHp },
+				{ PacketTypes.NpcStrike, HandleNpcStrike },
+				{ PacketTypes.ProjectileDestroy, HandleProjectileKill },
+				{ PacketTypes.PasswordSend, HandlePassword },
+				{ PacketTypes.PlayerDeathV2, HandlePlayerKillMeV2 },
+				{ PacketTypes.ChestOpen, HandleChestActive },
+				{ PacketTypes.PlayerMana, HandlePlayerMana },
+				{ PacketTypes.PaintTile, HandlePaintTile },
+				{ PacketTypes.PaintWall, HandlePaintWall },
+				{ PacketTypes.Teleport, HandleTeleport },
+				{ PacketTypes.SignNew, HandleSign },
+				{ PacketTypes.UpdateNPCHome, HandleUpdateNPCHome },
+				{ PacketTypes.SpawnBossorInvasion, HandleSpawnBoss },
+				{ PacketTypes.TeleportationPotion, HandleTeleportationPotion },
+				{ PacketTypes.NpcSpecial, HandleSpecial },
+				{ PacketTypes.ToggleParty, HandleToggleParty },
+				{ PacketTypes.CrystalInvasionStart, HandleOldOnesArmy },
+				{ PacketTypes.PlaceTileEntity, HandlePlaceTileEntity },
 			};
 		}
 
-		public static bool HandlerGetData(PacketTypes type, ServerPlayer player, MemoryStream data)
+		public static async Task<bool> HandlerGetData(PacketTypes type, ServerPlayer player, MemoryStream data)
 		{
 			GetDataHandlerDelegate handler;
-			GetDataHandlerDelegateAsync asyncHandler;
 			if (GetDataHandlerDelegates.TryGetValue(type, out handler))
 			{
 				try
 				{
-					return handler(new GetDataHandlerArgs(player, data));
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
-					return true;
-				}
-			}
-			else if (GetDataHandlerDelegatesAsync.TryGetValue(type, out asyncHandler))
-			{
-				try
-				{
-					return asyncHandler(new GetDataHandlerArgs(player, data)).GetAwaiter().GetResult();
+					return await handler(new GetDataHandlerArgs(player, data));
 				}
 				catch (Exception ex)
 				{
@@ -2695,7 +2674,7 @@ namespace TShockAPI
 
 		#endregion
 
-		private static bool HandlePlayerInfo(GetDataHandlerArgs args)
+		private static async Task<bool> HandlePlayerInfo(GetDataHandlerArgs args)
 		{
 			byte playerid = args.Data.ReadInt8();
 			// 0-3 male; 4-7 female
@@ -2751,14 +2730,14 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected plugin phase {0}",
 					name));
-				args.Player.Kick(GetString("A plugin on this server stopped your login."), true, true);
+				await args.Player.Kick(GetString("A plugin on this server stopped your login."), true, true);
 				return true;
 			}
 
 			if (name.Trim().Length == 0)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected name length 0"));
-				args.Player.Kick(GetString("You have been Bounced."), true, true);
+				await args.Player.Kick(GetString("You have been Bounced."), true, true);
 				return true;
 			}
 
@@ -2766,7 +2745,7 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(
 					GetString("GetDataHandlers / rejecting player for name prefix starting with tsi: or tsn:."));
-				args.Player.Kick(GetString("Illegal name: prefixes tsi: and tsn: are forbidden."), true, true);
+				await args.Player.Kick(GetString("Illegal name: prefixes tsi: and tsn: are forbidden."), true, true);
 				return true;
 			}
 
@@ -2814,21 +2793,21 @@ namespace TShockAPI
 			if (TShock.Config.Settings.SoftcoreOnly && difficulty != 0)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected softcore required"));
-				args.Player.Kick(GetString("You need to join with a softcore player."), true, true);
+				await args.Player.Kick(GetString("You need to join with a softcore player."), true, true);
 				return true;
 			}
 
 			if (TShock.Config.Settings.MediumcoreOnly && difficulty < 1)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected mediumcore required"));
-				args.Player.Kick(GetString("You need to join with a mediumcore player or higher."), true, true);
+				await args.Player.Kick(GetString("You need to join with a mediumcore player or higher."), true, true);
 				return true;
 			}
 
 			if (TShock.Config.Settings.HardcoreOnly && difficulty < 2)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected hardcore required"));
-				args.Player.Kick(GetString("You need to join with a hardcore player."), true, true);
+				await args.Player.Kick(GetString("You need to join with a hardcore player."), true, true);
 				return true;
 			}
 
@@ -2995,13 +2974,13 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleSpawn(GetDataHandlerArgs args)
+		private static Task<bool> HandleSpawn(GetDataHandlerArgs args)
 		{
 			if (args.Player.Dead && args.Player.RespawnTimer > 0)
 			{
 				TShock.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandleSpawn rejected dead player spawn request {0}", args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			byte player = args.Data.ReadInt8();
@@ -3014,7 +2993,7 @@ namespace TShockAPI
 
 			if (OnPlayerSpawn(args.Player, args.Data, player, spawnx, spawny, respawnTimer, numberOfDeathsPVE,
 				    numberOfDeathsPVP, context))
-				return true;
+				return Task.FromResult(true);
 
 			if ((Main.ServerSideCharacter) &&
 			    (spawnx == -1 && spawny == -1)) //this means they want to spawn to vanilla spawn
@@ -3059,15 +3038,15 @@ namespace TShockAPI
 				args.Player.Dead = true;
 			else
 				args.Player.Dead = false;
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerUpdate(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerUpdate(GetDataHandlerArgs args)
 		{
 			if (args.Player == null || args.TPlayer == null || args.Data == null)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / OnPlayerUpdate rejected from null player."));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			byte playerID = args.Data.ReadInt8();
@@ -3094,9 +3073,9 @@ namespace TShockAPI
 
 			if (OnPlayerUpdate(args.Player, args.Data, playerID, controls, miscData1, miscData2, miscData3,
 				    selectedItem, position, velocity, originalPosition, homePosition))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandlePlayerHp(GetDataHandlerArgs args)
@@ -3127,7 +3106,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleTile(GetDataHandlerArgs args)
+		private static Task<bool> HandleTile(GetDataHandlerArgs args)
 		{
 			EditAction action = (EditAction)args.Data.ReadInt8();
 			short tileX = args.Data.ReadInt16();
@@ -3144,12 +3123,12 @@ namespace TShockAPI
 			byte style = args.Data.ReadInt8();
 
 			if (OnTileEdit(args.Player, args.Data, tileX, tileY, action, type, editData, style))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleDoorUse(GetDataHandlerArgs args)
+		private static Task<bool> HandleDoorUse(GetDataHandlerArgs args)
 		{
 			byte action = (byte)args.Data.ReadByte();
 			short x = args.Data.ReadInt16();
@@ -3159,7 +3138,7 @@ namespace TShockAPI
 			DoorAction doorAction = (DoorAction)action;
 
 			if (OnDoorUse(args.Player, args.Data, x, y, direction, doorAction))
-				return true;
+				return Task.FromResult(true);
 
 			ushort tileType = Main.tile[x, y].type;
 
@@ -3167,14 +3146,14 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected out of range door {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (action < 0 || action > 5)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected type 0 5 check {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 
@@ -3184,13 +3163,13 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected door gap check {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSendTileRect(GetDataHandlerArgs args)
+		private static Task<bool> HandleSendTileRect(GetDataHandlerArgs args)
 		{
 			var player = args.Player;
 
@@ -3209,12 +3188,12 @@ namespace TShockAPI
 			var data = args.Data;
 
 			if (OnSendTileRect(player, data, tileX, tileY, width, length, changeType))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleItemDrop(GetDataHandlerArgs args)
+		private static Task<bool> HandleItemDrop(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var pos = new Vector2(args.Data.ReadSingle(), args.Data.ReadSingle());
@@ -3225,29 +3204,29 @@ namespace TShockAPI
 			var type = args.Data.ReadInt16();
 
 			if (OnItemDrop(args.Player, args.Data, id, pos, vel, stacks, prefix, noDelay, type))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleItemOwner(GetDataHandlerArgs args)
+		private static Task<bool> HandleItemOwner(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var owner = args.Data.ReadInt8();
 
 			if (id < 0 || id > 400)
-				return true;
+				return Task.FromResult(true);
 
 			if (id == 400 && owner == 255)
 			{
 				args.Player.IgnoreSscPackets = false;
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleProjectileNew(GetDataHandlerArgs args)
+		private static Task<bool> HandleProjectileNew(GetDataHandlerArgs args)
 		{
 			short ident = args.Data.ReadInt16();
 			Vector2 pos = args.Data.ReadVector2();
@@ -3271,7 +3250,7 @@ namespace TShockAPI
 			var index = TShock.Utils.SearchProjectile(ident, owner);
 
 			if (OnNewProjectile(args.Data, ident, pos, vel, knockback, dmg, owner, type, index, args.Player, ai))
-				return true;
+				return Task.FromResult(true);
 
 			lock (args.Player.RecentlyCreatedProjectiles)
 			{
@@ -3286,7 +3265,7 @@ namespace TShockAPI
 				}
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleNpcStrike(GetDataHandlerArgs args)
@@ -3405,18 +3384,18 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleTogglePvp(GetDataHandlerArgs args)
+		private static Task<bool> HandleTogglePvp(GetDataHandlerArgs args)
 		{
 			byte id = args.Data.ReadInt8();
 			bool pvp = args.Data.ReadBoolean();
 			if (OnPvpToggled(args.Player, args.Data, id, pvp))
-				return true;
+				return Task.FromResult(true);
 
 			if (id != args.Player.Index)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected index mismatch {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			string pvpMode = TShock.Config.Settings.PvPMode.ToLowerInvariant();
@@ -3426,25 +3405,25 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected fastswitch {0}",
 					args.Player.Name));
 				args.Player.SendData(PacketTypes.TogglePvp, "", id);
-				return true;
+				return Task.FromResult(true);
 			}
 
 			args.Player.LastPvPTeamChange = DateTime.UtcNow;
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleChestOpen(GetDataHandlerArgs args)
+		private static Task<bool> HandleChestOpen(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
 
 			if (OnChestOpen(args.Data, x, y, args.Player))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleChestItem(GetDataHandlerArgs args)
+		private static Task<bool> HandleChestItem(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var slot = args.Data.ReadInt8();
@@ -3453,7 +3432,7 @@ namespace TShockAPI
 			var type = args.Data.ReadInt16();
 
 			if (OnChestItemChange(args.Player, args.Data, id, slot, stacks, prefix, type))
-				return true;
+				return Task.FromResult(true);
 
 			Item item = new Item();
 			item.netDefaults(type);
@@ -3461,10 +3440,10 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleChestItem rejected max stacks {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleChestActive(GetDataHandlerArgs args)
@@ -3495,7 +3474,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlaceChest(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlaceChest(GetDataHandlerArgs args)
 		{
 			int flag = args.Data.ReadByte();
 			int tileX = args.Data.ReadInt16();
@@ -3503,17 +3482,17 @@ namespace TShockAPI
 			short style = args.Data.ReadInt16();
 
 			if (OnPlaceChest(args.Player, args.Data, flag, tileX, tileY, style))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerZone(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerZone(GetDataHandlerArgs args)
 		{
 			if (args.Player == null || args.TPlayer == null || args.Data == null)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerZone rejected null check"));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			var plr = args.Data.ReadInt8();
@@ -3524,9 +3503,9 @@ namespace TShockAPI
 			BitsByte zone5 = args.Data.ReadInt8();
 
 			if (OnPlayerZone(args.Player, args.Data, plr, zone1, zone2, zone3, zone4, zone5))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandlePassword(GetDataHandlerArgs args)
@@ -3616,13 +3595,13 @@ namespace TShockAPI
 			return true;
 		}
 
-		private static bool HandleNpcTalk(GetDataHandlerArgs args)
+		private static Task<bool> HandleNpcTalk(GetDataHandlerArgs args)
 		{
 			var plr = args.Data.ReadInt8();
 			var npc = args.Data.ReadInt16();
 
 			if (OnNpcTalk(args.Player, args.Data, plr, npc))
-				return true;
+				return Task.FromResult(true);
 
 			//Rejecting player who trying to talk to a npc if player were disabled, mainly for unregistered and logged out players. Preventing smuggling or duplicating their items if player put it in a npc's item slot
 			if (args.Player.IsBeingDisabled())
@@ -3630,14 +3609,14 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTalk rejected npc talk {0}",
 					args.Player.Name));
 				args.Player.SendData(PacketTypes.NpcTalk, "", plr, -1);
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (args.Player.IsBouncerThrottled())
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / HandleNpcTalk rejected from bouncer throttle from {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			// -1 is a magic value, represents not talking to an NPC
@@ -3645,18 +3624,18 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString(
 					"Bouncer / HandleNpcTalk rejected from bouncer out of bounds from {0}", args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerAnimation(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerAnimation(GetDataHandlerArgs args)
 		{
 			if (OnPlayerAnimation(args.Player, args.Data))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandlePlayerMana(GetDataHandlerArgs args)
@@ -3687,15 +3666,15 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlayerTeam(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerTeam(GetDataHandlerArgs args)
 		{
 			byte id = args.Data.ReadInt8();
 			byte team = args.Data.ReadInt8();
 			if (OnPlayerTeam(args.Player, args.Data, id, team))
-				return true;
+				return Task.FromResult(true);
 
 			if (id != args.Player.Index)
-				return true;
+				return Task.FromResult(true);
 
 			string pvpMode = TShock.Config.Settings.PvPMode.ToLowerInvariant();
 			if (pvpMode == "pvpwithnoteam" || (DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
@@ -3703,29 +3682,29 @@ namespace TShockAPI
 				args.Player.SendData(PacketTypes.PlayerTeam, "", id);
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerTeam rejected team fastswitch {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			args.Player.LastPvPTeamChange = DateTime.UtcNow;
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSignRead(GetDataHandlerArgs args)
+		private static Task<bool> HandleSignRead(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
 
 			if (OnSignRead(args.Player, args.Data, x, y))
-				return true;
+				return Task.FromResult(true);
 
 			if (x < 0 || y < 0 || x >= Main.maxTilesX || y >= Main.maxTilesY)
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSignRead rejected out of bounds {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleSign(GetDataHandlerArgs args)
@@ -3757,7 +3736,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleLiquidSet(GetDataHandlerArgs args)
+		private static Task<bool> HandleLiquidSet(GetDataHandlerArgs args)
 		{
 			int tileX = args.Data.ReadInt16();
 			int tileY = args.Data.ReadInt16();
@@ -3765,17 +3744,17 @@ namespace TShockAPI
 			byte type = args.Data.ReadInt8();
 
 			if (OnLiquidSet(args.Player, args.Data, tileX, tileY, amount, type))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerBuffList(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerBuffList(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
 
 			if (OnPlayerBuffUpdate(args.Player, args.Data, id))
-				return true;
+				return Task.FromResult(true);
 
 			for (int i = 0; i < Terraria.Player.maxBuffs; i++)
 			{
@@ -3807,7 +3786,7 @@ namespace TShockAPI
 				args.Player.Name));
 			NetMessage.SendData((int)PacketTypes.PlayerBuff, -1, args.Player.Index, NetworkText.Empty,
 				args.Player.Index);
-			return true;
+			return Task.FromResult(true);
 		}
 
 		private static async Task<bool> HandleSpecial(GetDataHandlerArgs args)
@@ -3857,28 +3836,28 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleNPCAddBuff(GetDataHandlerArgs args)
+		private static Task<bool> HandleNPCAddBuff(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt16();
 			var type = args.Data.ReadUInt16();
 			var time = args.Data.ReadInt16();
 
 			if (OnNPCAddBuff(args.Player, args.Data, id, type, time))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerAddBuff(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerAddBuff(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
 			var type = args.Data.ReadUInt16();
 			var time = args.Data.ReadInt32();
 
 			if (OnPlayerBuff(args.Player, args.Data, id, type, time))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleUpdateNPCHome(GetDataHandlerArgs args)
@@ -4215,18 +4194,18 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleHealOther(GetDataHandlerArgs args)
+		private static Task<bool> HandleHealOther(GetDataHandlerArgs args)
 		{
 			byte plr = args.Data.ReadInt8();
 			short amount = args.Data.ReadInt16();
 
 			if (OnHealOtherPlayer(args.Player, args.Data, plr, amount))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleCatchNpc(GetDataHandlerArgs args)
+		private static Task<bool> HandleCatchNpc(GetDataHandlerArgs args)
 		{
 			var npcID = args.Data.ReadInt16();
 			var who = args.Data.ReadByte();
@@ -4236,20 +4215,20 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc catch zero {0}", args.Player.Name));
 				Main.npc[npcID].active = true;
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcID);
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (args.Player.IsBeingDisabled())
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc rejected catch npc {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleReleaseNpc(GetDataHandlerArgs args)
+		private static Task<bool> HandleReleaseNpc(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt32();
 			var y = args.Data.ReadInt32();
@@ -4258,10 +4237,10 @@ namespace TShockAPI
 
 			if (OnReleaseNpc(args.Player, args.Data, x, y, type, style))
 			{
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleTeleportationPotion(GetDataHandlerArgs args)
@@ -4367,23 +4346,23 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleCompleteAnglerQuest(GetDataHandlerArgs args)
+		private static Task<bool> HandleCompleteAnglerQuest(GetDataHandlerArgs args)
 		{
 			// Since packet 76 is NEVER sent to us, we actually have to rely on this to get the true count
 			args.TPlayer.anglerQuestsFinished++;
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleNumberOfAnglerQuestsCompleted(GetDataHandlerArgs args)
+		private static Task<bool> HandleNumberOfAnglerQuestsCompleted(GetDataHandlerArgs args)
 		{
 			// Never sent by vanilla client, ignore this
 			TShock.Log.ConsoleDebug(GetString(
 				"GetDataHandlers / HandleNumberOfAnglerQuestsCompleted surprise packet! Someone tell the TShock team! {0}",
 				args.Player.Name));
-			return true;
+			return Task.FromResult(true);
 		}
 
-		private static bool HandlePlaceObject(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlaceObject(GetDataHandlerArgs args)
 		{
 			short x = args.Data.ReadInt16();
 			short y = args.Data.ReadInt16();
@@ -4394,21 +4373,21 @@ namespace TShockAPI
 			bool direction = args.Data.ReadBoolean();
 
 			if (OnPlaceObject(args.Player, args.Data, x, y, type, style, alternate, random, direction))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleLoadNetModule(GetDataHandlerArgs args)
+		private static Task<bool> HandleLoadNetModule(GetDataHandlerArgs args)
 		{
 			short moduleId = args.Data.ReadInt16();
 
 			if (OnReadNetModule(args.Player, args.Data, (NetModuleType)moduleId))
 			{
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandlePlaceTileEntity(GetDataHandlerArgs args)
@@ -4434,7 +4413,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlaceItemFrame(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlaceItemFrame(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
@@ -4445,13 +4424,13 @@ namespace TShockAPI
 
 			if (OnPlaceItemFrame(args.Player, args.Data, x, y, itemID, prefix, stack, itemFrame))
 			{
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSyncExtraValue(GetDataHandlerArgs args)
+		private static Task<bool> HandleSyncExtraValue(GetDataHandlerArgs args)
 		{
 			var npcIndex = args.Data.ReadInt16();
 			var extraValue = args.Data.ReadInt32();
@@ -4462,14 +4441,14 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected extents check {0}",
 					args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (!Main.expertMode && !Main.masterMode)
 			{
 				TShock.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandleSyncExtraValue rejected expert/master mode check {0}", args.Player.Name));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (npcIndex < 0 || npcIndex >= Main.npc.Length)
@@ -4477,7 +4456,7 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandleSyncExtraValue rejected npc id out of bounds check - NPC AccountId: {0}",
 					npcIndex));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			var npc = Main.npc[npcIndex];
@@ -4485,7 +4464,7 @@ namespace TShockAPI
 			{
 				TShock.Log.ConsoleDebug(
 					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC AccountId: {0}", npcIndex));
-				return true;
+				return Task.FromResult(true);
 			}
 
 			var distanceFromCoinPacketToNpc = Utils.Distance(position, npc.position);
@@ -4494,13 +4473,13 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandleSyncExtraValue rejected range check {0},{1} vs {2},{3} which is {4}",
 					npc.position.X, npc.position.Y, position.X, position.Y, distanceFromCoinPacketToNpc));
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleKillPortal(GetDataHandlerArgs args)
+		private static Task<bool> HandleKillPortal(GetDataHandlerArgs args)
 		{
 			short projectileIndex = args.Data.ReadInt16();
 			args.Data.ReadInt8(); // Read byte projectile AI
@@ -4512,14 +4491,14 @@ namespace TShockAPI
 				{
 					TShock.Log.ConsoleDebug(GetString(
 						"GetDataHandlers / HandleKillPortal rejected owner mismatch check {0}", args.Player.Name));
-					return true;
+					return Task.FromResult(true);
 				}
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandlePlayerPortalTeleport(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerPortalTeleport(GetDataHandlerArgs args)
 		{
 			byte plr = args.Data.ReadInt8();
 			short portalColorIndex = args.Data.ReadInt16();
@@ -4528,17 +4507,17 @@ namespace TShockAPI
 			float newVelocityX = args.Data.ReadSingle();
 			float newVelocityY = args.Data.ReadSingle();
 
-			return OnPlayerTeleportThroughPortal(
+			return Task.FromResult(OnPlayerTeleportThroughPortal(
 				args.Player,
 				plr,
 				args.Data,
 				new Vector2(newPositionX, newPositionY),
 				new Vector2(newVelocityX, newVelocityY),
 				portalColorIndex
-			);
+			));
 		}
 
-		private static bool HandleNpcTeleportPortal(GetDataHandlerArgs args)
+		private static Task<bool> HandleNpcTeleportPortal(GetDataHandlerArgs args)
 		{
 			var npcIndex = args.Data.ReadUInt16();
 			var portalColorIndex = args.Data.ReadInt16();
@@ -4554,7 +4533,7 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTeleportPortal rejected null check {0}",
 					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcIndex);
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (projectile.type != ProjectileID.PortalGunGate)
@@ -4563,13 +4542,13 @@ namespace TShockAPI
 					"GetDataHandlers / HandleNpcTeleportPortal rejected not thinking with portals {0}",
 					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcIndex);
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleGemLockToggle(GetDataHandlerArgs args)
+		private static Task<bool> HandleGemLockToggle(GetDataHandlerArgs args)
 		{
 			var x = args.Data.ReadInt16();
 			var y = args.Data.ReadInt16();
@@ -4577,13 +4556,13 @@ namespace TShockAPI
 
 			if (OnGemLockToggle(args.Player, args.Data, x, y, on))
 			{
-				return true;
+				return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleMassWireOperation(GetDataHandlerArgs args)
+		private static Task<bool> HandleMassWireOperation(GetDataHandlerArgs args)
 		{
 			short startX = args.Data.ReadInt16();
 			short startY = args.Data.ReadInt16();
@@ -4592,9 +4571,9 @@ namespace TShockAPI
 			byte toolMode = (byte)args.Data.ReadByte();
 
 			if (OnMassWireOperation(args.Player, args.Data, startX, startY, endX, endY, toolMode))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandleToggleParty(GetDataHandlerArgs args)
@@ -4636,7 +4615,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandlePlayerDamageV2(GetDataHandlerArgs args)
+		private static Task<bool> HandlePlayerDamageV2(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
 			PlayerDeathReason playerDeathReason = PlayerDeathReason.FromReader(new BinaryReader(args.Data));
@@ -4649,9 +4628,9 @@ namespace TShockAPI
 
 			if (OnPlayerDamage(args.Player, args.Data, id, direction, dmg, pvp, crit, cooldownCounter,
 				    playerDeathReason))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		private static async Task<bool> HandlePlayerKillMeV2(GetDataHandlerArgs args)
@@ -4731,18 +4710,18 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static bool HandleEmoji(GetDataHandlerArgs args)
+		private static Task<bool> HandleEmoji(GetDataHandlerArgs args)
 		{
 			byte playerIndex = args.Data.ReadInt8();
 			byte emojiID = args.Data.ReadInt8();
 
 			if (OnEmoji(args.Player, args.Data, playerIndex, emojiID))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleTileEntityDisplayDollItemSync(GetDataHandlerArgs args)
+		private static Task<bool> HandleTileEntityDisplayDollItemSync(GetDataHandlerArgs args)
 		{
 			byte playerIndex = args.Data.ReadInt8();
 			int tileEntityID = args.Data.ReadInt32();
@@ -4758,7 +4737,7 @@ namespace TShockAPI
 			Item oldItem = new Item();
 
 			if (!TileEntity.ByID.TryGetValue(tileEntityID, out TileEntity tileEntity))
-				return false;
+				return Task.FromResult(false);
 
 			TEDisplayDoll displayDoll = tileEntity as TEDisplayDoll;
 			if (displayDoll != null)
@@ -4772,7 +4751,7 @@ namespace TShockAPI
 				int prefix = args.Data.ReadByte();
 
 				if (oldItem.type == 0 && newItem.type == 0)
-					return false;
+					return Task.FromResult(false);
 
 				newItem.SetDefaults(itemType);
 				newItem.stack = stack;
@@ -4780,27 +4759,27 @@ namespace TShockAPI
 
 				if (OnDisplayDollItemSync(args.Player, args.Data, playerIndex, tileEntityID, displayDoll, slot, isDye,
 					    oldItem, newItem))
-					return true;
+					return Task.FromResult(true);
 			}
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleRequestTileEntityInteraction(GetDataHandlerArgs args)
+		private static Task<bool> HandleRequestTileEntityInteraction(GetDataHandlerArgs args)
 		{
 			int tileEntityID = args.Data.ReadInt32();
 			byte playerIndex = args.Data.ReadInt8();
 
 			if (!TileEntity.ByID.TryGetValue(tileEntityID, out TileEntity tileEntity))
-				return false;
+				return Task.FromResult(false);
 
 			if (OnRequestTileEntityInteraction(args.Player, args.Data, tileEntity, playerIndex))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSyncTilePicking(GetDataHandlerArgs args)
+		private static Task<bool> HandleSyncTilePicking(GetDataHandlerArgs args)
 		{
 			byte playerIndex = args.Data.ReadInt8();
 			short tileX = args.Data.ReadInt16();
@@ -4808,12 +4787,12 @@ namespace TShockAPI
 			byte damage = args.Data.ReadInt8();
 
 			if (OnSyncTilePicking(args.Player, args.Data, playerIndex, tileX, tileY, damage))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSyncRevengeMarker(GetDataHandlerArgs args)
+		private static Task<bool> HandleSyncRevengeMarker(GetDataHandlerArgs args)
 		{
 			int uniqueID = args.Data.ReadInt32();
 			Vector2 location = args.Data.ReadVector2();
@@ -4825,10 +4804,10 @@ namespace TShockAPI
 			float baseValue = args.Data.ReadSingle();
 			bool spawnedFromStatus = args.Data.ReadBoolean();
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleLandGolfBallInCup(GetDataHandlerArgs args)
+		private static Task<bool> HandleLandGolfBallInCup(GetDataHandlerArgs args)
 		{
 			byte playerIndex = args.Data.ReadInt8();
 			ushort tileX = args.Data.ReadUInt16();
@@ -4837,24 +4816,24 @@ namespace TShockAPI
 			ushort projectileType = args.Data.ReadUInt16();
 
 			if (OnLandGolfBallInCup(args.Player, args.Data, playerIndex, tileX, tileY, hits, projectileType))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleFishOutNPC(GetDataHandlerArgs args)
+		private static Task<bool> HandleFishOutNPC(GetDataHandlerArgs args)
 		{
 			ushort tileX = args.Data.ReadUInt16();
 			ushort tileY = args.Data.ReadUInt16();
 			short npcType = args.Data.ReadInt16();
 
 			if (OnFishOutNPC(args.Player, args.Data, tileX, tileY, npcType))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleFoodPlatterTryPlacing(GetDataHandlerArgs args)
+		private static Task<bool> HandleFoodPlatterTryPlacing(GetDataHandlerArgs args)
 		{
 			short tileX = args.Data.ReadInt16();
 			short tileY = args.Data.ReadInt16();
@@ -4863,20 +4842,20 @@ namespace TShockAPI
 			short stack = args.Data.ReadInt16();
 
 			if (OnFoodPlatterTryPlacing(args.Player, args.Data, tileX, tileY, itemID, prefix, stack))
-				return true;
+				return Task.FromResult(true);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
-		private static bool HandleSyncCavernMonsterType(GetDataHandlerArgs args)
+		private static Task<bool> HandleSyncCavernMonsterType(GetDataHandlerArgs args)
 		{
 			args.Player.Kick(GetString("Exploit attempt detected!"));
 			TShock.Log.ConsoleDebug(GetString(
 				$"HandleSyncCavernMonsterType: Player is trying to modify NPC cavernMonsterType; this is a crafted packet! - From {args.Player.Name}"));
-			return true;
+			return Task.FromResult(true);
 		}
 
-		private static bool HandleSyncLoadout(GetDataHandlerArgs args)
+		private static Task<bool> HandleSyncLoadout(GetDataHandlerArgs args)
 		{
 			var playerIndex = args.Data.ReadInt8();
 			var loadoutIndex = args.Data.ReadInt8();
@@ -4884,7 +4863,7 @@ namespace TShockAPI
 			// When syncing a player's own loadout index, they then sync it back to us...
 			// So let's only care if the index has actually changed, otherwise we might end up in a loop...
 			if (loadoutIndex == args.TPlayer.CurrentLoadoutIndex)
-				return false;
+				return Task.FromResult(false);
 
 			if (loadoutIndex >= args.TPlayer.Loadouts.Length)
 			{
@@ -4894,7 +4873,7 @@ namespace TShockAPI
 				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index,
 					number2: args.TPlayer.CurrentLoadoutIndex);
 
-				return true;
+				return Task.FromResult(true);
 			}
 
 			if (args.Player.IsBeingDisabled())
@@ -4904,7 +4883,7 @@ namespace TShockAPI
 				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index,
 					number2: args.TPlayer.CurrentLoadoutIndex);
 
-				return true;
+				return Task.FromResult(true);
 			}
 
 			// The client does not sync slot changes when changing loadouts, it only tells the server the loadout index changed,
@@ -4960,7 +4939,7 @@ namespace TShockAPI
 				Terraria.Utils.Swap(ref args.Player.PlayerData.inventory[switchedLoadoutDyeSlotStartIndex + i],
 					ref args.Player.PlayerData.inventory[NetItem.DyeIndex.Item1 + i]);
 
-			return false;
+			return Task.FromResult(false);
 		}
 
 		public enum DoorAction

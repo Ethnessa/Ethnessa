@@ -135,7 +135,7 @@ namespace TShockAPI
 		public void Broadcast(string msg, byte red, byte green, byte blue)
 		{
 			ServerPlayer.All.SendMessage(msg, red, green, blue);
-			ServerPlayer.ServerServer.SendMessage(msg, red, green, blue);
+			ServerPlayer.ServerConsole.SendMessage(msg, red, green, blue);
 			TShock.Log.Info(GetString("Broadcast: {0}", msg));
 		}
 
@@ -158,7 +158,7 @@ namespace TShockAPI
 		public void Broadcast(int ply, string msg, byte red, byte green, byte blue)
 		{
 			ServerPlayer.All.SendMessageFromPlayer(msg, red, green, blue, ply);
-			ServerPlayer.ServerServer.SendMessage(Main.player[ply].name + ": " + msg, red, green, blue);
+			ServerPlayer.ServerConsole.SendMessage(Main.player[ply].name + ": " + msg, red, green, blue);
 			TShock.Log.Info(GetString("Broadcast: {0}: {1}", Main.player[ply].name, msg));
 		}
 
@@ -178,7 +178,7 @@ namespace TShockAPI
 		public async Task SendLogs(string log, Color color, ServerPlayer excludedPlayer = null)
 		{
 			TShock.Log.Info(log);
-			ServerPlayer.ServerServer.SendMessage(log, color);
+			ServerPlayer.ServerConsole.SendMessage(log, color);
 			foreach (ServerPlayer player in TShock.Players)
 			{
 				if (player != null && player != excludedPlayer && player.Active && await player.HasPermission(Permissions.logs) &&
@@ -581,8 +581,8 @@ namespace TShockAPI
 		/// Stops the server after kicking all players with a reason message, and optionally saving the world
 		/// </summary>
 		/// <param name="save">bool perform a world save before stop (default: true)</param>
-		/// <param name="reason">string reason (default: "ServerServer shutting down!")</param>
-		public void StopServer(bool save = true, string reason = "ServerServer shutting down!")
+		/// <param name="reason">string reason (default: "ServerConsole shutting down!")</param>
+		public void StopServer(bool save = true, string reason = "ServerConsole shutting down!")
 		{
 			TShock.ShuttingDown = true;
 

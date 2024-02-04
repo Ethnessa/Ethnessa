@@ -185,7 +185,7 @@ namespace TShockAPI
 		/// </summary>
 		public void RegisterRestfulCommands()
 		{
-			// ServerServer Commands
+			// ServerConsole Commands
 			if (TShock.Config.Settings.EnableTokenEndpointAuthentication)
 			{
 				Rest.Register(new SecureRestCommand("/v2/server/status", ServerStatusV2));
@@ -298,7 +298,7 @@ namespace TShockAPI
 			Rest.Register(new SecureRestCommand("/v2/groups/update", GroupUpdate, RestPermissions.restmanagegroups));
 		}
 
-		#region Rest ServerServer Methods
+		#region Rest ServerConsole Methods
 
 		[Description("Executes a remote command on the server, and returns the output of the command.")]
 		[RouteAttribute("/v3/server/rawcmd")]
@@ -334,7 +334,7 @@ namespace TShockAPI
 				return RestInvalidParam("confirm");
 
 			// Inform players the server is shutting down
-			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "ServerServer is shutting down" : args.Parameters["message"];
+			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "ServerConsole is shutting down" : args.Parameters["message"];
 			TShock.Utils.StopServer(!GetBool(args.Parameters["nosave"], false), reason);
 
 			return RestResponse("The server is shutting down");
@@ -777,7 +777,7 @@ namespace TShockAPI
 			{
 				if (Main.npc[i].active && Main.npc[i].type != 0 && !Main.npc[i].townNPC && (!Main.npc[i].friendly || killFriendly))
 				{
-					ServerPlayer.ServerServer.StrikeNPC(i, 99999, 90f, 1);
+					ServerPlayer.ServerConsole.StrikeNPC(i, 99999, 90f, 1);
 					killcount++;
 				}
 			}
@@ -1002,7 +1002,7 @@ namespace TShockAPI
 
 			ServerPlayer player = (ServerPlayer)ret;
 			player.DamagePlayer(999999);
-			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "ServerServer Admin" : args.Parameters["from"];
+			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "ServerConsole Admin" : args.Parameters["from"];
 			player.SendInfoMessage(GetString($"{from} just killed you!"));
 			return RestResponse(GetString($"Player {player.Name} was killed"));
 		}

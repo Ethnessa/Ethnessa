@@ -47,6 +47,15 @@ namespace TShockAPI
 		public string? ParentGroupName { get; set; }
 
 		/// <summary>
+		/// Retrieves the parent group of this group.
+		/// </summary>
+		/// <returns>The parent group, or null</returns>
+		public async Task<Group?> GetParentGroup()
+		{
+			return await GroupManager.GetGroupByName(ParentGroupName);
+		}
+
+		/// <summary>
 		/// The chat color of the group in "R,G,B" format. Each component should be in the range 0-255.
 		/// </summary>
 		public string ChatColor
@@ -81,31 +90,16 @@ namespace TShockAPI
 		/// </summary>
 		public virtual async Task<List<string>> GetPermissions()
 		{
-			var cur = this;
-			var traversed = new List<Group>();
-			var all = new HashSet<string>();
-			while (cur != null)
+			var perms = new List<string>(Permissions);
+			var parent = await GetParentGroup();
+			while (parent != null)
 			{
-				foreach (var perm in cur.Permissions)
-				{
-					all.Add(perm);
-				}
-
-				foreach (var perm in cur.NegatedPermissions)
-				{
-					all.Remove(perm);
-				}
-
-				if (traversed.Contains(cur))
-				{
-					throw new Exception("Infinite group parenting ({0})".SFormat(cur.Name));
-				}
-
-				traversed.Add(cur);
-				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
+				perms.AddRange(parent.Permissions);
+				perms.RemoveAll(parent.NegatedPermissions.Contains);
+				parent = await parent.GetParentGroup();
 			}
 
-			return all.ToList();
+			return perms;
 		}
 
 		/// <summary>
@@ -151,54 +145,8 @@ namespace TShockAPI
 		/// <returns>True if the group has that permission.</returns>
 		public virtual async Task<bool> HasPermission(string permission)
 		{
-			bool negated = false;
-			if (String.IsNullOrEmpty(permission) || (await RealHasPermission(permission)))
-			{
-				return true;
-			}
-
-			if (negated)
-				return false;
-
-			string[] nodes = permission.Split('.');
-			for (int i = nodes.Length - 1; i >= 0; i--)
-			{
-				nodes[i] = "*";
-				if (await RealHasPermission(String.Join(".", nodes, 0, i + 1)))
-				{
-					return !negated;
-				}
-			}
-
-			return false;
-		}
-
-		private async Task<bool> RealHasPermission(string permission)
-		{
-			if (string.IsNullOrEmpty(permission))
-				return true;
-
-			var cur = this;
-			var traversed = new List<Group>();
-			while (cur != null)
-			{
-				if (cur.NegatedPermissions.Contains(permission))
-				{
-					return false;
-				}
-
-				if (cur.Permissions.Contains(permission))
-					return true;
-				if (traversed.Contains(cur))
-				{
-					throw new InvalidOperationException("Infinite group parenting ({0})".SFormat(cur.Name));
-				}
-
-				traversed.Add(cur);
-				cur = await GroupManager.GetGroupByName(cur?.ParentGroupName);
-			}
-
-			return false;
+			var perms = await GetPermissions();
+			return perms.Contains(permission) && !NegatedPermissions.Contains(permission);
 		}
 
 		/// <summary>
@@ -244,7 +192,7 @@ namespace TShockAPI
 		{
 			Permissions.Clear();
 			NegatedPermissions.Clear();
-			permission.ForEach(p => AddPermission(p));
+			permission.ForEach(AddPermission);
 		}
 
 		/// <summary>

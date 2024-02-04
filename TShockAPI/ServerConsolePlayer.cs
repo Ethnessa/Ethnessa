@@ -30,12 +30,12 @@ using TShockAPI.Database.Models;
 
 namespace TShockAPI
 {
-	public class ServerServerPlayer : ServerPlayer
+	public class ServerConsolePlayer : ServerPlayer
 	{
 		public static string AccountName = GetParticularString("The account name of server console.", "ServerConsole");
 
-		public ServerServerPlayer()
-			: base("ServerServer")
+		public ServerConsolePlayer()
+			: base("ServerConsole")
 		{
 			Group = new SuperAdminGroup();
 			Account = new UserAccount { Name = AccountName };

@@ -78,7 +78,7 @@ namespace TShockAPI
 		private static string LogFormat = LogFormatDefault;
 
 		/// <summary>LogPathDefault - The default log path.</summary>
-		private const string LogPathDefault = "tshock/logs";
+		private const string LogPathDefault = "data/logs";
 
 		/// <summary>This is the log path, which is initially set to the default log path, and then to the config file log path later.</summary>
 		private static string LogPath = LogPathDefault;
@@ -414,18 +414,18 @@ namespace TShockAPI
 
 				// TODO: We need a better way to do event handling with async methods... i dont like this at all
 				// we may possibly want to re-do the event system :shrug:
-				ServerApi.Hooks.GamePostInitialize.Register(this, async (x) => await OnPostInit(x));
-				ServerApi.Hooks.GameUpdate.Register(this, async (x) => await OnUpdate(x));
+				ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit);
+				ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
 				ServerApi.Hooks.GameHardmodeTileUpdate.Register(this, OnHardUpdate);
 				ServerApi.Hooks.GameStatueSpawn.Register(this, OnStatueSpawn);
 				ServerApi.Hooks.ServerConnect.Register(this, OnConnect);
-				ServerApi.Hooks.ServerJoin.Register(this, async (x) => await OnJoin(x));
-				ServerApi.Hooks.ServerLeave.Register(this, async (x) => await OnLeave(x));
-				ServerApi.Hooks.ServerChat.Register(this, async (x) => await OnChat(x));
+				ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
+				ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
+				ServerApi.Hooks.ServerChat.Register(this, OnChat);
 				ServerApi.Hooks.ServerCommand.Register(this, ServerHooks_OnCommand);
 				ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Register(this, NetHooks_SendData);
-				ServerApi.Hooks.NetGreetPlayer.Register(this, async (x) => await OnGreetPlayer(x));
+				ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
 				ServerApi.Hooks.NpcStrike.Register(this, NpcHooks_OnStrikeNpc);
 				ServerApi.Hooks.ProjectileSetDefaults.Register(this, OnProjectileSetDefaults);
 				ServerApi.Hooks.WorldStartHardMode.Register(this, OnStartHardMode);
@@ -433,7 +433,7 @@ namespace TShockAPI
 				ServerApi.Hooks.WorldChristmasCheck.Register(this, OnXmasCheck);
 				ServerApi.Hooks.WorldHalloweenCheck.Register(this, OnHalloweenCheck);
 				ServerApi.Hooks.NetNameCollision.Register(this, NetHooks_NameCollision);
-				ServerApi.Hooks.ItemForceIntoChest.Register(this, async (x) => await OnItemForceIntoChest(x));
+				ServerApi.Hooks.ItemForceIntoChest.Register(this, OnItemForceIntoChest);
 				ServerApi.Hooks.WorldGrassSpread.Register(this, OnWorldGrassSpread);
 				Hooks.PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
 				Hooks.PlayerHooks.PlayerPostLogin += OnPlayerLogin;
@@ -520,21 +520,19 @@ namespace TShockAPI
 
 				ModuleManager.Dispose();
 
-				// TODO: Deregister the commented events
-				// commenting these out to allow testing sooner
 
-				/*ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
-				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);*/
+				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
+				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
 				ServerApi.Hooks.GameHardmodeTileUpdate.Deregister(this, OnHardUpdate);
 				ServerApi.Hooks.GameStatueSpawn.Deregister(this, OnStatueSpawn);
 				ServerApi.Hooks.ServerConnect.Deregister(this, OnConnect);
-				/*ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
+				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
-				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);*/
+				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
 				ServerApi.Hooks.ServerCommand.Deregister(this, ServerHooks_OnCommand);
 				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 				ServerApi.Hooks.NetSendData.Deregister(this, NetHooks_SendData);
-				//ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
+				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
 				ServerApi.Hooks.NpcStrike.Deregister(this, NpcHooks_OnStrikeNpc);
 				ServerApi.Hooks.ProjectileSetDefaults.Deregister(this, OnProjectileSetDefaults);
 				ServerApi.Hooks.WorldStartHardMode.Deregister(this, OnStartHardMode);
@@ -542,7 +540,7 @@ namespace TShockAPI
 				ServerApi.Hooks.WorldChristmasCheck.Deregister(this, OnXmasCheck);
 				ServerApi.Hooks.WorldHalloweenCheck.Deregister(this, OnHalloweenCheck);
 				ServerApi.Hooks.NetNameCollision.Deregister(this, NetHooks_NameCollision);
-				//ServerApi.Hooks.ItemForceIntoChest.Deregister(this, OnItemForceIntoChest);
+				ServerApi.Hooks.ItemForceIntoChest.Deregister(this, OnItemForceIntoChest);
 				ServerApi.Hooks.WorldGrassSpread.Deregister(this, OnWorldGrassSpread);
 				TShockAPI.Hooks.PlayerHooks.PlayerPostLogin -= OnPlayerLogin;
 
@@ -618,11 +616,11 @@ namespace TShockAPI
 
 		/// <summary>NetHooks_NameCollision - Internal hook fired when a name collision happens.</summary>
 		/// <param name="args">args - The NameCollisionEventArgs object.</param>
-		private void NetHooks_NameCollision(NameCollisionEventArgs args)
+		private Task NetHooks_NameCollision(NameCollisionEventArgs args)
 		{
 			if (args.Handled)
 			{
-				return;
+				return Task.CompletedTask;
 			}
 
 			string ip = Utils.GetRealIP(Netplay.Clients[args.Who].Socket.GetRemoteAddress().ToString());
@@ -634,7 +632,7 @@ namespace TShockAPI
 				{
 					player.Kick(GetString("You logged in from the same IP."), true, true, null, true);
 					args.Handled = true;
-					return;
+					return Task.CompletedTask;
 				}
 
 				if (player.IsLoggedIn)
@@ -647,6 +645,8 @@ namespace TShockAPI
 					}
 				}
 			}
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>OnItemForceIntoChest - Internal hook fired when a player quick stacks items into a chest.</summary>
@@ -686,30 +686,34 @@ namespace TShockAPI
 
 		/// <summary>OnXmasCheck - Internal hook fired when the XMasCheck happens.</summary>
 		/// <param name="args">args - The ChristmasCheckEventArgs object.</param>
-		private void OnXmasCheck(ChristmasCheckEventArgs args)
+		private Task OnXmasCheck(ChristmasCheckEventArgs args)
 		{
 			if (args.Handled)
-				return;
+				return Task.CompletedTask;
 
 			if (Config.Settings.ForceXmas)
 			{
 				args.Xmas = true;
 				args.Handled = true;
 			}
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>OnHalloweenCheck - Internal hook fired when the HalloweenCheck happens.</summary>
 		/// <param name="args">args - The HalloweenCheckEventArgs object.</param>
-		private void OnHalloweenCheck(HalloweenCheckEventArgs args)
+		private Task OnHalloweenCheck(HalloweenCheckEventArgs args)
 		{
 			if (args.Handled)
-				return;
+				return Task.CompletedTask;
 
 			if (Config.Settings.ForceHalloween)
 			{
 				args.Halloween = true;
 				args.Handled = true;
 			}
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>
@@ -771,7 +775,7 @@ namespace TShockAPI
 			Log.ConsoleInfo(GetString("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again."));
 
 			// Perform a safe shutdown
-			TShock.Utils.StopServer(true, GetString("ServerServer console interrupted!"));
+			TShock.Utils.StopServer(true, GetString("ServerConsole console interrupted!"));
 		}
 
 		/// <summary>HandleCommandLine - Handles the command line parameters passed to the server.</summary>
@@ -1149,10 +1153,10 @@ namespace TShockAPI
 				switch (Config.Settings.ForceTime)
 				{
 					case "day":
-						ServerPlayer.ServerServer.SetTime(true, 27000.0);
+						ServerPlayer.ServerConsole.SetTime(true, 27000.0);
 						break;
 					case "night":
-						ServerPlayer.ServerServer.SetTime(false, 16200.0);
+						ServerPlayer.ServerConsole.SetTime(false, 16200.0);
 						break;
 				}
 			}
@@ -1166,7 +1170,7 @@ namespace TShockAPI
 						if (player.TileKillThreshold >= Config.Settings.TileKillThreshold)
 						{
 							player.Disable(GetString("Reached TileKill threshold."), flags);
-							ServerPlayer.ServerServer.RevertTiles(player.TilesDestroyed);
+							ServerPlayer.ServerConsole.RevertTiles(player.TilesDestroyed);
 							player.TilesDestroyed.Clear();
 						}
 					}
@@ -1188,7 +1192,7 @@ namespace TShockAPI
 							player.Disable(GetString("Reached TilePlace threshold"), flags);
 							lock (player.TilesCreated)
 							{
-								ServerPlayer.ServerServer.RevertTiles(player.TilesCreated);
+								ServerPlayer.ServerConsole.RevertTiles(player.TilesCreated);
 								player.TilesCreated.Clear();
 							}
 						}
@@ -1300,28 +1304,32 @@ namespace TShockAPI
 
 		/// <summary>OnHardUpdate - Fired when a hardmode tile update event happens.</summary>
 		/// <param name="args">args - The HardmodeTileUpdateEventArgs object.</param>
-		private void OnHardUpdate(HardmodeTileUpdateEventArgs args)
+		private Task OnHardUpdate(HardmodeTileUpdateEventArgs args)
 		{
 			if (args.Handled)
-				return;
+				return Task.CompletedTask;
 
 			if (!OnCreep(args.Type))
 			{
 				args.Handled = true;
 			}
+
+			return Task.CompletedTask;
 		}
 
 		/// <summary>OnWorldGrassSpread - Fired when grass is attempting to spread.</summary>
 		/// <param name="args">args - The GrassSpreadEventArgs object.</param>
-		private void OnWorldGrassSpread(GrassSpreadEventArgs args)
+		private Task OnWorldGrassSpread(GrassSpreadEventArgs args)
 		{
 			if (args.Handled)
-				return;
+				return Task.CompletedTask;
 
 			if (!OnCreep(args.Grass))
 			{
 				args.Handled = true;
 			}
+
+			return Task.CompletedTask;
 		}
 
 		/// <summary>
@@ -1353,7 +1361,7 @@ namespace TShockAPI
 
 		/// <summary>OnStatueSpawn - Fired when a statue spawns.</summary>
 		/// <param name="args">args - The StatueSpawnEventArgs object.</param>
-		private void OnStatueSpawn(StatueSpawnEventArgs args)
+		private Task OnStatueSpawn(StatueSpawnEventArgs args)
 		{
 			if (args.Within200 < Config.Settings.StatueSpawn200 && args.Within600 < Config.Settings.StatueSpawn600 &&
 			    args.WorldWide < Config.Settings.StatueSpawnWorld)
@@ -1364,18 +1372,19 @@ namespace TShockAPI
 			{
 				args.Handled = false;
 			}
+			return Task.CompletedTask;
 		}
 
 		/// <summary>OnConnect - Fired when a player connects to the server.</summary>
 		/// <param name="args">args - The ConnectEventArgs object.</param>
-		private void OnConnect(ConnectEventArgs args)
+		private Task OnConnect(ConnectEventArgs args)
 		{
 			if (ShuttingDown)
 			{
 				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1,
-					NetworkText.FromLiteral(GetString("ServerServer is shutting down...")));
+					NetworkText.FromLiteral(GetString("ServerConsole is shutting down...")));
 				args.Handled = true;
-				return;
+				return Task.CompletedTask;
 			}
 
 			var player = new ServerPlayer(args.Who);
@@ -1384,14 +1393,14 @@ namespace TShockAPI
 			{
 				player.Kick(Config.Settings.ServerFullNoReservedReason, true, true, null, false);
 				args.Handled = true;
-				return;
+				return Task.CompletedTask;
 			}
 
 			if (!FileTools.OnWhitelist(player.IP))
 			{
 				player.Kick(Config.Settings.WhitelistKickReason, true, true, null, false);
 				args.Handled = true;
-				return;
+				return Task.CompletedTask;
 			}
 
 			if (Geo != null)
@@ -1404,12 +1413,13 @@ namespace TShockAPI
 					{
 						player.Kick(GetString("Connecting via a proxy is not allowed."), true, true, null, false);
 						args.Handled = true;
-						return;
+						return Task.CompletedTask;
 					}
 				}
 			}
 
 			Players[args.Who] = player;
+			return Task.CompletedTask;
 		}
 
 		/// <summary>OnJoin - Internal hook called when a player joins. This is called after OnConnect.</summary>
@@ -1624,7 +1634,7 @@ namespace TShockAPI
 		/// Called when a command is issued from the server console.
 		/// </summary>
 		/// <param name="args">The CommandEventArgs object</param>
-		private void ServerHooks_OnCommand(CommandEventArgs args)
+		private async Task ServerHooks_OnCommand(CommandEventArgs args)
 		{
 			if (args.Handled)
 				return;
@@ -1651,11 +1661,11 @@ namespace TShockAPI
 			}
 			else if (args.Command.StartsWith(Commands.Specifier) || args.Command.StartsWith(Commands.SilentSpecifier))
 			{
-				Commands.HandleCommand(ServerPlayer.ServerServer, args.Command);
+				await Commands.HandleCommand(ServerPlayer.ServerConsole, args.Command);
 			}
 			else
 			{
-				Commands.HandleCommand(ServerPlayer.ServerServer, "/" + args.Command);
+				await Commands.HandleCommand(ServerPlayer.ServerConsole, "/" + args.Command);
 			}
 
 			args.Handled = true;
@@ -1663,7 +1673,7 @@ namespace TShockAPI
 
 		/// <summary>OnGetData - Called when the server gets raw data packets.</summary>
 		/// <param name="e">e - The GetDataEventArgs object.</param>
-		private void OnGetData(GetDataEventArgs e)
+		private async Task OnGetData(GetDataEventArgs e)
 		{
 			if (e.Handled)
 				return;
@@ -1700,7 +1710,7 @@ namespace TShockAPI
 			using (var data = new MemoryStream(e.Msg.readBuffer, e.Index, e.Length - 1))
 			{
 				// Exceptions are already handled
-				e.Handled = GetDataHandlers.HandlerGetData(type, player, data);
+				e.Handled = await GetDataHandlers.HandlerGetData(type, player, data);
 			}
 		}
 
@@ -1752,7 +1762,7 @@ namespace TShockAPI
 				{
 					player.IsDisabledForSSC = true;
 					player.SendErrorMessage(GetString(
-						"ServerServer side characters is enabled! Please {0}register or {0}login to play!",
+						"ServerConsole side characters is enabled! Please {0}register or {0}login to play!",
 						Commands.Specifier));
 					player.LoginHarassed = true;
 				}
@@ -1778,7 +1788,7 @@ namespace TShockAPI
 
 		/// <summary>NpcHooks_OnStrikeNpc - Fired when an NPC strike packet happens.</summary>
 		/// <param name="e">e - The NpcStrikeEventArgs object.</param>
-		private void NpcHooks_OnStrikeNpc(NpcStrikeEventArgs e)
+		private Task NpcHooks_OnStrikeNpc(NpcStrikeEventArgs e)
 		{
 			if (Config.Settings.InfiniteInvasion)
 			{
@@ -1787,11 +1797,13 @@ namespace TShockAPI
 					Main.invasionSize = 20000000;
 				}
 			}
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>OnProjectileSetDefaults - Called when a projectile sets the default attributes for itself.</summary>
 		/// <param name="e">e - The SetDefaultsEventArgs object parameterized with Projectile and int.</param>
-		private void OnProjectileSetDefaults(SetDefaultsEventArgs<Projectile, int> e)
+		private Task OnProjectileSetDefaults(SetDefaultsEventArgs<Projectile, int> e)
 		{
 			//tombstone fix.
 			if (e.Info == ProjectileID.Tombstone ||
@@ -1808,18 +1820,21 @@ namespace TShockAPI
 			if (e.Info == ProjectileID.BombSkeletronPrime)
 				if (Config.Settings.DisablePrimeBombs)
 					e.Object.SetDefaults(0);
+
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>NetHooks_SendData - Fired when the server sends data.</summary>
 		/// <param name="e">e - The SendDataEventArgs object.</param>
-		private void NetHooks_SendData(SendDataEventArgs e)
+		private Task NetHooks_SendData(SendDataEventArgs e)
 		{
 			if (e.MsgId == PacketTypes.PlayerHp)
 			{
 				if (Main.player[(byte)e.number].statLife <= 0)
 				{
 					e.Handled = true;
-					return;
+					return Task.CompletedTask;
 				}
 			}
 			else if (e.MsgId == PacketTypes.ProjectileNew)
@@ -1839,7 +1854,7 @@ namespace TShockAPI
 								player.RecentlyCreatedProjectiles.RemoveAll(p => p.Index == e.number && p.Killed);
 							}
 
-							if (!player.RecentlyCreatedProjectiles.Any(p => p.Index == e.number))
+							if (player.RecentlyCreatedProjectiles.All(p => p.Index != e.number))
 							{
 								player.RecentlyCreatedProjectiles.Add(new GetDataHandlers.ProjectileStruct()
 								{
@@ -1852,14 +1867,18 @@ namespace TShockAPI
 					}
 				}
 			}
+			return Task.CompletedTask;
+
 		}
 
 		/// <summary>OnStartHardMode - Fired when hard mode is started.</summary>
 		/// <param name="e">e - The HandledEventArgs object.</param>
-		private void OnStartHardMode(HandledEventArgs e)
+		private Task OnStartHardMode(HandledEventArgs e)
 		{
 			if (Config.Settings.DisableHardmode)
 				e.Handled = true;
+
+			return Task.CompletedTask;
 		}
 
 		/// <summary>OnConfigRead - Fired when the config file has been read.</summary>
