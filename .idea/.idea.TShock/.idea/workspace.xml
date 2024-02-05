@@ -9,12 +9,50 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="270e07cd-11a2-4564-8334-4f153bba4dd7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.all-contributorsrc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/CODE_OF_CONDUCT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/CONTRIBUTING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/FUNDING.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/config.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/defect-report.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/PULL_REQUEST_TEMPLATE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/config.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/no-response.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci-otapi3-nuget.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci-otapi3.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/i18n-trigger.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitmodules" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Commands.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Commands.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/ServerPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ServerPlayer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/TShock.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShock.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/COPYING" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README_cn.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SECURITY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/appveyor.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crowdin.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/.nojekyll" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/CNAME" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/_sidebar.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/changelog.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/command-line-parameters.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/config-file-descriptions.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/docker.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/i18n.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/lang.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/motd.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/packages-help.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/packages.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/permission-descriptions.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/rest-fields.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ssc-config.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ssc.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/tile-providers.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/renovate.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +158,7 @@
       <workItem from="1707061571314" duration="1193000" />
       <workItem from="1707075233747" duration="3970000" />
       <workItem from="1707154571289" duration="571000" />
-      <workItem from="1707161443597" duration="2574000" />
+      <workItem from="1707161443597" duration="3135000" />
     </task>
     <servers />
   </component>
