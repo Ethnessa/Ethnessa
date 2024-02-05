@@ -730,7 +730,7 @@ namespace TShockAPI
 		/// <summary>
 		/// The player's server side inventory data.
 		/// </summary>
-		public PlayerData PlayerData;
+		public PlayerData? PlayerData;
 
 		/// <summary>
 		/// Whether the player needs to specify a password upon connection( either server or user account ).
@@ -770,6 +770,7 @@ namespace TShockAPI
 			Regions
 		}
 
+		// TODO: Get this working!
 		/// <summary>Determines if the player can build on a given point.</summary>
 		/// <param name="x">The x coordinate they want to build at.</param>
 		/// <param name="y">The y coordinate they want to build at.</param>

@@ -10,20 +10,11 @@
   <component name="ChangeListManager">
     <list default="true" id="270e07cd-11a2-4564-8334-4f153bba4dd7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TShock/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/BackupManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/BackupManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/Commands.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Commands.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Configuration/TShockConfig.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Configuration/TShockConfig.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/GetDataHandlers.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Group.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Group.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ItemBans.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/Rest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/Rest.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Rest/RestManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/SaveManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/SaveManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Hooks/PlayerHooks.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/ServerPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ServerPlayer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/ServerServerPlayer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/ServerConsolePlayer.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TShockAPI/TShock.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/TShock.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/UpdateManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/UpdateManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TShockAPI/Utils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TShockAPI/Utils.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,9 +26,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/172080a42c1a44ce9d36d8c1406e163693ae00/41/ab0bad68/Main.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a0c10032686b457e918965a67401afd3208a0/07/3960865c/TraceLevel.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/d654b5ec3b254f06a1caab79a9e992ea12ad800/d9/fb788998/WindowsLaunch.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/53774442fef36b6713814b21c891279e254fba17f1364b6c713524356511c/Entity.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/87aae3481234c935c2a758f2169e3560ff13885cea8b933f94cc65f10221356/Watcher.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -130,6 +119,8 @@
       <workItem from="1706930799759" duration="193000" />
       <workItem from="1707061571314" duration="1193000" />
       <workItem from="1707075233747" duration="3970000" />
+      <workItem from="1707154571289" duration="571000" />
+      <workItem from="1707161443597" duration="2574000" />
     </task>
     <servers />
   </component>

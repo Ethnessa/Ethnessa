@@ -268,7 +268,7 @@ namespace TShockAPI
 
 		/// <summary>Initialize - Called by the TerrariaServerAPI during initialization.</summary>
 		[SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
-		public override async void Initialize()
+		public override async Task Initialize()
 		{
 			string logFilename;
 
@@ -560,7 +560,7 @@ namespace TShockAPI
 
 		/// <summary>OnPlayerLogin - Fires the PlayerLogin hook to listening plugins.</summary>
 		/// <param name="args">args - The PlayerPostLoginEventArgs object.</param>
-		private async void OnPlayerLogin(PlayerPostLoginEventArgs args)
+		private async Task OnPlayerLogin(PlayerPostLoginEventArgs args)
 		{
 			List<String> KnownIps = new List<string>();
 			if (!string.IsNullOrWhiteSpace(args.Player.Account.KnownIps))
@@ -608,10 +608,11 @@ namespace TShockAPI
 
 		/// <summary>OnPlayerPreLogin - Internal hook fired when on player pre login.</summary>
 		/// <param name="args">args - The PlayerPreLoginEventArgs object.</param>
-		private void OnPlayerPreLogin(Hooks.PlayerPreLoginEventArgs args)
+		private async Task OnPlayerPreLogin(Hooks.PlayerPreLoginEventArgs args)
 		{
 			if (args.Player.IsLoggedIn)
-				args.Player.SaveServerCharacter();
+				await args.Player.SaveServerCharacter();
+
 		}
 
 		/// <summary>NetHooks_NameCollision - Internal hook fired when a name collision happens.</summary>
@@ -1619,7 +1620,7 @@ namespace TShockAPI
 
 				// Invoke the PlayerChat hook. If this hook event handled then we need to prevent sending the chat message
 				args.Handled = true;
-				bool cancelChat = PlayerHooks.OnPlayerChat(player, args.Text, ref text);
+				bool cancelChat = await PlayerHooks.OnPlayerChat(player, args.Text, ref text);
 
 				if (cancelChat)
 				{

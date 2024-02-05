@@ -499,7 +499,7 @@ namespace TShockAPI
 		/// </summary>
 		public static event AsyncEventHandler<TileEditEventArgs>? TileEdit;
 
-		private static bool OnTileEdit(ServerPlayer ply, MemoryStream data, int x, int y, EditAction action,
+		private static async Task<bool> OnTileEdit(ServerPlayer ply, MemoryStream data, int x, int y, EditAction action,
 			EditType editDetail, short editData, byte style)
 		{
 			if (TileEdit == null)
@@ -516,7 +516,7 @@ namespace TShockAPI
 				editDetail = editDetail,
 				Style = style
 			};
-			TileEdit.Invoke(args);
+			await TileEdit.Invoke(args);
 			return args.Handled;
 		}
 
@@ -3106,7 +3106,7 @@ namespace TShockAPI
 			return false;
 		}
 
-		private static Task<bool> HandleTile(GetDataHandlerArgs args)
+		private static async Task<bool> HandleTile(GetDataHandlerArgs args)
 		{
 			EditAction action = (EditAction)args.Data.ReadInt8();
 			short tileX = args.Data.ReadInt16();
@@ -3122,10 +3122,7 @@ namespace TShockAPI
 
 			byte style = args.Data.ReadInt8();
 
-			if (OnTileEdit(args.Player, args.Data, tileX, tileY, action, type, editData, style))
-				return Task.FromResult(true);
-
-			return Task.FromResult(false);
+			return await OnTileEdit(args.Player, args.Data, tileX, tileY, action, type, editData, style);
 		}
 
 		private static Task<bool> HandleDoorUse(GetDataHandlerArgs args)
@@ -3515,7 +3512,7 @@ namespace TShockAPI
 
 			string password = args.Data.ReadString();
 
-			if (Hooks.PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, password))
+			if (await Hooks.PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, password))
 				return true;
 
 			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name);

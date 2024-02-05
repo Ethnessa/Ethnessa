@@ -640,10 +640,7 @@ namespace TShockAPI
 		{
 			string cmdText = text.Remove(0, 1);
 			string cmdPrefix = text[0].ToString();
-			bool silent = false;
-
-			if (cmdPrefix == SilentSpecifier)
-				silent = true;
+			bool silent = cmdPrefix == SilentSpecifier;
 
 			int index = -1;
 			for (int i = 0; i < cmdText.Length; i++)
@@ -673,10 +670,10 @@ namespace TShockAPI
 
 			IEnumerable<Command> cmds = ChatCommands.FindAll(c => c.HasAlias(cmdName));
 
-			if (Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
+			if (await Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
 				return true;
 
-			if (cmds.Count() == 0)
+			if (!cmds.Any())
 			{
 				if (player.AwaitingResponse.ContainsKey(cmdName))
 				{
@@ -834,13 +831,13 @@ namespace TShockAPI
 			bool usingUUID = false;
 			if (args.Parameters.Count == 0 && !TShock.Config.Settings.DisableUUIDLogin)
 			{
-				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, ""))
+				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, ""))
 					return;
 				usingUUID = true;
 			}
 			else if (args.Parameters.Count == 1)
 			{
-				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, args.Parameters[0]))
+				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, args.Parameters[0]))
 					return;
 				password = args.Parameters[0];
 			}
@@ -852,7 +849,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Parameters[0], args.Parameters[1]))
+				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Parameters[0], args.Parameters[1]))
 					return;
 
 				account = await UserAccountManager.GetUserAccountByName(args.Parameters[0]);
@@ -904,7 +901,7 @@ namespace TShockAPI
 							args.Player.PlayerData.CopyCharacter(args.Player);
 							await CharacterManager.InsertPlayerData(args.Player);
 						}
-						args.Player.PlayerData.RestoreCharacter(args.Player);
+						await args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
 					args.Player.LoginFailsBySsi = false;
 
@@ -931,7 +928,7 @@ namespace TShockAPI
 					}
 					await UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
 
-					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
+					await Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
 				else
 				{
