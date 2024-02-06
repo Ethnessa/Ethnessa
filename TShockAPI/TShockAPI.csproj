@@ -48,6 +48,12 @@
     <Reference Include="HttpServer">
       <HintPath>..\prebuilts\HttpServer.dll</HintPath>
     </Reference>
+    <Reference Include="OTAPI">
+      <HintPath>..\Open-Terraria-API\OTAPI.Patcher\bin\Debug\net6.0\artifact-pc\OTAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="OTAPI.Runtime">
+      <HintPath>..\Open-Terraria-API\OTAPI.Patcher\bin\Debug\net6.0\artifact-pc\OTAPI.Runtime.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

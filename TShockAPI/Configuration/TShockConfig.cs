@@ -41,7 +41,7 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The path to the directory where logs should be written to.</summary>
 		[Description("The path to the directory where logs should be written to.")]
-		public string LogPath = "tshock/logs";
+		public string LogPath = "data/logs";
 
 		/// <summary>Whether or not the server should output debug level messages related to system operation.</summary>
 		[Description("Whether or not the server should output debug level messages related to system operation.")]

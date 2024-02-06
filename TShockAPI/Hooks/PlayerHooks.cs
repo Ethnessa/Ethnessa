@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using MongoDB.Driver;
 using TShockAPI.Database;
+using TShockAPI.ServerCommands;
 
 namespace TShockAPI.Hooks
 {
@@ -312,7 +314,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players after they've successfully logged in to a user account.
 		/// </summary>
-		public static event PlayerPostLoginD PlayerPostLogin;
+		public static event PlayerPostLoginD? PlayerPostLogin;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerPreLogin"/> event.
@@ -322,7 +324,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players when sending login credentials to the server.
 		/// </summary>
-		public static event PlayerPreLoginD PlayerPreLogin;
+		public static event PlayerPreLoginD? PlayerPreLogin;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerLogout"/> event.
@@ -332,7 +334,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players upon logging out from a user account.
 		/// </summary>
-		public static event PlayerLogoutD PlayerLogout;
+		public static event PlayerLogoutD? PlayerLogout;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerCommand"/> event.
@@ -342,7 +344,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players when using a command.
 		/// </summary>
-		public static event PlayerCommandD PlayerCommand;
+		public static event PlayerCommandD? PlayerCommand;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerChat"/> event.
@@ -353,7 +355,7 @@ namespace TShockAPI.Hooks
 		/// Fired by players when they send a chat message packet to the server
 		/// and before it is transmitted to the rest of the players.
 		/// </summary>
-		public static event PlayerChatD PlayerChat;
+		public static event PlayerChatD? PlayerChat;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerPermission"/> event.
@@ -363,7 +365,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players every time a permission check involving them occurs.
 		/// </summary>
-		public static event PlayerPermissionD PlayerPermission;
+		public static event PlayerPermissionD? PlayerPermission;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerItembanPermission"/> event.
@@ -373,7 +375,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players every time a permission check on banned items involving them occurs.
 		/// </summary>
-		public static event PlayerItembanPermissionD PlayerItembanPermission;
+		public static event PlayerItembanPermissionD? PlayerItembanPermission;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerProjbanPermission"/> event.
@@ -383,7 +385,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players every time a permission check on banned projectiles involving them occurs.
 		/// </summary>
-		public static event PlayerProjbanPermissionD PlayerProjbanPermission;
+		public static event PlayerProjbanPermissionD? PlayerProjbanPermission;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerTilebanPermission"/> event.
@@ -393,7 +395,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players every time a permission check on banned tiles involving them occurs.
 		/// </summary>
-		public static event PlayerTilebanPermissionD PlayerTilebanPermission;
+		public static event PlayerTilebanPermissionD? PlayerTilebanPermission;
 
 		/// <summary>
 		/// The delegate of the <see cref="PlayerHasBuildPermission"/> event.
@@ -403,7 +405,7 @@ namespace TShockAPI.Hooks
 		/// <summary>
 		/// Fired by players every time a build permission check occurs.
 		/// </summary>
-		public static event PlayerHasBuildPermissionD PlayerHasBuildPermission;
+		public static event PlayerHasBuildPermissionD? PlayerHasBuildPermission;
 
 
 		/// <summary>

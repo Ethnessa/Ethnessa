@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using TShockAPI.ServerCommands;
 
 // Since the permission nodes have annotations that say what they are, we don't need XML comments.
 #pragma warning disable 1591

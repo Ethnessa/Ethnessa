@@ -1529,7 +1529,6 @@ namespace TShockAPI
 
 			if (args.Handled || player == default)
 			{
-				args.Handled = true;
 				return;
 			}
 
