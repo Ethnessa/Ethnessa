@@ -11,6 +11,7 @@ public class GroupCommand : Command
 	public override List<string> Names { get; protected set; } = new() { "group" };
 	public override CommandDelegate CommandDelegate { get; set; } = Execute;
 	public override List<string> Permissions { get; protected set; } = new(){TShockAPI.Permissions.managegroup};
+
 	public static void Execute(CommandArgs args)
 	{
 		string subCmd = args.Parameters.Count == 0 ? "help" : args.Parameters[0].ToLower();

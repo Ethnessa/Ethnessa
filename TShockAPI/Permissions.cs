@@ -117,6 +117,9 @@ namespace TShockAPI
 		public static readonly string buffplayer = "tshock.buff.others";
 		#endregion
 
+		[Description("User can use the /config command")]
+		public static readonly string config = "tshock.config";
+
 		#region tshock.cfg nodes
 		[Description("User is notified when an update is available, user can turn off / restart the server.")]
 		public static readonly string maintenance = "tshock.cfg.maintenance";
