@@ -175,13 +175,13 @@ namespace TShockAPI
 		/// <param name="log">Message to send</param>
 		/// <param name="color">Color of the message</param>
 		/// <param name="excludedPlayer">The player to not send the message to.</param>
-		public async Task SendLogs(string log, Color color, ServerPlayer excludedPlayer = null)
+		public void SendLogs(string log, Color color, ServerPlayer excludedPlayer = null)
 		{
 			TShock.Log.Info(log);
 			ServerPlayer.ServerConsole.SendMessage(log, color);
 			foreach (ServerPlayer player in TShock.Players)
 			{
-				if (player != null && player != excludedPlayer && player.Active && await player.HasPermission(Permissions.logs) &&
+				if (player != null && player != excludedPlayer && player.Active && player.HasPermission(Permissions.logs) &&
 						player.DisplayLogs && TShock.Config.Settings.DisableSpewLogs == false)
 					player.SendMessage(log, color);
 			}
@@ -1058,13 +1058,13 @@ namespace TShockAPI
 
 		/// <summary>Dumps a matrix of all permissions &amp; all groups in Markdown table format.</summary>
 		/// <param name="path">The save destination.</param>
-		internal async Task DumpPermissionMatrix(string path)
+		internal void DumpPermissionMatrix(string path)
 		{
 			StringBuilder output = new StringBuilder();
 			output.Append("|Permission|");
 
 			// Traverse to build group name list
-			var groups = await GroupManager.GetGroupsAsync();
+			var groups = GroupManager.GetGroups();
 			foreach (Group g in groups)
 			{
 				output.Append("[[");
@@ -1090,7 +1090,7 @@ namespace TShockAPI
 
 				foreach (Group g in groups)
 				{
-					if (await g.HasPermission((string)field.GetValue(null)))
+					if (g.HasPermission((string)field.GetValue(null)))
 					{
 						output.Append("✔|");
 					}

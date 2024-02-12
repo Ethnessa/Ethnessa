@@ -13,16 +13,15 @@ namespace TShockAPI.Handlers
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public async Task OnReceive(EmojiEventArgs args)
+		public void OnReceive(object sender, EmojiEventArgs args)
 		{
-			if (!(await args.Player.HasPermission(Permissions.sendemoji)))
+			if (!(args.Player.HasPermission(Permissions.sendemoji)))
 			{
 				args.Player.SendErrorMessage(GetString("You do not have permission to send emotes!"));
 				args.Handled = true;
 				return;
 			}
 
-			await Task.CompletedTask;
 		}
 	}
 }

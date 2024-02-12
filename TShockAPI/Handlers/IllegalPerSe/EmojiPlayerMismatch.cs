@@ -13,7 +13,7 @@ namespace TShockAPI.Handlers.IllegalPerSe
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public async Task OnReceive(EmojiEventArgs args)
+		public void OnReceive(object sender, EmojiEventArgs args)
 		{
 			if (args.PlayerIndex != args.Player.Index)
 			{
@@ -21,7 +21,6 @@ namespace TShockAPI.Handlers.IllegalPerSe
 				args.Handled = true;
 				return;
 			}
-			await Task.CompletedTask;
 		}
 	}
 }

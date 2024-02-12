@@ -45,11 +45,11 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public async Task<bool> HandlePacket(ServerPlayer player)
+		public bool HandlePacket(ServerPlayer player)
 		{
 			if (PylonEventType == SubPacketType.PlayerRequestsTeleport)
 			{
-				if (!(await player.HasPermission(Permissions.pylon)))
+				if (!(player.HasPermission(Permissions.pylon)))
 				{
 					player.SendErrorMessage(GetString("You do not have permission to teleport using pylons."));
 					return true;

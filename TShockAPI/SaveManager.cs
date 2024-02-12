@@ -48,7 +48,7 @@ namespace TShockAPI
 		/// <summary>
 		/// SaveWorld event handler which notifies users that the server may lag
 		/// </summary>
-		public Task OnSaveWorld(WorldSaveEventArgs args)
+		public void OnSaveWorld(WorldSaveEventArgs args)
 		{
 			if (TShock.Config.Settings.AnnounceSave)
 			{
@@ -65,7 +65,6 @@ namespace TShockAPI
 				}
 			}
 
-			return Task.CompletedTask;
 
 		}
 

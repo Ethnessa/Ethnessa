@@ -30,7 +30,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public async Task OnReceive(ReadNetModuleEventArgs args)
+		public void OnReceive(object sender, ReadNetModuleEventArgs args)
 		{
 			INetModuleHandler handler;
 
@@ -47,7 +47,7 @@ namespace TShockAPI.Handlers.NetModules
 			}
 
 			handler.Deserialize(args.Data);
-			var rejectPacket = await handler.HandlePacket(args.Player);
+			var rejectPacket = handler.HandlePacket(args.Player);
 
 			args.Handled = rejectPacket;
 		}

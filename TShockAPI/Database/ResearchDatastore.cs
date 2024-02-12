@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Driver;
 using Terraria;
 using Terraria.ID;
 using TShockAPI.Database.Models;
@@ -18,22 +18,21 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class ResearchDatastore
 	{
+		private static IMongoCollection<SacrificedItem> sacrificedItems => TShock.GlobalDatabase.GetCollection<SacrificedItem>("sacrificeditems");
 		/// <summary>
 		/// In-memory cache of what items have been sacrificed.
 		/// The first call to GetSacrificedItems will load this with data from the database.
 		/// </summary>
 		private static Dictionary<int, int> _itemsSacrificed;
 
-
-
 		/// <summary>
 		/// This call will return the memory-cached list of items sacrificed.
 		/// If the cache is not initialized, it will be initialized from the database.
 		/// </summary>
 		/// <returns></returns>
-		public static async Task<Dictionary<int, int>> GetSacrificedItems()
+		public static Dictionary<int, int> GetSacrificedItems()
 		{
-			return _itemsSacrificed ?? await ReadFromDatabase();
+			return _itemsSacrificed ?? ReadFromDatabase();
 		}
 
 		/// <summary>
@@ -41,19 +40,18 @@ namespace TShockAPI.Database
 		/// what the progress of research on items is for this world.
 		/// </summary>
 		/// <returns>A dictionary of ItemID keys and Amount Sacrificed values.</returns>
-		private static async Task<Dictionary<int, int>> ReadFromDatabase()
+		private static Dictionary<int, int> ReadFromDatabase()
 		{
-			Dictionary<int, int> sacrificedItems = new Dictionary<int, int>();
-			var fromDatabase = await DB.Find<SacrificedItem>()
-				.Match(x => x.WorldId == Main.worldID)
-				.ExecuteAsync();
+			Dictionary<int, int> sacItems = new Dictionary<int, int>();
+			var fromDatabase = sacrificedItems.Find<SacrificedItem>(x => x.WorldId == Main.worldID)
+				.ToList();
 
 			foreach(var item in fromDatabase)
 			{
-				sacrificedItems[item.ItemId] = item.AmountSacrified;
+				sacItems[item.ItemId] = item.AmountSacrified;
 			}
 
-			return sacrificedItems;
+			return sacItems;
 		}
 
 		/// <summary>
@@ -63,16 +61,16 @@ namespace TShockAPI.Database
 		/// <param name="amount">The amount of items being sacrificed.</param>
 		/// <param name="player">The player who sacrificed the item for research.</param>
 		/// <returns>The cumulative total sacrifices for this item.</returns>
-		public static async Task<int> SacrificeItem(int itemId, int amount, ServerPlayer player)
+		public static int SacrificeItem(int itemId, int amount, ServerPlayer player)
 		{
-			var itemsSacrificed = await GetSacrificedItems();
+			var itemsSacrificed = GetSacrificedItems();
 			if (!(itemsSacrificed.ContainsKey(itemId)))
 				itemsSacrificed[itemId] = 0;
 
 			try
 			{
 				SacrificedItem item = new SacrificedItem(Main.worldID, player.Account.AccountId, itemId, amount);
-				await item.SaveAsync();
+				sacrificedItems.InsertOne(item);
 				itemsSacrificed[itemId] += amount;
 
 			}catch(Exception ex)

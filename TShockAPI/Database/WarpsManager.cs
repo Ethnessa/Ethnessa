@@ -24,13 +24,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Terraria;
 using Microsoft.Xna.Framework;
-using MongoDB.Entities;
-using Entity = MongoDB.Entities.Entity;
+using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace TShockAPI.Database
 {
 	public static class WarpManager
 	{
+		private static IMongoCollection<Warp> warps => TShock.GlobalDatabase.GetCollection<Warp>("warps");
 		/// <summary>
 		/// Adds a warp.
 		/// </summary>
@@ -38,12 +39,12 @@ namespace TShockAPI.Database
 		/// <param name="y">The Y position.</param>
 		/// <param name="name">The name.</param>
 		/// <returns>Whether the operation succeeded.</returns>
-		public static async Task<bool> Add(int x, int y, string name)
+		public static bool Add(int x, int y, string name)
 		{
 			try
 			{
 				Warp warp = new Warp(new Point(x,y), name);
-				await warp.SaveAsync();
+				warps.InsertOne(warp);
 			}
 			catch (Exception ex)
 			{
@@ -57,11 +58,11 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="warpName">The warp name.</param>
 		/// <returns>Whether the operation succeeded.</returns>
-		public static async Task<bool> Remove(string warpName)
+		public static bool Remove(string warpName)
 		{
 			try
 			{
-				await DB.DeleteAsync<Warp>(x => x.Eq(y=>y.Name, warpName));
+				warps.FindOneAndDelete<Warp>(y=>y.Name == warpName);
 				return true;
 			}
 			catch (Exception ex)
@@ -76,9 +77,9 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="warpName">The name.</param>
 		/// <returns>The warp, if it exists, or else null.</returns>
-		public static async Task<Warp?> Find(string warpName)
+		public static Warp? Find(string warpName)
 		{
-			return await DB.Find<Warp>().Match(x => x.Name == warpName).ExecuteFirstAsync();
+			return warps.Find<Warp>(x => x.Name == warpName).FirstOrDefault();
 		}
 
 		/// <summary>
@@ -88,17 +89,11 @@ namespace TShockAPI.Database
 		/// <param name="x">The X position.</param>
 		/// <param name="y">The Y position.</param>
 		/// <returns>Whether the operation succeeded.</returns>
-		public static async Task<bool> Position(string warpName, int x, int y)
+		public static bool Position(string warpName, int x, int y)
 		{
 			try
 			{
-				var warp = await Find(warpName);
-				if (warp != null)
-				{
-					warp.Position = new Point(x, y);
-					await warp.SaveAsync();
-					return true;
-				}
+				warps.FindOneAndUpdate<Warp>(x => x.Name == warpName, Builders<Warp>.Update.Set(x => x.Position, new Point(x, y)));
 			}
 			catch (Exception ex)
 			{
@@ -117,13 +112,7 @@ namespace TShockAPI.Database
 		{
 			try
 			{
-				var warp = await Find(warpName);
-				if (warp != null)
-				{
-					warp.IsPrivate = state;
-					await warp.SaveAsync();
-					return true;
-				}
+				warps.FindOneAndUpdate<Warp>(x => x.Name == warpName, Builders<Warp>.Update.Set(x => x.IsPrivate, state));
 			}
 			catch (Exception ex)
 			{
@@ -136,8 +125,9 @@ namespace TShockAPI.Database
 	/// <summary>
 	/// Represents a warp.
 	/// </summary>
-	public class Warp : Entity
+	public class Warp
 	{
+		public ObjectId ObjectId { get; set; }
 		/// <summary>
 		/// Gets or sets the name.
 		/// </summary>

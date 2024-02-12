@@ -1,13 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using BCrypt.Net;
-using MongoDB.Entities;
+using MongoDB.Bson;
 
 namespace TShockAPI.Database.Models;
 
 /// <summary>A database user account.</summary>
-public class UserAccount : Entity
+public class UserAccount
 {
+	public ObjectId Id { get; set; }
 	/// <summary>The database AccountId of the user account.</summary>
 	public int AccountId { get; set; }
 
@@ -104,7 +105,7 @@ public class UserAccount : Entity
 		{
 			try
 			{
-				await UserAccountManager.SetUserAccountPassword(this, password);
+				UserAccountManager.SetUserAccountPassword(this, password);
 			}
 			catch (UserAccountManager.UserAccountManagerException e)
 			{

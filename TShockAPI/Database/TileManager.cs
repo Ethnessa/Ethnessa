@@ -21,7 +21,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Terraria;
 using TShockAPI.Hooks;
 
@@ -29,16 +30,17 @@ namespace TShockAPI.Database
 {
 	public static class TileManager
 	{
-		public static async Task<List<TileBan>> ToListAsync()
+		private static IMongoCollection<TileBan> tileBans => TShock.GlobalDatabase.GetCollection<TileBan>("tilebans");
+		public static List<TileBan> ToListAsync()
 		{
-			return await DB.Find<TileBan>().ExecuteAsync();
+			return tileBans.Find(Builders<TileBan>.Filter.Empty).ToList();
 		}
-		public static async Task AddNewBan(short id = 0)
+		public static void AddNewBan(short id = 0)
 		{
 			try
 			{
 				TileBan tileban = new TileBan(id);
-				await tileban.SaveAsync();
+				tileBans.InsertOne(tileban);
 			}
 			catch (Exception ex)
 			{
@@ -46,13 +48,13 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task RemoveBan(short id)
+		public static void RemoveBan(short id)
 		{
-			if (!(await TileIsBanned(id, null)))
+			if (!(TileIsBanned(id, null)))
 				return;
 			try
 			{
-				await DB.DeleteAsync<TileBan>(x => x.Eq(y=>y.Type, id));
+				tileBans.FindOneAndDelete<TileBan>(x=>x.Type==id);
 			}
 			catch (Exception ex)
 			{
@@ -60,30 +62,30 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task<bool> TileIsBanned(short id)
+		public static bool TileIsBanned(short id)
 		{
-			return (await DB.CountAsync<TileBan>(x=>x.Type==id)) > 0;
+			return (tileBans.Count<TileBan>(x=>x.Type==id)) > 0;
 		}
 
-		public static async Task<bool> TileIsBanned(short id, ServerPlayer ply)
+		public static bool TileIsBanned(short id, ServerPlayer ply)
 		{
-			TileBan b = await GetBanById(id);
-			return !(await b.HasPermissionToPlaceTile(ply));
+			TileBan b = GetBanById(id);
+			return !(b.HasPermissionToPlaceTile(ply));
 
 			return false;
 		}
 
-		public static async Task<bool> AllowGroup(short id, string name)
+		public static bool AllowGroup(short id, string name)
 		{
 			string groupsNew = "";
-			var b = await GetBanById(id);
+			var b = GetBanById(id);
 			if (b != null)
 			{
 				if (!b.AllowedGroups.Contains(name))
 				{
 					b.AllowedGroups.Add(name);
 					groupsNew = string.Join(",", b.AllowedGroups);
-					await b.SaveAsync();
+					tileBans.ReplaceOne(x => x.Type == id, b);
 					return true;
 				}
 			}
@@ -91,14 +93,14 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<bool> RemoveGroup(short id, string name)
+		public static bool RemoveGroup(short id, string name)
 		{
-			var b = await GetBanById(id);
+			var b = GetBanById(id);
 			if (b != null)
 			{
 				if (b.RemoveGroup(name))
 				{
-					await b.SaveAsync();
+					tileBans.ReplaceOne(x=> x.Type == id, b);
 					return true;
 				}
 			}
@@ -106,14 +108,15 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<TileBan?> GetBanById(short id)
+		public static TileBan? GetBanById(short id)
 		{
-			return await DB.Find<TileBan>().Match(x=>x.Type==id).ExecuteFirstAsync();
+			return tileBans.Find<TileBan>(x=>x.Type==id).FirstOrDefault();
 		}
 	}
 
-	public class TileBan : MongoDB.Entities.Entity, IEquatable<TileBan>
+	public class TileBan : IEquatable<TileBan>
 	{
+		public ObjectId Id { get; set; }
 		public short Type { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
@@ -135,12 +138,12 @@ namespace TShockAPI.Database
 			return Type == other.Type;
 		}
 
-		public async Task<bool> HasPermissionToPlaceTile(ServerPlayer ply)
+		public bool HasPermissionToPlaceTile(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;
 
-			if (await ply.HasPermission(Permissions.canusebannedtiles))
+			if (ply.HasPermission(Permissions.canusebannedtiles))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerTilebanPermission(ply, this);
@@ -160,7 +163,7 @@ namespace TShockAPI.Database
 					throw new InvalidOperationException(GetString($"Infinite group parenting ({cur.Name})"));
 				}
 				traversed.Add(cur);
-				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
+				cur = GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
 			return false;
 			// could add in the other permissions in this class instead of a giant if switch.

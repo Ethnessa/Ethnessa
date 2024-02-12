@@ -133,7 +133,7 @@ namespace Rests
 				tokenBucket.Add(context.RemoteEndPoint.Address.ToString(), 1); // First time request, set to one and process request
 			}
 
-			var userAccount = await UserAccountManager.GetUserAccountByName(username);
+			var userAccount = UserAccountManager.GetUserAccountByName(username);
 			if (userAccount == null)
 			{
 				AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
@@ -146,8 +146,8 @@ namespace Rests
 				return new RestObject("403") { Error = GetString("Username or password may be incorrect or this account may not have sufficient privileges.") };
 			}
 
-			var userGroup = await GroupManager.GetGroupByName(userAccount.Group);
-			if (!await userGroup.HasPermission(RestPermissions.restapi) && userAccount.Group != "superadmin")
+			var userGroup = GroupManager.GetGroupByName(userAccount.Group);
+			if (!userGroup.HasPermission(RestPermissions.restapi) && userAccount.Group != "superadmin")
 			{
 				AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
 				return new RestObject("403")
@@ -171,7 +171,7 @@ namespace Rests
 			return response;
 		}
 
-		protected override async Task<object> ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, IRequest request, IHttpContext context)
+		protected override object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, IRequest request, IHttpContext context)
 		{
 			if (!cmd.RequiresToken)
 				return base.ExecuteCommand(cmd, verbs, parms, request, context);
@@ -187,7 +187,7 @@ namespace Rests
 				return new RestObject("403")
 				{ Error = GetString("Not authorized. The specified API endpoint requires a token, but the provided token was not valid.") };
 
-			var userGroup = await GroupManager.GetGroupByName(tokenData.UserGroupName);
+			var userGroup = GroupManager.GetGroupByName(tokenData.UserGroupName);
 			if (userGroup == null)
 			{
 				Tokens.Remove(token);
@@ -202,7 +202,7 @@ namespace Rests
 
 				foreach (var perm in secureCmd.Permissions)
 				{
-					var allowed = await userGroup.HasPermission(perm);
+					var allowed = userGroup.HasPermission(perm);
 					if (!allowed)
 					{
 						hasPermission = false;

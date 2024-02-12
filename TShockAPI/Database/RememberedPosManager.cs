@@ -21,21 +21,21 @@ using System.Data;
 using System.Threading.Tasks;
 using Terraria;
 using Microsoft.Xna.Framework;
-using MongoDB.Entities;
+using MongoDB.Driver;
 using TShockAPI.Database.Models;
 
 namespace TShockAPI.Database
 {
 	public static class RememberedPosManager
 	{
-		public static async Task<Vector2?> GetLeavePos(int accountId)
+		private static IMongoCollection<RememberedPosition> rememberedPos => TShock.GlobalDatabase.GetCollection<RememberedPosition>("rememberedpos");
+		public static Vector2? GetLeavePos(int accountId)
 		{
 			try
 			{
-				var pos = await DB.Find<RememberedPosition>()
-					.Match(x => x.AccountId == accountId && x.WorldId == Main.worldID)
-					.Sort(x=>x.Descending(y=>y.Created))
-					.ExecuteFirstAsync();
+				var pos = rememberedPos.Find<RememberedPosition>(x=>x.AccountId==accountId && x.WorldId==Main.worldID)
+					.SortByDescending(x=>x.Created)
+					.FirstOrDefault();
 
 				if (pos is not null)
 				{
@@ -50,12 +50,12 @@ namespace TShockAPI.Database
 			return null;
 		}
 
-		public static async Task InsertLeavePos(int accountId, int X, int Y)
+		public static void InsertLeavePos(int accountId, int X, int Y)
 		{
 			try
 			{
 				RememberedPosition pos = new(accountId, X, Y, Main.worldID);
-				await pos.SaveAsync();
+				rememberedPos.InsertOne(pos);
 			}
 			catch (Exception ex)
 			{

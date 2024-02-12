@@ -15,7 +15,7 @@ namespace TShockAPI.Handlers
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public async Task OnReceive(SyncTilePickingEventArgs args)
+		public void OnReceive(object sender, SyncTilePickingEventArgs args)
 		{
 			if (args.TileX > Main.maxTilesX || args.TileX < 0
 			   || args.TileY > Main.maxTilesY || args.TileY < 0)
@@ -25,7 +25,6 @@ namespace TShockAPI.Handlers
 				return;
 			}
 
-			await Task.CompletedTask;
 		}
 
 	}

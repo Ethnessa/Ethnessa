@@ -23,7 +23,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Driver;
 
 namespace TShockAPI.Database
 {
@@ -32,15 +32,16 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class GroupManager
 	{
-		public static async Task<List<Group>> GetGroupsAsync()
+		public static IMongoCollection<Group> groups => TShock.GlobalDatabase.GetCollection<Group>("groups");
+		public static List<Group> GetGroups()
 		{
-			return await DB.Find<Group>().ExecuteAsync();
+			return groups.Find(Builders<Group>.Filter.Empty).ToList();
 		}
 
-		public static async Task EnsureDefaultGroups()
+		public static void EnsureDefaultGroups()
 		{
 			// Add default groups if they don't exist
-			await AddDefaultGroup("guest", "",
+			AddDefaultGroup("guest", "",
 				new List<string>(){
 					Permissions.canbuild,
 					Permissions.canregister,
@@ -51,7 +52,7 @@ namespace TShockAPI.Database
 					Permissions.synclocalarea,
 					Permissions.sendemoji});
 
-			await AddDefaultGroup("default", "guest",
+			AddDefaultGroup("default", "guest",
 				new List<string>(){
 					Permissions.warp,
 					Permissions.canchangepassword,
@@ -65,19 +66,19 @@ namespace TShockAPI.Database
 					Permissions.magicconch,
 					Permissions.demonconch});
 
-			Group.DefaultGroup = await GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
+			Group.DefaultGroup = GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
 			AssertCoreGroupsPresent();
 		}
 
-		internal static async Task AssertCoreGroupsPresent()
+		internal static void AssertCoreGroupsPresent()
 		{
-			if (!(await GroupExists(TShock.Config.Settings.DefaultGuestGroupName)))
+			if (!(GroupExists(TShock.Config.Settings.DefaultGuestGroupName)))
 			{
 				TShock.Log.ConsoleError(GetString("The guest group could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The guest group could not be found."));
 			}
 
-			if (!(await GroupExists(TShock.Config.Settings.DefaultRegistrationGroupName)))
+			if (!(GroupExists(TShock.Config.Settings.DefaultRegistrationGroupName)))
 			{
 				TShock.Log.ConsoleError(GetString("The default usergroup could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The default usergroup could not be found."));
@@ -106,10 +107,10 @@ namespace TShockAPI.Database
 			return true;
 		}
 
-		private static async Task AddDefaultGroup(string name, string parent, List<string> permissions)
+		private static void AddDefaultGroup(string name, string parent, List<string> permissions)
 		{
-			if (!(await GroupExists(name))){
-				await AddGroup(name, parent, permissions, Group.DefaultChatColor);
+			if (!(GroupExists(name))){
+				AddGroup(name, parent, permissions, Group.DefaultChatColor);
 			}
 		}
 
@@ -118,12 +119,12 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="group">The group.</param>
 		/// <returns><c>true</c> if it does; otherwise, <c>false</c>.</returns>
-		public static async Task<bool> GroupExists(string group)
+		public static bool GroupExists(string group)
 		{
 			if (group == "superadmin")
 				return true;
 
-			return await DB.CountAsync<Group>(g => g.Name.Equals(group)) > 0;
+			return groups.CountDocuments(g => g.Name.Equals(group)) > 0;
 		}
 
 		/// <summary>
@@ -131,14 +132,14 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">The name.</param>
 		/// <returns>The group.</returns>
-		public static async Task<Group?> GetGroupByName(string? name)
+		public static Group? GetGroupByName(string? name)
 		{
 			if (name is null)
 			{
 				return null;
 			}
 			
-			var ret = await DB.Find<Group>().Match(x => x.Name == name).ExecuteFirstAsync();
+			var ret = groups.Find<Group>(x => x.Name == name).FirstOrDefault();
 			return ret;
 		}
 
@@ -149,9 +150,9 @@ namespace TShockAPI.Database
 		/// <param name="parentName">parent of group</param>
 		/// <param name="permissions">permissions</param>
 		/// <param name="chatColor">chatcolor</param>
-		public static async Task AddGroup(String name, string parentName, List<string> permissions, String chatColor)
+		public static void AddGroup(String name, string parentName, List<string> permissions, String chatColor)
 		{
-			if (await GroupExists(name))
+			if (GroupExists(name))
 			{
 				throw new GroupExistsException(name);
 			}
@@ -163,7 +164,7 @@ namespace TShockAPI.Database
 
 			if (!string.IsNullOrWhiteSpace(parentName))
 			{
-				var parent = await GetGroupByName(parentName);
+				var parent = GetGroupByName(parentName);
 				if (parent == null || name == parentName)
 				{
 					var error = GetString($"Invalid parent group {parentName} for group {group.Name}");
@@ -173,7 +174,7 @@ namespace TShockAPI.Database
 				group.ParentGroupName = parent.Name;
 			}
 
-			await group.SaveAsync();
+			groups.InsertOne(group);
 		}
 
 		/// <summary>
@@ -185,22 +186,22 @@ namespace TShockAPI.Database
 		/// <param name="chatcolor">chatcolor</param>
 		/// <param name="prefix">prefix</param>
 		/// <param name="suffix">suffix</param>
-		public static async Task UpdateGroup(string name, string parentname, List<string> permissions, string chatcolor, string prefix, string suffix)
+		public static void UpdateGroup(string name, string parentname, List<string> permissions, string chatcolor, string prefix, string suffix)
 		{
-			Group group = await GetGroupByName(name);
+			Group group = GetGroupByName(name);
 			if (group == null)
 				throw new GroupNotExistException(name);
 
 			Group parent = null;
 			if (!string.IsNullOrWhiteSpace(parentname))
 			{
-				parent = await GetGroupByName(parentname);
+				parent = GetGroupByName(parentname);
 				if (parent == null || parent == group)
 					throw new GroupManagerException(GetString($"Invalid parent group {parentname} for group {name}."));
 
 				// Check if the new parent would cause loops.
 				List<Group> groupChain = new List<Group> { group, parent };
-				Group? checkingGroup = await GetGroupByName(parent.ParentGroupName);
+				Group? checkingGroup = GetGroupByName(parent.ParentGroupName);
 				while (checkingGroup != null)
 				{
 					if (groupChain.Contains(checkingGroup))
@@ -208,7 +209,7 @@ namespace TShockAPI.Database
 							GetString($"Parenting group {group} to {parentname} would cause loops in the parent chain."));
 
 					groupChain.Add(checkingGroup);
-					checkingGroup = await GetGroupByName(parent.ParentGroupName);
+					checkingGroup = GetGroupByName(parent.ParentGroupName);
 				}
 			}
 
@@ -221,7 +222,7 @@ namespace TShockAPI.Database
 			group.Prefix = prefix;
 			group.Suffix = suffix;
 
-			await group.SaveAsync();
+			groups.InsertOne(group);
 		}
 
 		/// <summary>
@@ -230,20 +231,20 @@ namespace TShockAPI.Database
 		/// <param name="name">The group's name.</param>
 		/// <param name="newName">The new name.</param>
 		/// <returns>The result from the operation to be sent back to the user.</returns>
-		public static async Task<string> RenameGroup(string name, string newName)
+		public static string RenameGroup(string name, string newName)
 		{
-			if (!(await GroupExists(name)))
+			if (!(GroupExists(name)))
 			{
 				throw new GroupNotExistException(name);
 			}
 
-			if ((await GroupExists(newName)))
+			if ((GroupExists(newName)))
 			{
 				throw new GroupExistsException(newName);
 			}
 
 
-			var group = await GetGroupByName(name);
+			var group = GetGroupByName(name);
 
 			if (group is null)
 			{
@@ -251,15 +252,15 @@ namespace TShockAPI.Database
 			}
 
 			group.Name = newName;
-			await group.SaveAsync();
+			groups.ReplaceOne(g => g.Id == group.Id, group);
 
-			var childGroups = await DB.Find<Group>()
-				.Match(x => x.ParentGroupName ==name)
-				.ExecuteAsync();
+			var childGroups = groups.Find<Group>(x => x.ParentGroupName ==name)
+				.ToList();
 
 			foreach (Group grp in childGroups)
 			{
 				grp.ParentGroupName = newName;
+				groups.ReplaceOne(g => g.Id == grp.Id, grp);
 			}
 
 			TShock.Config.Read(FileTools.ConfigPath, out bool writeConfig);
@@ -292,7 +293,7 @@ namespace TShockAPI.Database
 		/// <param name="name">The group's name.</param>
 		/// <param name="exceptions">Whether exceptions will be thrown in case something goes wrong.</param>
 		/// <returns>The result from the operation to be sent back to the user.</returns>
-		public static async Task<string> DeleteGroup(string name, bool exceptions = false)
+		public static string DeleteGroup(string name, bool exceptions = false)
 		{
 			if (name == Group.DefaultGroup.Name)
 			{
@@ -301,16 +302,15 @@ namespace TShockAPI.Database
 				return GetString("You can't remove the default guest group.");
 			}
 
-			var group = await DB.Find<Group>()
-				.Match(x => x.Name == name)
-				.ExecuteFirstAsync();
+			var group = groups.Find<Group>(x => x.Name == name)
+				.FirstOrDefault();
 
 			if (group is null)
 			{
 				return GetString($"Group {name} doesn't exist.");
 			}
 
-			await group.DeleteAsync();
+			groups.DeleteOne(x => x.Id == group.Id);
 
 			if (exceptions)
 				throw new GroupManagerException(GetString($"Failed to delete group {name}."));
@@ -323,16 +323,16 @@ namespace TShockAPI.Database
 		/// <param name="name">The group name.</param>
 		/// <param name="permissions">The permission list.</param>
 		/// <returns>The result from the operation to be sent back to the user.</returns>
-		public static async Task<string> AddPermissions(string name, List<string> permissions)
+		public static string AddPermissions(string name, List<string> permissions)
 		{
-			var group = await GetGroupByName(name);
+			var group = GetGroupByName(name);
 			if (group is null)
 			{
 				return GetString($"Group {name} doesn't exist.");
 			}
 
 			group.Permissions.AddRange(permissions);
-			await group.SaveAsync();
+			groups.ReplaceOne(x => x.Id == group.Id, group);
 			return "";
 		}
 
@@ -342,16 +342,16 @@ namespace TShockAPI.Database
 		/// <param name="name">The group name.</param>
 		/// <param name="permissions">The permission list.</param>
 		/// <returns>The result from the operation to be sent back to the user.</returns>
-		public static async Task<string> DeletePermissions(String name, List<String> permissions)
+		public static string DeletePermissions(String name, List<String> permissions)
 		{
-			var group = await GetGroupByName(name);
+			var group = GetGroupByName(name);
 			if (group is null)
 			{
 				return GetString($"Group {name} doesn't exist.");
 			}
 
 			permissions.ForEach(p => group.RemovePermission(p));
-			await group.SaveAsync();
+			groups.ReplaceOne(x => x.Id == group.Id, group);
 			return "";
 		}
 

@@ -30,9 +30,9 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public async Task<bool> HandlePacket(ServerPlayer player)
+		public bool HandlePacket(ServerPlayer player)
 		{
-			if (!await HasPermission(PowerType, player))
+			if (!HasPermission(PowerType, player))
 			{
 				return true;
 			}
@@ -46,7 +46,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// <param name="powerType"></param>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public static async Task<bool> HasPermission(CreativePowerTypes powerType, ServerPlayer player)
+		public static bool HasPermission(CreativePowerTypes powerType, ServerPlayer player)
 		{
 			if (!PowerToPermissionMap.ContainsKey(powerType))
 			{
@@ -63,7 +63,7 @@ namespace TShockAPI.Handlers.NetModules
 				return false;
 			}
 
-			if (!await player.HasPermission(permission))
+			if (!player.HasPermission(permission))
 			{
 				player.SendErrorMessage(PermissionToDescriptionMap[permission]);
 				return false;

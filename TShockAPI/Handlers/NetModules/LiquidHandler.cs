@@ -22,7 +22,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public async Task<bool> HandlePacket(ServerPlayer player)
+		public bool HandlePacket(ServerPlayer player)
 		{
 			return true;
 		}

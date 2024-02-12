@@ -46,7 +46,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
-using MongoDB.Entities;
 using MonoMod.Cil;
 using Terraria.Achievements;
 using Terraria.Initializers;
@@ -151,6 +150,8 @@ namespace TShockAPI
 		/// Called after TShock is initialized. Useful for plugins that needs hooks before tshock but also depend on tshock being loaded.
 		/// </summary>
 		public static event Action Initialized;
+		public static IMongoDatabase GlobalDatabase { get; private set; }
+		public static IMongoDatabase LocalDatabase { get; private set; }
 
 		public static ModuleManager ModuleManager { get; } = new ModuleManager();
 
@@ -268,7 +269,7 @@ namespace TShockAPI
 
 		/// <summary>Initialize - Called by the TerrariaServerAPI during initialization.</summary>
 		[SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
-		public override async Task Initialize()
+		public override void Initialize()
 		{
 			string logFilename;
 
@@ -345,11 +346,15 @@ namespace TShockAPI
 				var mongoConnectionSettings =
 					MongoClientSettings.FromConnectionString(Config.Settings.MongoConnectionString);
 
+				var mongoClient = new MongoClient(mongoConnectionSettings);
+
+
+
 				// attempt to make connection to global database
-				await DB.InitAsync(Config.Settings.DefaultGlobalDatabase, mongoConnectionSettings);
+				GlobalDatabase = mongoClient.GetDatabase(Config.Settings.DefaultGlobalDatabase);
 
 				// attempt to make connection to local database
-				await DB.InitAsync(Config.Settings.LocalDatabase, mongoConnectionSettings);
+				LocalDatabase = mongoClient.GetDatabase(Config.Settings.LocalDatabase);
 
 				// POSSIBLY REIMPLEMENT THIS LATER WITH MONGODB
 				/*if (Config.Settings.UseSqlLogs)
@@ -368,7 +373,7 @@ namespace TShockAPI
 					File.Delete(Path.Combine(SavePath, "tshock.pid"));
 				}
 
-				await File.WriteAllTextAsync(Path.Combine(SavePath, "tshock.pid"),
+				File.WriteAllTextAsync(Path.Combine(SavePath, "tshock.pid"),
 					Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture));
 
 				CliParser.Reset();
@@ -381,7 +386,7 @@ namespace TShockAPI
 				};
 
 				// create 'guest' and 'default' user groups
-				await GroupManager.EnsureDefaultGroups();
+				GroupManager.EnsureDefaultGroups();
 
 				RestApi = new SecureRest(Netplay.ServerIP, Config.Settings.RestApiPort);
 				RestManager = new RestManager(RestApi);
@@ -560,7 +565,7 @@ namespace TShockAPI
 
 		/// <summary>OnPlayerLogin - Fires the PlayerLogin hook to listening plugins.</summary>
 		/// <param name="args">args - The PlayerPostLoginEventArgs object.</param>
-		private async Task OnPlayerLogin(PlayerPostLoginEventArgs args)
+		private void OnPlayerLogin(PlayerPostLoginEventArgs args)
 		{
 			List<String> KnownIps = new List<string>();
 			if (!string.IsNullOrWhiteSpace(args.Player.Account.KnownIps))
@@ -587,41 +592,41 @@ namespace TShockAPI
 			}
 
 			args.Player.Account.KnownIps = JsonConvert.SerializeObject(KnownIps, Formatting.Indented);
-			await UserAccountManager.UpdateLogin(args.Player.Account);
+			UserAccountManager.UpdateLogin(args.Player.Account);
 
-			await BanManager.IsPlayerBanned(args.Player);
+			BanManager.IsPlayerBanned(args.Player);
 		}
 
 		/// <summary>OnAccountDelete - Internal hook fired on account delete.</summary>
 		/// <param name="args">args - The AccountDeleteEventArgs object.</param>
-		private async void OnAccountDelete(Hooks.AccountDeleteEventArgs args)
+		private void OnAccountDelete(Hooks.AccountDeleteEventArgs args)
 		{
-			await CharacterManager.RemovePlayer(args.Account.AccountId);
+			CharacterManager.RemovePlayer(args.Account.AccountId);
 		}
 
 		/// <summary>OnAccountCreate - Internal hook fired on account creation.</summary>
 		/// <param name="args">args - The AccountCreateEventArgs object.</param>
-		private async void OnAccountCreate(Hooks.AccountCreateEventArgs args)
+		private void OnAccountCreate(Hooks.AccountCreateEventArgs args)
 		{
-			await CharacterManager.SeedInitialData(await UserAccountManager.GetUserAccount(args.Account));
+			CharacterManager.SeedInitialData(UserAccountManager.GetUserAccount(args.Account));
 		}
 
 		/// <summary>OnPlayerPreLogin - Internal hook fired when on player pre login.</summary>
 		/// <param name="args">args - The PlayerPreLoginEventArgs object.</param>
-		private async Task OnPlayerPreLogin(Hooks.PlayerPreLoginEventArgs args)
+		private void OnPlayerPreLogin(Hooks.PlayerPreLoginEventArgs args)
 		{
 			if (args.Player.IsLoggedIn)
-				await args.Player.SaveServerCharacter();
+				args.Player.SaveServerCharacter();
 
 		}
 
 		/// <summary>NetHooks_NameCollision - Internal hook fired when a name collision happens.</summary>
 		/// <param name="args">args - The NameCollisionEventArgs object.</param>
-		private Task NetHooks_NameCollision(NameCollisionEventArgs args)
+		private void NetHooks_NameCollision(NameCollisionEventArgs args)
 		{
 			if (args.Handled)
 			{
-				return Task.CompletedTask;
+				return;
 			}
 
 			string ip = Utils.GetRealIP(Netplay.Clients[args.Who].Socket.GetRemoteAddress().ToString());
@@ -633,7 +638,7 @@ namespace TShockAPI
 				{
 					player.Kick(GetString("You logged in from the same IP."), true, true, null, true);
 					args.Handled = true;
-					return Task.CompletedTask;
+					return;
 				}
 
 				if (player.IsLoggedIn)
@@ -646,13 +651,13 @@ namespace TShockAPI
 					}
 				}
 			}
-			return Task.CompletedTask;
+			return;
 
 		}
 
 		/// <summary>OnItemForceIntoChest - Internal hook fired when a player quick stacks items into a chest.</summary>
 		/// <param name="args">The <see cref="ForceItemIntoChestEventArgs"/> object.</param>
-		private async Task OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
+		private async void OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
 		{
 			if (args.Handled)
 			{
@@ -677,7 +682,7 @@ namespace TShockAPI
 				// After checking for protected regions, no further range checking is necessarily because the client packet only specifies the
 				// inventory slot to quick stack. The vanilla Terraria server itself determines what chests are close enough to the player.
 				if (Config.Settings.RegionProtectChests &&
-				    !await RegionManager.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
+					!RegionManager.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
 				{
 					args.Handled = true;
 					return;
@@ -687,33 +692,33 @@ namespace TShockAPI
 
 		/// <summary>OnXmasCheck - Internal hook fired when the XMasCheck happens.</summary>
 		/// <param name="args">args - The ChristmasCheckEventArgs object.</param>
-		private Task OnXmasCheck(ChristmasCheckEventArgs args)
+		private void OnXmasCheck(ChristmasCheckEventArgs args)
 		{
 			if (args.Handled)
-				return Task.CompletedTask;
+				return;
 
 			if (Config.Settings.ForceXmas)
 			{
 				args.Xmas = true;
 				args.Handled = true;
 			}
-			return Task.CompletedTask;
+			return;
 
 		}
 
 		/// <summary>OnHalloweenCheck - Internal hook fired when the HalloweenCheck happens.</summary>
 		/// <param name="args">args - The HalloweenCheckEventArgs object.</param>
-		private Task OnHalloweenCheck(HalloweenCheckEventArgs args)
+		private void OnHalloweenCheck(HalloweenCheckEventArgs args)
 		{
 			if (args.Handled)
-				return Task.CompletedTask;
+				return;
 
 			if (Config.Settings.ForceHalloween)
 			{
 				args.Halloween = true;
 				args.Handled = true;
 			}
-			return Task.CompletedTask;
+			return;
 
 		}
 
@@ -727,7 +732,7 @@ namespace TShockAPI
 			Log.Error(e.ExceptionObject.ToString());
 
 			if (e.ExceptionObject.ToString().Contains("Terraria.Netplay.ListenForClients") ||
-			    e.ExceptionObject.ToString().Contains("Terraria.Netplay.ServerLoop"))
+				e.ExceptionObject.ToString().Contains("Terraria.Netplay.ServerLoop"))
 			{
 				var sb = new List<string>();
 				for (int i = 0; i < Netplay.Clients.Length; i++)
@@ -984,7 +989,7 @@ namespace TShockAPI
 
 		/// <summary>OnPostInit - Fired when the server loads a map, to perform world specific operations.</summary>
 		/// <param name="args">args - The EventArgs object.</param>
-		private async Task OnPostInit(EventArgs args)
+		private async void OnPostInit(EventArgs args)
 		{
 			Utils.SetConsoleTitle(false);
 
@@ -1042,7 +1047,7 @@ namespace TShockAPI
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
 			if (File.Exists(Path.Combine(SavePath, "setup.lock")) ||
-			    ((await UserAccountManager.GetUserAccounts())?.Count() > 0))
+				((UserAccountManager.GetUserAccounts())?.Count() > 0))
 			{
 				SetupToken = 0;
 
@@ -1105,7 +1110,7 @@ namespace TShockAPI
 
 		/// <summary>OnUpdate - Called when ever the server ticks.</summary>
 		/// <param name="args">args - EventArgs args</param>
-		private async Task OnUpdate(EventArgs args)
+		private async void OnUpdate(EventArgs args)
 		{
 			// This forces Terraria to actually continue to update
 			// even if there are no clients connected
@@ -1122,19 +1127,19 @@ namespace TShockAPI
 			//call these every second, not every update
 			if ((DateTime.UtcNow - LastCheck).TotalSeconds >= 1)
 			{
-				await OnSecondUpdate();
+				OnSecondUpdate();
 				LastCheck = DateTime.UtcNow;
 			}
 
 			if (Main.ServerSideCharacter && (DateTime.UtcNow - LastSave).TotalMinutes >=
-			    ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
+				ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
 			{
 				foreach (var player in Players)
 				{
 					// prevent null point exceptions
 					if (player != null && player is { IsLoggedIn: true, IsDisabledPendingTrashRemoval: false })
 					{
-						await CharacterManager.InsertPlayerData(player);
+						CharacterManager.InsertPlayerData(player);
 					}
 				}
 
@@ -1143,7 +1148,7 @@ namespace TShockAPI
 		}
 
 		/// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
-		private async Task OnSecondUpdate()
+		private async void OnSecondUpdate()
 		{
 			DisableFlags flags = Config.Settings.DisableSecondUpdateLogs
 				? DisableFlags.WriteToConsole
@@ -1208,7 +1213,7 @@ namespace TShockAPI
 						player.RecentFuse--;
 
 					if ((Main.ServerSideCharacter) && (player.TPlayer.SpawnX > 0) &&
-					    (player.sX != player.TPlayer.SpawnX))
+						(player.sX != player.TPlayer.SpawnX))
 					{
 						player.sX = player.TPlayer.SpawnX;
 						player.sY = player.TPlayer.SpawnY;
@@ -1224,7 +1229,7 @@ namespace TShockAPI
 					{
 						if (player.RememberedPositionPending == 1)
 						{
-							var pos = await RememberedPosManager.GetLeavePos(player.Account.AccountId);
+							var pos = RememberedPosManager.GetLeavePos(player.Account.AccountId);
 							if (pos is null)
 							{
 								return;
@@ -1286,7 +1291,7 @@ namespace TShockAPI
 
 					if (!Main.ServerSideCharacter || (Main.ServerSideCharacter && player.IsLoggedIn))
 					{
-						if (!await player.HasPermission(Permissions.ignorestackhackdetection))
+						if (!player.HasPermission(Permissions.ignorestackhackdetection))
 						{
 							player.IsDisabledForStackDetection = player.HasHackedItemStacks(shouldWarnPlayer: true);
 						}
@@ -1305,32 +1310,32 @@ namespace TShockAPI
 
 		/// <summary>OnHardUpdate - Fired when a hardmode tile update event happens.</summary>
 		/// <param name="args">args - The HardmodeTileUpdateEventArgs object.</param>
-		private Task OnHardUpdate(HardmodeTileUpdateEventArgs args)
+		private void OnHardUpdate(HardmodeTileUpdateEventArgs args)
 		{
 			if (args.Handled)
-				return Task.CompletedTask;
+				return;
 
 			if (!OnCreep(args.Type))
 			{
 				args.Handled = true;
 			}
 
-			return Task.CompletedTask;
+			return;
 		}
 
 		/// <summary>OnWorldGrassSpread - Fired when grass is attempting to spread.</summary>
 		/// <param name="args">args - The GrassSpreadEventArgs object.</param>
-		private Task OnWorldGrassSpread(GrassSpreadEventArgs args)
+		private void OnWorldGrassSpread(GrassSpreadEventArgs args)
 		{
 			if (args.Handled)
-				return Task.CompletedTask;
+				return;
 
 			if (!OnCreep(args.Grass))
 			{
 				args.Handled = true;
 			}
 
-			return Task.CompletedTask;
+			return;
 		}
 
 		/// <summary>
@@ -1341,13 +1346,13 @@ namespace TShockAPI
 		private bool OnCreep(int tileType)
 		{
 			if (!Config.Settings.AllowCrimsonCreep && (tileType == TileID.Dirt || tileType == TileID.CrimsonGrass
-			                                                                   || TileID.Sets.Crimson[tileType]))
+																			   || TileID.Sets.Crimson[tileType]))
 			{
 				return false;
 			}
 
 			if (!Config.Settings.AllowCorruptionCreep && (tileType == TileID.Dirt || tileType == TileID.CorruptThorns
-				    || TileID.Sets.Corrupt[tileType]))
+					|| TileID.Sets.Corrupt[tileType]))
 			{
 				return false;
 			}
@@ -1362,10 +1367,10 @@ namespace TShockAPI
 
 		/// <summary>OnStatueSpawn - Fired when a statue spawns.</summary>
 		/// <param name="args">args - The StatueSpawnEventArgs object.</param>
-		private Task OnStatueSpawn(StatueSpawnEventArgs args)
+		private void OnStatueSpawn(StatueSpawnEventArgs args)
 		{
 			if (args.Within200 < Config.Settings.StatueSpawn200 && args.Within600 < Config.Settings.StatueSpawn600 &&
-			    args.WorldWide < Config.Settings.StatueSpawnWorld)
+				args.WorldWide < Config.Settings.StatueSpawnWorld)
 			{
 				args.Handled = true;
 			}
@@ -1373,19 +1378,19 @@ namespace TShockAPI
 			{
 				args.Handled = false;
 			}
-			return Task.CompletedTask;
+			return;
 		}
 
 		/// <summary>OnConnect - Fired when a player connects to the server.</summary>
 		/// <param name="args">args - The ConnectEventArgs object.</param>
-		private Task OnConnect(ConnectEventArgs args)
+		private void OnConnect(ConnectEventArgs args)
 		{
 			if (ShuttingDown)
 			{
 				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1,
 					NetworkText.FromLiteral(GetString("ServerConsole is shutting down...")));
 				args.Handled = true;
-				return Task.CompletedTask;
+				return;
 			}
 
 			var player = new ServerPlayer(args.Who);
@@ -1394,14 +1399,14 @@ namespace TShockAPI
 			{
 				player.Kick(Config.Settings.ServerFullNoReservedReason, true, true, null, false);
 				args.Handled = true;
-				return Task.CompletedTask;
+				return;
 			}
 
 			if (!FileTools.OnWhitelist(player.IP))
 			{
 				player.Kick(Config.Settings.WhitelistKickReason, true, true, null, false);
 				args.Handled = true;
-				return Task.CompletedTask;
+				return;
 			}
 
 			if (Geo != null)
@@ -1414,18 +1419,18 @@ namespace TShockAPI
 					{
 						player.Kick(GetString("Connecting via a proxy is not allowed."), true, true, null, false);
 						args.Handled = true;
-						return Task.CompletedTask;
+						return;
 					}
 				}
 			}
 
 			Players[args.Who] = player;
-			return Task.CompletedTask;
+			return;
 		}
 
 		/// <summary>OnJoin - Internal hook called when a player joins. This is called after OnConnect.</summary>
 		/// <param name="args">args - The JoinEventArgs object.</param>
-		private async Task OnJoin(JoinEventArgs args)
+		private async void OnJoin(JoinEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
@@ -1443,12 +1448,12 @@ namespace TShockAPI
 				return;
 			}
 
-			await BanManager.IsPlayerBanned(player);
+			BanManager.IsPlayerBanned(player);
 		}
 
 		/// <summary>OnLeave - Called when a player leaves the server.</summary>
 		/// <param name="args">args - The LeaveEventArgs object.</param>
-		private async Task OnLeave(LeaveEventArgs args)
+		private async void OnLeave(LeaveEventArgs args)
 		{
 			if (args.Who >= Players.Length || args.Who < 0)
 			{
@@ -1488,15 +1493,15 @@ namespace TShockAPI
 				Log.Info(GetString("{0} disconnected.", tsplr.Name));
 
 				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter &&
-				    (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
+					(!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
 				{
 					tsplr.PlayerData.CopyCharacter(tsplr);
-					await CharacterManager.InsertPlayerData(tsplr);
+					CharacterManager.InsertPlayerData(tsplr);
 				}
 
 				if (Config.Settings.RememberLeavePos && !tsplr.LoginHarassed)
 				{
-					await RememberedPosManager.InsertLeavePos(tsplr.Account.AccountId, (int)(tsplr.X / 16),
+					RememberedPosManager.InsertLeavePos(tsplr.Account.AccountId, (int)(tsplr.X / 16),
 						(int)(tsplr.Y / 16));
 				}
 
@@ -1523,7 +1528,7 @@ namespace TShockAPI
 
 		/// <summary>OnChat - Fired when a player chats. Used for handling chat and commands.</summary>
 		/// <param name="args">args - The ServerChatEventArgs object.</param>
-		private async Task OnChat(ServerChatEventArgs args)
+		private async void OnChat(ServerChatEventArgs args)
 		{
 			var player = Players.ElementAtOrDefault(args.Who);
 
@@ -1534,7 +1539,7 @@ namespace TShockAPI
 
 			if (args.Text.Length > 500)
 			{
-				await player.Kick(GetString("Crash attempt via long chat packet."), true);
+				player.Kick(GetString("Crash attempt via long chat packet."), true);
 				args.Handled = true;
 				return;
 			}
@@ -1566,7 +1571,7 @@ namespace TShockAPI
 					args.Handled = true;
 
 					// Handle the command
-					if (!await Commands.HandleCommand(player, text))
+					if (!Commands.HandleCommand(player, text))
 					{
 						// This is required in case anyone makes HandleCommand return false again
 						player.SendErrorMessage(
@@ -1582,7 +1587,7 @@ namespace TShockAPI
 			}
 			else // player is sending a chat message
 			{
-				var canPlayerChat = await player.HasPermission(Permissions.canchat);
+				var canPlayerChat = player.HasPermission(Permissions.canchat);
 				if (!canPlayerChat) // do they even have perms?
 				{
 					args.Handled = true;
@@ -1619,7 +1624,7 @@ namespace TShockAPI
 
 				// Invoke the PlayerChat hook. If this hook event handled then we need to prevent sending the chat message
 				args.Handled = true;
-				bool cancelChat = await PlayerHooks.OnPlayerChat(player, args.Text, ref text);
+				bool cancelChat = PlayerHooks.OnPlayerChat(player, args.Text, ref text);
 
 				if (cancelChat)
 				{
@@ -1634,7 +1639,7 @@ namespace TShockAPI
 		/// Called when a command is issued from the server console.
 		/// </summary>
 		/// <param name="args">The CommandEventArgs object</param>
-		private async Task ServerHooks_OnCommand(CommandEventArgs args)
+		private async void ServerHooks_OnCommand(CommandEventArgs args)
 		{
 			if (args.Handled)
 				return;
@@ -1661,11 +1666,11 @@ namespace TShockAPI
 			}
 			else if (args.Command.StartsWith(Commands.Specifier) || args.Command.StartsWith(Commands.SilentSpecifier))
 			{
-				await Commands.HandleCommand(ServerPlayer.ServerConsole, args.Command);
+				Commands.HandleCommand(ServerPlayer.ServerConsole, args.Command);
 			}
 			else
 			{
-				await Commands.HandleCommand(ServerPlayer.ServerConsole, "/" + args.Command);
+				Commands.HandleCommand(ServerPlayer.ServerConsole, "/" + args.Command);
 			}
 
 			args.Handled = true;
@@ -1673,7 +1678,7 @@ namespace TShockAPI
 
 		/// <summary>OnGetData - Called when the server gets raw data packets.</summary>
 		/// <param name="e">e - The GetDataEventArgs object.</param>
-		private async Task OnGetData(GetDataEventArgs e)
+		private async void OnGetData(GetDataEventArgs e)
 		{
 			if (e.Handled)
 				return;
@@ -1694,8 +1699,8 @@ namespace TShockAPI
 			}
 
 			if ((player.State < 10 || player.Dead) && (int)type > 12 && (int)type != 16 && (int)type != 42 &&
-			    (int)type != 50 &&
-			    (int)type != 38 && (int)type != 21 && (int)type != 22 && type != PacketTypes.SyncLoadout)
+				(int)type != 50 &&
+				(int)type != 38 && (int)type != 21 && (int)type != 22 && type != PacketTypes.SyncLoadout)
 			{
 				e.Handled = true;
 				return;
@@ -1710,13 +1715,13 @@ namespace TShockAPI
 			using (var data = new MemoryStream(e.Msg.readBuffer, e.Index, e.Length - 1))
 			{
 				// Exceptions are already handled
-				e.Handled = await GetDataHandlers.HandlerGetData(type, player, data);
+				e.Handled = GetDataHandlers.HandlerGetData(type, player, data);
 			}
 		}
 
 		/// <summary>OnGreetPlayer - Fired when a player is greeted by the server. Handles things like the MOTD, join messages, etc.</summary>
 		/// <param name="args">args - The GreetPlayerEventArgs object.</param>
-		private async Task OnGreetPlayer(GreetPlayerEventArgs args)
+		private async void OnGreetPlayer(GreetPlayerEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
@@ -1776,8 +1781,8 @@ namespace TShockAPI
 			player.LastNetPosition = new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
 
 			if (Config.Settings.RememberLeavePos &&
-			    (await RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
-			    !player.LoginHarassed)
+				(RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
+				!player.LoginHarassed)
 			{
 				player.RememberedPositionPending = 3;
 				player.SendInfoMessage(GetString("You will be teleported to your last known location..."));
@@ -1788,7 +1793,7 @@ namespace TShockAPI
 
 		/// <summary>NpcHooks_OnStrikeNpc - Fired when an NPC strike packet happens.</summary>
 		/// <param name="e">e - The NpcStrikeEventArgs object.</param>
-		private Task NpcHooks_OnStrikeNpc(NpcStrikeEventArgs e)
+		private void NpcHooks_OnStrikeNpc(NpcStrikeEventArgs e)
 		{
 			if (Config.Settings.InfiniteInvasion)
 			{
@@ -1797,18 +1802,18 @@ namespace TShockAPI
 					Main.invasionSize = 20000000;
 				}
 			}
-			return Task.CompletedTask;
+			return;
 
 		}
 
 		/// <summary>OnProjectileSetDefaults - Called when a projectile sets the default attributes for itself.</summary>
 		/// <param name="e">e - The SetDefaultsEventArgs object parameterized with Projectile and int.</param>
-		private Task OnProjectileSetDefaults(SetDefaultsEventArgs<Projectile, int> e)
+		private void OnProjectileSetDefaults(SetDefaultsEventArgs<Projectile, int> e)
 		{
 			//tombstone fix.
 			if (e.Info == ProjectileID.Tombstone ||
-			    (e.Info >= ProjectileID.GraveMarker && e.Info <= ProjectileID.Obelisk) ||
-			    (e.Info >= ProjectileID.RichGravestone1 && e.Info <= ProjectileID.RichGravestone5))
+				(e.Info >= ProjectileID.GraveMarker && e.Info <= ProjectileID.Obelisk) ||
+				(e.Info >= ProjectileID.RichGravestone1 && e.Info <= ProjectileID.RichGravestone5))
 				if (Config.Settings.DisableTombstones)
 					e.Object.SetDefaults(0);
 			if (e.Info == ProjectileID.HappyBomb)
@@ -1821,20 +1826,20 @@ namespace TShockAPI
 				if (Config.Settings.DisablePrimeBombs)
 					e.Object.SetDefaults(0);
 
-			return Task.CompletedTask;
+			return;
 
 		}
 
 		/// <summary>NetHooks_SendData - Fired when the server sends data.</summary>
 		/// <param name="e">e - The SendDataEventArgs object.</param>
-		private Task NetHooks_SendData(SendDataEventArgs e)
+		private void NetHooks_SendData(SendDataEventArgs e)
 		{
 			if (e.MsgId == PacketTypes.PlayerHp)
 			{
 				if (Main.player[(byte)e.number].statLife <= 0)
 				{
 					e.Handled = true;
-					return Task.CompletedTask;
+					return;
 				}
 			}
 			else if (e.MsgId == PacketTypes.ProjectileNew)
@@ -1843,8 +1848,8 @@ namespace TShockAPI
 				{
 					var projectile = Main.projectile[e.number];
 					if (projectile.active && projectile.owner >= 0 &&
-					    (GetDataHandlers.projectileCreatesLiquid.ContainsKey(projectile.type) ||
-					     GetDataHandlers.projectileCreatesTile.ContainsKey(projectile.type)))
+						(GetDataHandlers.projectileCreatesLiquid.ContainsKey(projectile.type) ||
+						 GetDataHandlers.projectileCreatesTile.ContainsKey(projectile.type)))
 					{
 						var player = Players[projectile.owner];
 						if (player != null)
@@ -1867,18 +1872,18 @@ namespace TShockAPI
 					}
 				}
 			}
-			return Task.CompletedTask;
+			return;
 
 		}
 
 		/// <summary>OnStartHardMode - Fired when hard mode is started.</summary>
 		/// <param name="e">e - The HandledEventArgs object.</param>
-		private Task OnStartHardMode(HandledEventArgs e)
+		private void OnStartHardMode(HandledEventArgs e)
 		{
 			if (Config.Settings.DisableHardmode)
 				e.Handled = true;
 
-			return Task.CompletedTask;
+			return;
 		}
 
 		/// <summary>OnConfigRead - Fired when the config file has been read.</summary>

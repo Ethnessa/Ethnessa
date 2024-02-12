@@ -439,7 +439,7 @@ namespace TShockAPI
 			#endregion Whitelist
 		}
 
-		internal async Task OnGetSection(GetDataHandlers.GetSectionEventArgs args)
+		internal void OnGetSection(object sender, GetDataHandlers.GetSectionEventArgs args)
 		{
 			if (args.Player.RequestedSection)
 			{
@@ -457,7 +457,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasPermission(Permissions.ignorestackhackdetection))
+			if (!args.Player.HasPermission(Permissions.ignorestackhackdetection))
 			{
 				args.Player.IsDisabledForStackDetection = args.Player.HasHackedItemStacks(shouldWarnPlayer: true);
 			}
@@ -466,7 +466,7 @@ namespace TShockAPI
 		/// <summary>Handles disabling enforcement and minor anti-exploit stuff</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlayerUpdate(PlayerUpdateEventArgs args)
+		internal void OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
 		{
 			byte plr = args.PlayerId;
 			ControlSet control = args.Control;
@@ -578,13 +578,12 @@ namespace TShockAPI
 			}
 
 			args.Player.LastNetPosition = pos;
-			await Task.CompletedTask;
 		}
 
 		/// <summary>Bouncer's TileEdit hook is used to revert malicious tile changes.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnTileEdit(GetDataHandlers.TileEditEventArgs args)
+		internal void OnTileEdit(object sender, GetDataHandlers.TileEditEventArgs args)
 		{
 			// TODO: Add checks on the new edit actions. ReplaceTile, ReplaceWall, TryKillTile, Acutate, PokeLogicGate, SlopePoundTile
 			EditAction action = args.Action;
@@ -608,7 +607,7 @@ namespace TShockAPI
 
 				// I do not understand the ice tile check enough to be able to modify it, however I do know that it can be used to completely bypass region protection
 				// This check ensures that build permission is always checked no matter what
-				if (!await args.Player.HasBuildPermission(tileX, tileY))
+				if (!args.Player.HasBuildPermission(tileX, tileY))
 				{
 					TShock.Log.ConsoleDebug(GetString("Bouncer / OnTileEdit rejected from build from {0} {1} {2}", args.Player.Name, action, editData));
 
@@ -649,7 +648,7 @@ namespace TShockAPI
 
 				if (action == EditAction.PlaceTile || action == EditAction.ReplaceTile)
 				{
-					if (await TileManager.TileIsBanned(editData, args.Player))
+					if (TileManager.TileIsBanned(editData, args.Player))
 					{
 						TShock.Log.ConsoleDebug(GetString("Bouncer / OnTileEdit rejected from (tb) {0} {1} {2}", args.Player.Name, action, editData));
 						args.Player.SendTileSquareCentered(tileX, tileY, 1);
@@ -874,7 +873,7 @@ namespace TShockAPI
 				}
 
 				if (!args.Player.HasModifiedIceSuccessfully(tileX, tileY, editData, action)
-					&& !await args.Player.HasBuildPermission(tileX, tileY))
+					&& !args.Player.HasBuildPermission(tileX, tileY))
 				{
 					TShock.Log.ConsoleDebug(GetString("Bouncer / OnTileEdit rejected from ice/build from {0} {1} {2}", args.Player.Name, action, editData));
 
@@ -959,7 +958,7 @@ namespace TShockAPI
 				//snake coil can allow massive amounts of tile edits so it gets an exception
 				if (!((action == EditAction.PlaceTile && editData == TileID.MysticSnakeRope) || (action == EditAction.KillTile && tile.type == TileID.MysticSnakeRope)))
 				{
-					if ((action == EditAction.PlaceTile || action == EditAction.ReplaceTile || action == EditAction.PlaceWall || action == EditAction.ReplaceWall) && !await args.Player.HasPermission(Permissions.ignoreplacetiledetection))
+					if ((action == EditAction.PlaceTile || action == EditAction.ReplaceTile || action == EditAction.PlaceWall || action == EditAction.ReplaceWall) && !args.Player.HasPermission(Permissions.ignoreplacetiledetection))
 					{
 						args.Player.TilePlaceThreshold++;
 						var coords = new Vector2(tileX, tileY);
@@ -969,7 +968,7 @@ namespace TShockAPI
 					}
 
 					if ((action == EditAction.KillTile || action == EditAction.KillTileNoItem || action == EditAction.ReplaceTile || action == EditAction.KillWall || action == EditAction.ReplaceWall) && Main.tileSolid[Main.tile[tileX, tileY].type] &&
-						!await args.Player.HasPermission(Permissions.ignorekilltiledetection))
+						!args.Player.HasPermission(Permissions.ignorekilltiledetection))
 					{
 						args.Player.TileKillThreshold++;
 						var coords = new Vector2(tileX, tileY);
@@ -987,7 +986,6 @@ namespace TShockAPI
 				TShock.Log.ConsoleDebug(GetString("If you're seeing this message and you know what that player did, please report it to TShock for further investigation."));
 				args.Player.SendTileSquareCentered(tileX, tileY, 4);
 				args.Handled = true;
-				await Task.CompletedTask;
 			}
 		}
 
@@ -1057,7 +1055,7 @@ namespace TShockAPI
 		/// <summary>Registered when items fall to the ground to prevent cheating.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnItemDrop(GetDataHandlers.ItemDropEventArgs args)
+		internal void OnItemDrop(object sender, GetDataHandlers.ItemDropEventArgs args)
 		{
 			short id = args.ID;
 			Vector2 pos = args.Position;
@@ -1126,7 +1124,7 @@ namespace TShockAPI
 
 			Item item = new Item();
 			item.netDefaults(type);
-			if ((stacks > item.maxStack || stacks <= 0) || (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player) && !await args.Player.HasPermission(Permissions.allowdroppingbanneditems)))
+			if ((stacks > item.maxStack || stacks <= 0) || (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player) && !args.Player.HasPermission(Permissions.allowdroppingbanneditems)))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnItemDrop rejected from drop item ban check / max stack check / min stack check from {0}", args.Player.Name));
 				args.Player.SendData(PacketTypes.ItemDrop, "", id);
@@ -1158,7 +1156,7 @@ namespace TShockAPI
 		/// <summary>Bouncer's projectile trigger hook stops world damaging projectiles from destroying the world.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnNewProjectile(GetDataHandlers.NewProjectileEventArgs args)
+		internal void OnNewProjectile(object sender, GetDataHandlers.NewProjectileEventArgs args)
 		{
 			short ident = args.Identity;
 			Vector2 pos = args.Position;
@@ -1178,7 +1176,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (await ProjectileManager.ProjectileIsBanned(type, args.Player))
+			if (ProjectileManager.ProjectileIsBanned(type, args.Player))
 			{
 				args.Player.Disable(GetString("Player does not have permission to create projectile {0}.", type), DisableFlags.WriteToLogAndConsole);
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnNewProjectile rejected from permission check from {0} {1}", args.Player.Name, type));
@@ -1188,7 +1186,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (damage > TShock.Config.Settings.MaxProjDamage && !await args.Player.HasPermission(Permissions.ignoredamagecap))
+			if (damage > TShock.Config.Settings.MaxProjDamage && !args.Player.HasPermission(Permissions.ignoredamagecap))
 			{
 				args.Player.Disable(GetString("Projectile damage is higher than {0}.", TShock.Config.Settings.MaxProjDamage), DisableFlags.WriteToLogAndConsole);
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnNewProjectile rejected from projectile damage limit from {0} {1}/{2}", args.Player.Name, damage, TShock.Config.Settings.MaxProjDamage));
@@ -1253,7 +1251,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!TShock.Config.Settings.IgnoreProjUpdate && !await args.Player.HasPermission(Permissions.ignoreprojectiledetection))
+			if (!TShock.Config.Settings.IgnoreProjUpdate && !args.Player.HasPermission(Permissions.ignoreprojectiledetection))
 			{
 				if (type == ProjectileID.BlowupSmokeMoonlord
 					|| type == ProjectileID.PhantasmalEye
@@ -1335,7 +1333,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasPermission(Permissions.ignoreprojectiledetection))
+			if (!args.Player.HasPermission(Permissions.ignoreprojectiledetection))
 			{
 				if (type == ProjectileID.CrystalShard && TShock.Config.Settings.ProjIgnoreShrapnel) // Ignore crystal shards
 				{
@@ -1363,7 +1361,7 @@ namespace TShockAPI
 		/// <summary>Handles the NPC Strike event for Bouncer.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnNPCStrike(GetDataHandlers.NPCStrikeEventArgs args)
+		internal void OnNPCStrike(object sender, GetDataHandlers.NPCStrikeEventArgs args)
 		{
 			short id = args.ID;
 			byte direction = args.Direction;
@@ -1377,7 +1375,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (damage >= TShock.Config.Settings.MaxDamage && !await args.Player.HasPermission(Permissions.ignoredamagecap))
+			if (damage >= TShock.Config.Settings.MaxDamage && !args.Player.HasPermission(Permissions.ignoredamagecap))
 			{
 				if (TShock.Config.Settings.KickOnDamageThresholdBroken)
 				{
@@ -1453,7 +1451,7 @@ namespace TShockAPI
 		/// <summary>Handles when a chest item is changed.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnChestItemChange(GetDataHandlers.ChestItemEventArgs args)
+		internal void OnChestItemChange(object sender, GetDataHandlers.ChestItemEventArgs args)
 		{
 			short id = args.ID;
 			byte slot = args.Slot;
@@ -1476,7 +1474,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasBuildPermission(Main.chest[id].x, Main.chest[id].y) && TShock.Config.Settings.RegionProtectChests)
+			if (!args.Player.HasBuildPermission(Main.chest[id].x, Main.chest[id].y) && TShock.Config.Settings.RegionProtectChests)
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnChestItemChange rejected from region protection? from {0}", args.Player.Name));
 				args.Handled = true;
@@ -1490,13 +1488,13 @@ namespace TShockAPI
 				return;
 			}
 
-			await Task.CompletedTask;
+			
 		}
 
 		/// <summary>The Bouncer handler for when chests are opened.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnChestOpen(GetDataHandlers.ChestOpenEventArgs args)
+		internal void OnChestOpen(object sender, GetDataHandlers.ChestOpenEventArgs args)
 		{
 			if (args.Player.IsBeingDisabled())
 			{
@@ -1512,7 +1510,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasBuildPermission(args.X, args.Y) && TShock.Config.Settings.RegionProtectChests)
+			if (!args.Player.HasBuildPermission(args.X, args.Y) && TShock.Config.Settings.RegionProtectChests)
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnChestOpen rejected from region check from {0}", args.Player.Name));
 				args.Handled = true;
@@ -1526,7 +1524,7 @@ namespace TShockAPI
 		/// <summary>The place chest event that Bouncer hooks to prevent accidental damage.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlaceChest(GetDataHandlers.PlaceChestEventArgs args)
+		internal void OnPlaceChest(object sender, GetDataHandlers.PlaceChestEventArgs args)
 		{
 			int tileX = args.TileX;
 			int tileY = args.TileY;
@@ -1581,7 +1579,7 @@ namespace TShockAPI
 				}
 			}
 
-			if (!await args.Player.HasBuildPermission(tileX, tileY))
+			if (!args.Player.HasBuildPermission(tileX, tileY))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnPlaceChest rejected from invalid permission from {0}", args.Player.Name));
 				args.Player.SendTileSquareCentered(tileX, tileY, 3);
@@ -1660,7 +1658,7 @@ namespace TShockAPI
 		/// <summary>Handles Bouncer's liquid set anti-cheat.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnLiquidSet(GetDataHandlers.LiquidSetEventArgs args)
+		internal void OnLiquidSet(object sender, GetDataHandlers.LiquidSetEventArgs args)
 		{
 			int tileX = args.TileX;
 			int tileY = args.TileY;
@@ -1700,7 +1698,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasPermission(Permissions.ignoreliquidsetdetection))
+			if (!args.Player.HasPermission(Permissions.ignoreliquidsetdetection))
 			{
 				args.Player.TileLiquidThreshold++;
 			}
@@ -1738,7 +1736,7 @@ namespace TShockAPI
 					args.Handled = true;
 				}
 
-				if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(selectedItemType), args.Player))
+				if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(selectedItemType), args.Player))
 				{
 					Reject(GetString("Using banned {0} to manipulate liquid", Lang.GetItemNameValue(selectedItemType)));
 					return;
@@ -1747,28 +1745,28 @@ namespace TShockAPI
 				switch (type)
 				{
 					case LiquidType.Water:
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.WaterBucket), args.Player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.WaterBucket), args.Player))
 						{
 							Reject(GetString("Using banned water bucket without permissions"));
 							return;
 						}
 						break;
 					case LiquidType.Lava:
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.LavaBucket), args.Player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.LavaBucket), args.Player))
 						{
 							Reject(GetString("Using banned lava bucket without permissions"));
 							return;
 						}
 						break;
 					case LiquidType.Honey:
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.HoneyBucket), args.Player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.HoneyBucket), args.Player))
 						{
 							Reject(GetString("Using banned honey bucket without permissions"));
 							return;
 						}
 						break;
 					case LiquidType.Shimmer:
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.BottomlessShimmerBucket), args.Player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(ItemID.BottomlessShimmerBucket), args.Player))
 						{
 							Reject(GetString("Using banned shimmering water bucket without permissions"));
 							return;
@@ -1830,7 +1828,7 @@ namespace TShockAPI
 				}
 			}
 
-			if (!await args.Player.HasBuildPermission(tileX, tileY))
+			if (!args.Player.HasBuildPermission(tileX, tileY))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnLiquidSet rejected build permission from {0}", args.Player.Name));
 				args.Player.SendTileSquareCentered(tileX, tileY, 1);
@@ -1970,7 +1968,7 @@ namespace TShockAPI
 		/// <summary>Handles NPCAddBuff events.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnNPCAddBuff(GetDataHandlers.NPCAddBuffEventArgs args)
+		internal void OnNPCAddBuff(object sender, GetDataHandlers.NPCAddBuffEventArgs args)
 		{
 			short id = args.ID;
 			int type = args.Type;
@@ -1999,7 +1997,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasPermission(Permissions.ignorenpcbuffdetection))
+			if (!args.Player.HasPermission(Permissions.ignorenpcbuffdetection))
 			{
 				bool detectedNPCBuffTimeCheat = false;
 
@@ -2050,13 +2048,13 @@ namespace TShockAPI
 		/// <summary>The Bouncer handler for when an NPC is rehomed.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnUpdateNPCHome(GetDataHandlers.NPCHomeChangeEventArgs args)
+		internal void OnUpdateNPCHome(object sender, GetDataHandlers.NPCHomeChangeEventArgs args)
 		{
 			int id = args.ID;
 			short x = args.X;
 			short y = args.Y;
 
-			if (!await args.Player.HasBuildPermission(x, y))
+			if (!args.Player.HasBuildPermission(x, y))
 			{
 				args.Player.SendData(PacketTypes.UpdateNPCHome, "", id, Main.npc[id].homeTileX, Main.npc[id].homeTileY,
 									 Convert.ToByte(Main.npc[id].homeless));
@@ -2079,7 +2077,7 @@ namespace TShockAPI
 		/// <summary>Bouncer's HealOther handler prevents gross misuse of HealOther packets by hackers.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnHealOtherPlayer(GetDataHandlers.HealOtherPlayerEventArgs args)
+		internal void OnHealOtherPlayer(object sender, GetDataHandlers.HealOtherPlayerEventArgs args)
 		{
 			short amount = args.Amount;
 			byte plr = args.TargetPlayerIndex;
@@ -2094,7 +2092,7 @@ namespace TShockAPI
 			// Why 0.2?
 			// @bartico6: Because heal other player only happens when you are using the spectre armor with the hood,
 			// and the healing you can do with that is 20% of your damage.
-			if (amount >= TShock.Config.Settings.MaxDamage * 0.2 && !await args.Player.HasPermission(Permissions.ignoredamagecap))
+			if (amount >= TShock.Config.Settings.MaxDamage * 0.2 && !args.Player.HasPermission(Permissions.ignoredamagecap))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnHealOtherPlayer 0.2 check from {0}", args.Player.Name));
 				args.Player.Disable(GetString("HealOtherPlayer cheat attempt!"), DisableFlags.WriteToLogAndConsole);
@@ -2213,7 +2211,7 @@ namespace TShockAPI
 		/// <summary>Bouncer's PlaceObject hook reverts malicious tile placement.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlaceObject(GetDataHandlers.PlaceObjectEventArgs args)
+		internal void OnPlaceObject(object sender, GetDataHandlers.PlaceObjectEventArgs args)
 		{
 			short x = args.X;
 			short y = args.Y;
@@ -2259,7 +2257,7 @@ namespace TShockAPI
 			}
 
 			// TODO: REMOVE. This does NOT look like Bouncer code.
-			if (await TileManager.TileIsBanned(type, args.Player))
+			if (TileManager.TileIsBanned(type, args.Player))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnPlaceObject rejected banned tiles from {0}", args.Player.Name));
 				args.Player.SendTileSquareCentered(x, y, 1);
@@ -2349,7 +2347,7 @@ namespace TShockAPI
 				for (int j = y; j < y + tileData.Height; j++)
 				{
 					if (!args.Player.HasModifiedIceSuccessfully(i, j, type, EditAction.PlaceTile)
-						&& !await args.Player.HasBuildPermission(i, j))
+						&& !args.Player.HasBuildPermission(i, j))
 					{
 						TShock.Log.ConsoleDebug(GetString("Bouncer / OnPlaceObject rejected mad loop from {0}", args.Player.Name));
 						args.Player.SendTileSquareCentered(i, j, 4);
@@ -2382,7 +2380,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasPermission(Permissions.ignoreplacetiledetection))
+			if (!args.Player.HasPermission(Permissions.ignoreplacetiledetection))
 			{
 				args.Player.TilePlaceThreshold++;
 				var coords = new Vector2(x, y);
@@ -2395,7 +2393,7 @@ namespace TShockAPI
 		/// <summary>Fired when a PlaceTileEntity occurs for basic anti-cheat on perms and range.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlaceTileEntity(GetDataHandlers.PlaceTileEntityEventArgs args)
+		internal void OnPlaceTileEntity(object sender, GetDataHandlers.PlaceTileEntityEventArgs args)
 		{
 			if (!TShock.Utils.TilePlacementValid(args.X, args.Y))
 			{
@@ -2411,7 +2409,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasBuildPermission(args.X, args.Y))
+			if (!args.Player.HasBuildPermission(args.X, args.Y))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnPlaceTileEntity rejected permissions from {0}", args.Player.Name));
 				args.Handled = true;
@@ -2429,7 +2427,7 @@ namespace TShockAPI
 		/// <summary>Fired when an item frame is placed for anti-cheat detection.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlaceItemFrame(GetDataHandlers.PlaceItemFrameEventArgs args)
+		internal void OnPlaceItemFrame(object sender, GetDataHandlers.PlaceItemFrameEventArgs args)
 		{
 			if (!TShock.Utils.TilePlacementValid(args.X, args.Y))
 			{
@@ -2446,7 +2444,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasBuildPermission(args.X, args.Y))
+			if (!args.Player.HasBuildPermission(args.X, args.Y))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnPlaceItemFrame rejected permissions from {0}", args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.UpdateTileEntity, -1, -1, NetworkText.Empty, args.ItemFrame.ID, 0, 1);
@@ -2497,7 +2495,7 @@ namespace TShockAPI
 		/// <summary>Handles the anti-cheat components of gem lock toggles.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnGemLockToggle(GetDataHandlers.GemLockToggleEventArgs args)
+		internal void OnGemLockToggle(object sender, GetDataHandlers.GemLockToggleEventArgs args)
 		{
 			if (args.X < 0 || args.Y < 0 || args.X >= Main.maxTilesX || args.Y >= Main.maxTilesY)
 			{
@@ -2522,7 +2520,7 @@ namespace TShockAPI
 
 			if (TShock.Config.Settings.RegionProtectGemLocks)
 			{
-				if (!await args.Player.HasBuildPermission(args.X, args.Y))
+				if (!args.Player.HasBuildPermission(args.X, args.Y))
 				{
 					TShock.Log.ConsoleDebug(GetString("Bouncer / OnGemLockToggle rejected permissions check from {0}", args.Player.Name));
 					args.Handled = true;
@@ -2534,7 +2532,7 @@ namespace TShockAPI
 		/// <summary>Handles validation of of basic anti-cheat on mass wire operations.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnMassWireOperation(GetDataHandlers.MassWireOperationEventArgs args)
+		internal void OnMassWireOperation(object sender, GetDataHandlers.MassWireOperationEventArgs args)
 		{
 			short startX = args.StartX;
 			short startY = args.StartY;
@@ -2571,7 +2569,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (!await args.Player.HasBuildPermission(x, y))
+				if (!args.Player.HasBuildPermission(x, y))
 				{
 					TShock.Log.ConsoleDebug(GetString("Bouncer / OnMassWireOperation rejected build perms from {0}", args.Player.Name));
 					args.Handled = true;
@@ -2583,7 +2581,7 @@ namespace TShockAPI
 		/// <summary>Called when a player is damaged.</summary>
 		/// <param name="sender">The object that triggered the event.</param>
 		/// <param name="args">The packet arguments that the event has.</param>
-		internal async Task OnPlayerDamage(GetDataHandlers.PlayerDamageEventArgs args)
+		internal void OnPlayerDamage(object sender, GetDataHandlers.PlayerDamageEventArgs args)
 		{
 			byte id = args.ID;
 			short damage = args.Damage;
@@ -2599,7 +2597,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (damage > TShock.Config.Settings.MaxDamage && !await args.Player.HasPermission(Permissions.ignoredamagecap) && id != args.Player.Index)
+			if (damage > TShock.Config.Settings.MaxDamage && !args.Player.HasPermission(Permissions.ignoredamagecap) && id != args.Player.Index)
 			{
 				if (TShock.Config.Settings.KickOnDamageThresholdBroken)
 				{
@@ -2725,7 +2723,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		internal async Task OnFishOutNPC(GetDataHandlers.FishOutNPCEventArgs args)
+		internal void OnFishOutNPC(object sender, GetDataHandlers.FishOutNPCEventArgs args)
 		{
 			/// Getting recent projectiles of the player and selecting the first that is a bobber.
 			var projectile = args.Player.RecentlyCreatedProjectiles.FirstOrDefault(p => Main.projectile[p.Index].bobber);
@@ -2748,7 +2746,7 @@ namespace TShockAPI
 				args.Handled = true;
 				return;
 			}
-			if (args.NpcID == NPCID.DukeFishron && !await args.Player.HasPermission(Permissions.summonboss))
+			if (args.NpcID == NPCID.DukeFishron && !args.Player.HasPermission(Permissions.summonboss))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnFishOutNPC rejected summon boss permissions from {0}", args.Player.Name));
 				args.Handled = true;
@@ -2766,7 +2764,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		internal async Task OnFoodPlatterTryPlacing(GetDataHandlers.FoodPlatterTryPlacingEventArgs args)
+		internal void OnFoodPlatterTryPlacing(object sender, GetDataHandlers.FoodPlatterTryPlacingEventArgs args)
 		{
 			if (!TShock.Utils.TilePlacementValid(args.TileX, args.TileY))
 			{
@@ -2793,7 +2791,7 @@ namespace TShockAPI
 				return;
 			}
 
-			if (!await args.Player.HasBuildPermission(args.TileX, args.TileY))
+			if (!args.Player.HasBuildPermission(args.TileX, args.TileY))
 			{
 				TShock.Log.ConsoleDebug(GetString("Bouncer / OnFoodPlatterTryPlacing rejected permissions from {0}", args.Player.Name));
 				Item item = new Item();

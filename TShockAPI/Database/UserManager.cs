@@ -26,8 +26,6 @@ using BCrypt.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using MongoDB.Entities;
 using TShockAPI.Database.Models;
 
 namespace TShockAPI.Database
@@ -35,27 +33,28 @@ namespace TShockAPI.Database
 	/// <summary>UserAccountManager - Methods for dealing with database user accounts and other related functionality within TShock.</summary>
 	public static class UserAccountManager
 	{
+		private static IMongoCollection<UserAccount> userAccounts => TShock.GlobalDatabase.GetCollection<UserAccount>("useraccounts");
 		/// <summary>
 		/// Adds the given user account to the database
 		/// </summary>
 		/// <param name="account">The user account to be added</param>
 		/// <remarks>You can also use UserAccount.SaveAsync(), however you should check if it already exists first.</remarks>
-		public static async Task AddUserAccount(UserAccount account)
+		public static void AddUserAccount(UserAccount account)
 		{
-			if (!(await GroupManager.GroupExists(account.Group)))
+			if (!(GroupManager.GroupExists(account.Group)))
 				throw new GroupNotExistsException(account.Group);
 
 			try
 			{
 				// does account already exist?
-				var alreadyExists = await DB.CountAsync<UserAccount>(x => x.Name == account.Name) > 0;
+				var alreadyExists = userAccounts.Count<UserAccount>(x => x.Name == account.Name) > 0;
 				if (alreadyExists)
 				{
 					throw new UserAccountExistsException(account.Name);
 				}
 
-				account.AccountId = await GetNextUserId();
-				await account.SaveAsync();
+				account.AccountId = GetNextUserId();
+				userAccounts.InsertOne(account);
 			}
 			catch (Exception ex)
 			{
@@ -65,22 +64,23 @@ namespace TShockAPI.Database
 			Hooks.AccountHooks.OnAccountCreate(account);
 		}
 
-		public static async Task<int> GetNextUserId()
+		public static int GetNextUserId()
 		{
-			if (await DB.Queryable<UserAccount>().AnyAsync() is false)
-				return 0;
-			return (int)await DB.Queryable<UserAccount>().MaxAsync(x => x.AccountId) + 1;
+			var last = userAccounts.Find<UserAccount>(x => true).SortByDescending(x => x.AccountId).Limit(1).FirstOrDefault();
+			if (last == null)
+				return 1;
+			return last.AccountId + 1;
 		}
 
 		/// <summary>
 		/// Removes all user accounts from the database whose usernames match the given user account
 		/// </summary>
 		/// <param name="account">The user account</param>
-		public static async Task RemoveUserAccount(UserAccount account)
+		public static void RemoveUserAccount(UserAccount account)
 		{
 			try
 			{
-				await DB.DeleteAsync<UserAccount>(x => x.Name == account.Name);
+				userAccounts.FindOneAndDelete<UserAccount>(x => x.Name == account.Name);
 			}
 			catch (Exception ex)
 			{
@@ -95,12 +95,12 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="account">The user account</param>
 		/// <param name="password">The user account password to be set</param>
-		public static async Task SetUserAccountPassword(UserAccount account, string password)
+		public static void SetUserAccountPassword(UserAccount account, string password)
 		{
 			try
 			{
 				account.CreateBCryptHash(password);
-				await account.SaveAsync();
+				userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
 			}
 			catch (Exception ex)
 			{
@@ -113,12 +113,12 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="account">The user account</param>
 		/// <param name="uuid">The user account uuid to be set</param>
-		public static async Task SetUserAccountUUID(UserAccount account, string uuid)
+		public static void SetUserAccountUUID(UserAccount account, string uuid)
 		{
 			try
 			{
 				account.UUID = uuid;
-				await account.SaveAsync();
+				userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
 			}
 			catch (Exception ex)
 			{
@@ -131,9 +131,9 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="account">The user account</param>
 		/// <param name="group">The user account group to be set</param>
-		public static async Task SetUserGroup(UserAccount account, string group)
+		public static void SetUserGroup(UserAccount account, string group)
 		{
-			var grp = await GroupManager.GetGroupByName(group);
+			var grp = GroupManager.GetGroupByName(group);
 			if (grp == null)
 				throw new GroupNotExistsException(group);
 
@@ -156,12 +156,12 @@ namespace TShockAPI.Database
 
 		/// <summary>Updates the last accessed time for a database user account to the current time.</summary>
 		/// <param name="account">The user account object to modify.</param>
-		public static async Task UpdateLogin(UserAccount account)
+		public static void UpdateLogin(UserAccount account)
 		{
 			try
 			{
 				account.LastAccessed = DateTime.UtcNow;
-				await account.SaveAsync();
+				userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
 			}
 			catch (Exception ex)
 			{
@@ -176,7 +176,7 @@ namespace TShockAPI.Database
 		{
 			try
 			{
-				return (await DB.Find<UserAccount>().Match(x => x.Name == username).ExecuteFirstAsync())?.AccountId;
+				return (userAccounts.Find<UserAccount>(x => x.Name == username).FirstOrDefault())?.AccountId;
 			}
 			catch (Exception ex)
 			{
@@ -189,11 +189,11 @@ namespace TShockAPI.Database
 		/// <summary>Gets a user account object by name.</summary>
 		/// <param name="name">The user's name.</param>
 		/// <returns>The user account object returned from the search.</returns>
-		public static async Task<UserAccount?> GetUserAccountByName(string name)
+		public static UserAccount? GetUserAccountByName(string name)
 		{
 			try
 			{
-				return await GetUserAccount(new UserAccount { Name = name });
+				return GetUserAccount(new UserAccount { Name = name });
 			}
 			catch (UserAccountManagerException)
 			{
@@ -204,11 +204,11 @@ namespace TShockAPI.Database
 		/// <summary>Gets a user account object by their user account AccountId.</summary>
 		/// <param name="id">The user's AccountId.</param>
 		/// <returns>The user account object returned from the search.</returns>
-		public static async Task<UserAccount?> GetUserAccountById(int id)
+		public static UserAccount? GetUserAccountById(int id)
 		{
 			try
 			{
-				return await GetUserAccount(new UserAccount { AccountId = id });
+				return GetUserAccount(new UserAccount { AccountId = id });
 			}
 			catch (UserAccountManagerException)
 			{
@@ -219,23 +219,22 @@ namespace TShockAPI.Database
 		/// <summary>Gets a user account object by a user account object.</summary>
 		/// <param name="account">The user account object to search by.</param>
 		/// <returns>The user object that is returned from the search.</returns>
-		public static async Task<UserAccount?> GetUserAccount(UserAccount account)
+		public static UserAccount? GetUserAccount(UserAccount account)
 		{
 			if (account.AccountId == 0 && string.IsNullOrWhiteSpace(account.Name))
 				throw new UserAccountManagerException(GetString("User account AccountId and Name are both empty"));
 
-			return await DB.Find<UserAccount>()
-				.Match(x => x.Name == account.Name || x.AccountId == account.AccountId)
-				.ExecuteFirstAsync();
+			return userAccounts.Find<UserAccount>(x => x.Name == account.Name || x.AccountId == account.AccountId)
+				.FirstOrDefault();
 		}
 
 		/// <summary>Gets all the user accounts from the database.</summary>
 		/// <returns>The user accounts from the database.</returns>
-		public static async Task<List<UserAccount>?> GetUserAccounts()
+		public static List<UserAccount>? GetUserAccounts()
 		{
 			try
 			{
-				List<UserAccount> accounts = await DB.Queryable<UserAccount>().ToListAsync();
+				List<UserAccount> accounts = userAccounts.Find(Builders<UserAccount>.Filter.Empty).ToList();
 				return accounts;
 			}
 			catch (Exception ex)
@@ -252,7 +251,7 @@ namespace TShockAPI.Database
 		/// <param name="username">Rough username search. "n" will match "n", "na", "nam", "name", etc.</param>
 		/// <param name="notAtStart">If username is not the first part of the username.</param>
 		/// <returns>Matching users or null if exception is thrown.</returns>
-		public static async Task<List<UserAccount>?> GetUserAccountsByName(string username, bool notAtStart = false)
+		public static List<UserAccount>? GetUserAccountsByName(string username, bool notAtStart = false)
 		{
 			try
 			{
@@ -262,7 +261,7 @@ namespace TShockAPI.Database
 					: Builders<UserAccount>.Filter.Regex("Username",
 						new MongoDB.Bson.BsonRegularExpression("^" + username, "i"));
 
-				return await DB.Find<UserAccount>().Match(filter).ExecuteAsync();
+				return userAccounts.Find(filter).ToList();
 			}
 			catch (Exception ex)
 			{

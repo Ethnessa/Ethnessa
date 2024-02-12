@@ -11,7 +11,7 @@ public class GroupCommand : Command
 	public override List<string> Names { get; protected set; } = new() { "group" };
 	public override CommandDelegate CommandDelegate { get; set; } = Execute;
 	public override List<string> Permissions { get; protected set; } = new(){TShockAPI.Permissions.managegroup};
-	public static async Task Execute(CommandArgs args)
+	public static void Execute(CommandArgs args)
 	{
 		string subCmd = args.Parameters.Count == 0 ? "help" : args.Parameters[0].ToLower();
 
@@ -35,7 +35,7 @@ public class GroupCommand : Command
 
 				try
 				{
-					await GroupManager.AddGroup(groupName, null, permissions, TShockAPI.Group.DefaultChatColor);
+					GroupManager.AddGroup(groupName, null, permissions, TShockAPI.Group.DefaultChatColor);
 					args.Player.SendSuccessMessage(GetString($"Group {groupName} was added successfully."));
 				}
 				catch (GroupExistsException)
@@ -67,9 +67,9 @@ public class GroupCommand : Command
 				args.Parameters.RemoveRange(0, 2);
 				if (groupName == "*")
 				{
-					foreach (Group g in await GroupManager.GetGroupsAsync())
+					foreach (Group g in GroupManager.GetGroups())
 					{
-						await GroupManager.AddPermissions(g.Name, args.Parameters);
+						GroupManager.AddPermissions(g.Name, args.Parameters);
 					}
 
 					args.Player.SendSuccessMessage(
@@ -79,7 +79,7 @@ public class GroupCommand : Command
 
 				try
 				{
-					string response = await GroupManager.AddPermissions(groupName, args.Parameters);
+					string response = GroupManager.AddPermissions(groupName, args.Parameters);
 					if (response.Length > 0)
 					{
 						args.Player.SendSuccessMessage(response);
@@ -146,7 +146,7 @@ public class GroupCommand : Command
 				}
 
 				string groupName = args.Parameters[1];
-				var group = await GroupManager.GetGroupByName(groupName);
+				var group = GroupManager.GetGroupByName(groupName);
 				if (group == null)
 				{
 					args.Player.SendErrorMessage(GetString("No such group \"{0}\".", groupName));
@@ -157,7 +157,7 @@ public class GroupCommand : Command
 				{
 					string newParentGroupName = string.Join(" ", args.Parameters.Skip(2));
 					if (!string.IsNullOrWhiteSpace(newParentGroupName) &&
-					    !await GroupManager.GroupExists(newParentGroupName))
+					    !GroupManager.GroupExists(newParentGroupName))
 					{
 						args.Player.SendErrorMessage(GetString("No such group \"{0}\".", newParentGroupName));
 						return;
@@ -165,7 +165,7 @@ public class GroupCommand : Command
 
 					try
 					{
-						await GroupManager.UpdateGroup(groupName, newParentGroupName, group.Permissions, group.ChatColor,
+						GroupManager.UpdateGroup(groupName, newParentGroupName, group.Permissions, group.ChatColor,
 							group.Suffix, group.Prefix);
 
 						if (!string.IsNullOrWhiteSpace(newParentGroupName))
@@ -181,7 +181,7 @@ public class GroupCommand : Command
 				}
 				else
 				{
-					var parent = await group.GetParentGroup();
+					var parent = group.GetParentGroup();
 					if (parent is not null)
 						args.Player.SendSuccessMessage(GetString("Parent of \"{0}\" is \"{1}\".", group.Name,
 							parent));
@@ -206,7 +206,7 @@ public class GroupCommand : Command
 				}
 
 				string groupName = args.Parameters[1];
-				var group = await GroupManager.GetGroupByName(groupName);
+				var group = GroupManager.GetGroupByName(groupName);
 				if (group == null)
 				{
 					args.Player.SendErrorMessage(GetString("No such group \"{0}\".", groupName));
@@ -219,7 +219,7 @@ public class GroupCommand : Command
 
 					try
 					{
-						await GroupManager.UpdateGroup(groupName, group.ParentGroupName ?? "", group.Permissions, group.ChatColor,
+						GroupManager.UpdateGroup(groupName, group.ParentGroupName ?? "", group.Permissions, group.ChatColor,
 							newSuffix, group.Prefix);
 
 						if (!string.IsNullOrWhiteSpace(newSuffix))
@@ -259,7 +259,7 @@ public class GroupCommand : Command
 				}
 
 				string groupName = args.Parameters[1];
-				var group = await GroupManager.GetGroupByName(groupName);
+				var group = GroupManager.GetGroupByName(groupName);
 				if (group == null)
 				{
 					args.Player.SendErrorMessage(GetString("No such group \"{0}\".", groupName));
@@ -272,7 +272,7 @@ public class GroupCommand : Command
 
 					try
 					{
-						await GroupManager.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, group.ChatColor,
+						GroupManager.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, group.ChatColor,
 							group.Suffix, newPrefix);
 
 						if (!string.IsNullOrWhiteSpace(newPrefix))
@@ -313,7 +313,7 @@ public class GroupCommand : Command
 				}
 
 				string groupName = args.Parameters[1];
-				var group = await GroupManager.GetGroupByName(groupName);
+				var group = GroupManager.GetGroupByName(groupName);
 				if (group == null)
 				{
 					args.Player.SendErrorMessage(GetString("No such group \"{0}\".", groupName));
@@ -333,7 +333,7 @@ public class GroupCommand : Command
 					{
 						try
 						{
-							await GroupManager.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, newColor,
+							GroupManager.UpdateGroup(groupName, group.ParentGroupName, group.Permissions, newColor,
 								group.Suffix, group.Prefix);
 
 							args.Player.SendSuccessMessage(GetString("Chat color for group \"{0}\" set to \"{1}\".",
@@ -375,7 +375,7 @@ public class GroupCommand : Command
 				string newName = args.Parameters[2];
 				try
 				{
-					string response = await GroupManager.RenameGroup(group, newName);
+					string response = GroupManager.RenameGroup(group, newName);
 					args.Player.SendSuccessMessage(response);
 				}
 				catch (GroupManagerException ex)
@@ -401,7 +401,7 @@ public class GroupCommand : Command
 
 				try
 				{
-					string response = await GroupManager.DeleteGroup(args.Parameters[1], true);
+					string response = GroupManager.DeleteGroup(args.Parameters[1], true);
 					if (response.Length > 0)
 					{
 						args.Player.SendSuccessMessage(response);
@@ -432,9 +432,9 @@ public class GroupCommand : Command
 				args.Parameters.RemoveRange(0, 2);
 				if (groupName == "*")
 				{
-					foreach (Group g in await GroupManager.GetGroupsAsync())
+					foreach (Group g in GroupManager.GetGroups())
 					{
-						await GroupManager.DeletePermissions(g.Name, args.Parameters);
+						GroupManager.DeletePermissions(g.Name, args.Parameters);
 					}
 
 					args.Player.SendSuccessMessage(
@@ -444,7 +444,7 @@ public class GroupCommand : Command
 
 				try
 				{
-					string response = await GroupManager.DeletePermissions(groupName, args.Parameters);
+					string response = GroupManager.DeletePermissions(groupName, args.Parameters);
 					if (response.Length > 0)
 					{
 						args.Player.SendSuccessMessage(response);
@@ -469,7 +469,7 @@ public class GroupCommand : Command
 				int pageNumber;
 				if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
 					return;
-				var groupNames = from grp in (await GroupManager.GetGroupsAsync())
+				var groupNames = from grp in (GroupManager.GetGroups())
 					select grp.Name;
 				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(groupNames),
 					new PaginationTools.Settings
@@ -498,14 +498,14 @@ public class GroupCommand : Command
 				if (!PaginationTools.TryParsePageNumber(args.Parameters, 2, args.Player, out pageNumber))
 					return;
 
-				if (!await GroupManager.GroupExists(args.Parameters[1]))
+				if (!GroupManager.GroupExists(args.Parameters[1]))
 				{
 					args.Player.SendErrorMessage(GetString("Invalid group."));
 					return;
 				}
 
-				var grp = await GroupManager.GetGroupByName(args.Parameters[1]);
-				List<string> permissions = await grp.GetPermissions();
+				var grp = GroupManager.GetGroupByName(args.Parameters[1]);
+				List<string> permissions = grp.GetPermissions();
 
 				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(permissions),
 					new PaginationTools.Settings

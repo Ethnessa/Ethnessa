@@ -1,10 +1,11 @@
 using System;
-using MongoDB.Entities;
+using MongoDB.Bson;
 
 namespace TShockAPI.Database.Models;
 
-public class SacrificedItem : Entity
+public class SacrificedItem
 {
+	public ObjectId Id { get; set; }
 	public int WorldId { get; set; }
 	public int AccountId { get; set; }
 	public int ItemId { get; set; }

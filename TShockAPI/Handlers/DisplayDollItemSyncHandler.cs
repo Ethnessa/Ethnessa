@@ -12,17 +12,16 @@ namespace TShockAPI.Handlers
 	/// </summary>
 	public class DisplayDollItemSyncHandler : IPacketHandler<DisplayDollItemSyncEventArgs>
 	{
-		public async Task OnReceive(DisplayDollItemSyncEventArgs args)
+		public void OnReceive(object sender, DisplayDollItemSyncEventArgs args)
 		{
 			/// If the player has no building permissions means that they couldn't even see the content of the doll in the first place.
 			/// Thus, they would not be able to modify its content. This means that a hacker attempted to send this packet directly, or through raw bytes to tamper with the DisplayDoll. This is why I do not bother with making sure the player gets their item back.
-			if (!(await args.Player.HasBuildPermission(args.DisplayDollEntity.Position.X, args.DisplayDollEntity.Position.Y, false)))
+			if (!(args.Player.HasBuildPermission(args.DisplayDollEntity.Position.X, args.DisplayDollEntity.Position.Y, false)))
 			{
 				args.Player.SendErrorMessage(GetString("You do not have permission to modify a Mannequin in a protected area!"));
 				args.Handled = true;
 				return;
 			}
-			await Task.CompletedTask;
 		}
 	}
 }

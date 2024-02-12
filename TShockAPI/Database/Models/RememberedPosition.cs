@@ -1,10 +1,12 @@
 using System;
 using Microsoft.Xna.Framework;
+using MongoDB.Bson;
 
 namespace TShockAPI.Database.Models;
 
-public class RememberedPosition : MongoDB.Entities.Entity
+public class RememberedPosition 
 {
+	public ObjectId Id { get; set; }
 	public int AccountId { get; set; }
 
 	public int X { get; set; }

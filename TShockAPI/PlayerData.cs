@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using MongoDB.Bson;
 using Terraria;
 using TShockAPI;
 using Terraria.Localization;
@@ -28,8 +29,9 @@ using TShockAPI.Database;
 
 namespace TShockAPI
 {
-	public class PlayerData : MongoDB.Entities.Entity
+	public class PlayerData
 	{
+		public ObjectId Id { get; set; }
 		public int UserId { get; set; }
 		public NetItem[] inventory = new NetItem[NetItem.MaxInventory];
 		public int health = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
@@ -699,7 +701,7 @@ namespace TShockAPI
 
 			if (Main.GameModeInfo.IsJourneyMode)
 			{
-				var sacrificedItems = await ResearchDatastore.GetSacrificedItems();
+				var sacrificedItems = ResearchDatastore.GetSacrificedItems();
 				for(int i = 0; i < ItemID.Count; i++)
 				{
 					var amount = 0;

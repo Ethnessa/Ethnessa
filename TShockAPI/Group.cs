@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 using TShockAPI.Database;
 
 namespace TShockAPI
@@ -9,8 +10,9 @@ namespace TShockAPI
 	/// <summary>
 	/// A class used to group multiple users' permissions and settings.
 	/// </summary>
-	public class Group : MongoDB.Entities.Entity
+	public class Group
 	{
+		public ObjectId Id { get; set; }
 		/// <summary>
 		/// Default chat color.
 		/// </summary>
@@ -50,9 +52,9 @@ namespace TShockAPI
 		/// Retrieves the parent group of this group.
 		/// </summary>
 		/// <returns>The parent group, or null</returns>
-		public async Task<Group?> GetParentGroup()
+		public Group? GetParentGroup()
 		{
-			return await GroupManager.GetGroupByName(ParentGroupName);
+			return GroupManager.GetGroupByName(ParentGroupName);
 		}
 
 		/// <summary>
@@ -88,15 +90,15 @@ namespace TShockAPI
 		/// <summary>
 		/// The permissions of this group and all that it inherits from.
 		/// </summary>
-		public virtual async Task<List<string>> GetPermissions()
+		public virtual List<string> GetPermissions()
 		{
 			var perms = new List<string>(Permissions);
-			var parent = await GetParentGroup();
+			var parent = GetParentGroup();
 			while (parent != null)
 			{
 				perms.AddRange(parent.Permissions);
 				perms.RemoveAll(parent.NegatedPermissions.Contains);
-				parent = await parent.GetParentGroup();
+				parent = parent.GetParentGroup();
 			}
 
 			return perms;
@@ -143,9 +145,9 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="permission">The permission to check.</param>
 		/// <returns>True if the group has that permission.</returns>
-		public virtual async Task<bool> HasPermission(string permission)
+		public virtual bool HasPermission(string permission)
 		{
-			var perms = await GetPermissions();
+			var perms = GetPermissions();
 			return perms.Contains(permission) && !NegatedPermissions.Contains(permission);
 		}
 
@@ -262,9 +264,9 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="permission">The permission</param>
 		/// <returns>True</returns>
-		public override async Task<bool> HasPermission(string permission)
+		public override bool HasPermission(string permission)
 		{
-			return await Task.FromResult(true);
+			return true;
 		}
 	}
 }

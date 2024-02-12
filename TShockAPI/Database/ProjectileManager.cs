@@ -19,19 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using TShockAPI.Hooks;
 
 namespace TShockAPI.Database
 {
 	public static class ProjectileManager
 	{
-		public static async Task AddNewBan(short id = 0)
+		private static IMongoCollection<ProjectileBan> projectiles => TShock.GlobalDatabase.GetCollection<ProjectileBan>("projectiles");
+		public static void AddNewBan(short id = 0)
 		{
 			try
 			{
 				ProjectileBan ban = new ProjectileBan(id);
-				await ban.SaveAsync();
+				projectiles.InsertOne(ban);
 			}
 			catch (Exception ex)
 			{
@@ -39,13 +41,13 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task RemoveBan(short id)
+		public static void RemoveBan(short id)
 		{
-			if (!(await ProjectileIsBanned(id, null)))
+			if (!(ProjectileIsBanned(id, null)))
 				return;
 			try
 			{
-				await DB.DeleteAsync<ProjectileBan>(x => x.Type == id);
+				projectiles.DeleteMany(x => x.Type == id);
 			}
 			catch (Exception ex)
 			{
@@ -53,32 +55,32 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task<bool> ProjectileIsBanned(short id)
+		public static bool ProjectileIsBanned(short id)
 		{
-			return await DB.CountAsync<ProjectileBan>(x => x.Type == id) > 0;
+			return projectiles.Count<ProjectileBan>(x => x.Type == id) > 0;
 		}
 
-		public static async Task<bool> ProjectileIsBanned(short id, ServerPlayer ply)
+		public static bool ProjectileIsBanned(short id, ServerPlayer ply)
 		{
-			if (await ProjectileIsBanned(id))
+			if (ProjectileIsBanned(id))
 			{
-				ProjectileBan b = await GetBanById(id);
-				return !(await b.HasPermissionToCreateProjectile(ply));
+				ProjectileBan b = GetBanById(id);
+				return !(b.HasPermissionToCreateProjectile(ply));
 			}
 
 			return false;
 		}
 
-		public static async Task<bool> AllowGroup(short id, string name)
+		public static bool AllowGroup(short id, string name)
 		{
 			string groupsNew = "";
-			ProjectileBan b = await GetBanById(id);
+			ProjectileBan b = GetBanById(id);
 			if (b != null)
 			{
 				try
 				{
 					b.AllowedGroups.Add(name);
-					await b.SaveAsync();
+					projectiles.ReplaceOne(x => x.Id == b.Id, b);
 					return true;
 				}
 				catch (Exception ex)
@@ -90,15 +92,15 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<bool> RemoveGroup(short id, string group)
+		public static bool RemoveGroup(short id, string group)
 		{
-			ProjectileBan b = await GetBanById(id);
+			ProjectileBan b = GetBanById(id);
 			if (b != null)
 			{
 				try
 				{
 					b.AllowedGroups.Remove(group);
-					await b.SaveAsync();
+					projectiles.ReplaceOne(x => x.Id == b.Id, b);
 					return true;
 				}
 				catch (Exception ex)
@@ -110,15 +112,16 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<ProjectileBan?> GetBanById(short id)
+		public static ProjectileBan? GetBanById(short id)
 		{
-			return await DB.Find<ProjectileBan>().Match(x => x.Type == id)
-				.ExecuteFirstAsync();
+			return projectiles.Find<ProjectileBan>(x => x.Type == id)
+				.FirstOrDefault();
 		}
 	}
 
-	public class ProjectileBan : Entity, IEquatable<ProjectileBan>
+	public class ProjectileBan : IEquatable<ProjectileBan>
 	{
+		public ObjectId Id { get; set; }
 		public short Type { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
@@ -140,12 +143,12 @@ namespace TShockAPI.Database
 			return Type == other.Type;
 		}
 
-		public async Task<bool> HasPermissionToCreateProjectile(ServerPlayer ply)
+		public bool HasPermissionToCreateProjectile(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;
 
-			if (await ply.HasPermission(Permissions.canusebannedprojectiles))
+			if (ply.HasPermission(Permissions.canusebannedprojectiles))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerProjbanPermission(ply, this);
@@ -167,7 +170,7 @@ namespace TShockAPI.Database
 				}
 
 				traversed.Add(cur);
-				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
+				cur = GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
 
 			return false;

@@ -22,7 +22,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Driver;
 using Terraria;
 using TShockAPI.Database.Models;
 
@@ -30,14 +30,20 @@ namespace TShockAPI.Database
 {
 	public static class CharacterManager
 	{
-		public static async Task<PlayerData?> GetPlayerData(int accountId)
+		private static IMongoCollection<PlayerData> playerData => TShock.GlobalDatabase.GetCollection<PlayerData>("playerdata");
+
+		public static PlayerData? GetPlayerData(int accountId)
 		{
-			return await DB.Find<PlayerData>()
-				.Match(x => x.UserId == accountId)
-				.ExecuteFirstAsync();
+			return playerData.Find<PlayerData>(x => x.UserId == accountId)
+				.FirstOrDefault();
 		}
 
-		public static async Task<bool> SeedInitialData(UserAccount account)
+		public static PlayerData? DeletePlayerData(int accountId)
+		{
+			return playerData.FindOneAndDelete<PlayerData>(x => x.UserId == accountId);
+		}
+
+		public static bool SeedInitialData(UserAccount account)
 		{
 			try
 			{
@@ -60,7 +66,7 @@ namespace TShockAPI.Database
 					questsCompleted = 0
 				};
 
-				await initialData.SaveAsync();
+				playerData.InsertOne(initialData);
 				return true;
 			}
 			catch (Exception ex)
@@ -75,9 +81,9 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="player">player to take data from</param>
 		/// <returns>true if inserted successfully</returns>
-		public static async Task<bool> InsertPlayerData(ServerPlayer player, bool fromCommand = false)
+		public static bool InsertPlayerData(ServerPlayer player, bool fromCommand = false)
 		{
-			PlayerData playerData = player.PlayerData;
+			PlayerData playersData = player.PlayerData;
 
 			if (!player.IsLoggedIn)
 				return false;
@@ -85,7 +91,7 @@ namespace TShockAPI.Database
 			if (player.State < 10)
 				return false;
 
-			if (await player.HasPermission(Permissions.bypassssc) && !fromCommand)
+			if (player.HasPermission(Permissions.bypassssc) && !fromCommand)
 			{
 				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
@@ -94,7 +100,7 @@ namespace TShockAPI.Database
 
 			try
 			{
-				await playerData.SaveAsync();
+				playerData.InsertOne(playersData);
 				return true;
 			}
 			catch (Exception ex)
@@ -110,18 +116,17 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="userid">User AccountId of the player</param>
 		/// <returns>true if removed successfully</returns>
-		public static async Task<bool> RemovePlayer(int userid)
+		public static bool RemovePlayer(int userid)
 		{
 			try
 			{
-				var playerData = (await GetPlayerData(userid));
+				var playerData = DeletePlayerData(userid);
 
 				if (playerData is null)
 				{
 					throw new Exception($"The player does not exist!");
 				}
 
-				await playerData.DeleteAsync();
 				return true;
 			}
 			catch (Exception ex)
@@ -138,23 +143,23 @@ namespace TShockAPI.Database
 		/// <param name="player">The player to store the data for.</param>
 		/// <param name="data">The player data to store.</param>
 		/// <returns>If the command succeeds.</returns>
-		public static async Task<bool> InsertSpecificPlayerData(ServerPlayer player, PlayerData data)
+		public static bool InsertSpecificPlayerData(ServerPlayer player, PlayerData data)
 		{
-			PlayerData playerData = data;
+			PlayerData playersData = data;
 
 			if (!player.IsLoggedIn)
 				return false;
 
-			if (await player.HasPermission(Permissions.bypassssc))
+			if (player.HasPermission(Permissions.bypassssc))
 			{
 				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
 				return true;
 			}
 
-			await RemovePlayer(player.Account.AccountId);
-			playerData.UserId = player.Account.AccountId;
-			await playerData.SaveAsync();
+			RemovePlayer(player.Account.AccountId);
+			playersData.UserId = player.Account.AccountId;
+			playerData.InsertOne(playersData);
 
 			return true;
 		}

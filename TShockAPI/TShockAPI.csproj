@@ -36,7 +36,6 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="GetText.NET" Version="1.7.14" />
     <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
-    <PackageReference Include="MongoDB.Entities" Version="23.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
   </ItemGroup>
 
@@ -47,12 +46,6 @@
   <ItemGroup>
     <Reference Include="HttpServer">
       <HintPath>..\prebuilts\HttpServer.dll</HintPath>
-    </Reference>
-    <Reference Include="OTAPI">
-      <HintPath>..\Open-Terraria-API\OTAPI.Patcher\bin\Debug\net6.0\artifact-pc\OTAPI.dll</HintPath>
-    </Reference>
-    <Reference Include="OTAPI.Runtime">
-      <HintPath>..\Open-Terraria-API\OTAPI.Patcher\bin\Debug\net6.0\artifact-pc\OTAPI.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
 

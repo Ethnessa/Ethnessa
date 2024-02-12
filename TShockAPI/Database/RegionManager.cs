@@ -23,9 +23,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Terraria;
 using Microsoft.Xna.Framework;
+using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Entities;
-using Entity = MongoDB.Entities.Entity;
 
 namespace TShockAPI.Database
 {
@@ -34,9 +33,10 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class RegionManager
 	{
-		public static async Task<int> CountRegions()
+		private static IMongoCollection<Region> regions => TShock.GlobalDatabase.GetCollection<Region>("regions");
+		public static int CountRegions()
 		{
-			return Convert.ToInt32(await DB.CountAsync<Region>());
+			return Convert.ToInt32(regions.CountDocuments(Builders<Region>.Filter.Empty));
 		}
 
 		/// <summary>
@@ -51,17 +51,18 @@ namespace TShockAPI.Database
 		/// <param name="worldid">The world regionId that this region is in.</param>
 		/// <param name="z">The Z index of the region.</param>
 		/// <returns>Whether the region was created and added successfully.</returns>
-		public static async Task<bool> AddRegion(int tx, int ty, int width, int height, string regionname, string owner, string worldid, int z = 0)
+		public static bool AddRegion(int tx, int ty, int width, int height, string regionname, string owner, string worldid, int z = 0)
 		{
-			if (await GetRegionByName(regionname) != null)
+			if (GetRegionByName(regionname) != null)
 			{
 				return false;
 			}
 			try
 			{
-				int nextId = await CountRegions();
+				int nextId = CountRegions();
 				Region region = new Region(nextId, new Rectangle(tx, ty, width, height), regionname, owner, true, worldid, z);
 				Hooks.RegionHooks.OnRegionCreated(region);
+				regions.InsertOne(region);
 				return true;
 			}
 			catch (Exception ex)
@@ -76,20 +77,14 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="id">The AccountId of the region to delete.</param>
 		/// <returns>Whether the region was successfully deleted.</returns>
-		public static async Task<bool> DeleteRegion(int id)
+		public static bool DeleteRegion(int id)
 		{
 			try
 			{
 				var worldid = Main.worldID.ToString();
 
-				var region = await DB.Find<Region>().Match(x=>x.RegionId == id && x.WorldID == worldid)
-					.ExecuteFirstAsync();
-
-				if (region is not null)
-				{
-					Hooks.RegionHooks.OnRegionDeleted(region);
-					await region.DeleteAsync();
-				}
+				var region = regions.FindOneAndDelete<Region>(x => x.RegionId == id && x.WorldID == worldid);
+				Hooks.RegionHooks.OnRegionDeleted(region);
 
 				return true;
 			}
@@ -105,20 +100,15 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">The name of the region to delete.</param>
 		/// <returns>Whether the region was successfully deleted.</returns>
-		public static async Task<bool> DeleteRegion(string name)
+		public static bool DeleteRegion(string name)
 		{
 			try
 			{
 				var worldid = Main.worldID.ToString();
 
-				var region = await DB.Find<Region>().Match(x=>x.Name == name && x.WorldID == worldid)
-					.ExecuteFirstAsync();
+				var region = regions.FindOneAndDelete<Region>(x=>x.Name == name && x.WorldID == worldid);
 
-				if (region is not null)
-				{
-					Hooks.RegionHooks.OnRegionDeleted(region);
-					await region.DeleteAsync();
-				}
+				Hooks.RegionHooks.OnRegionDeleted(region);
 
 				return true;
 			}
@@ -135,20 +125,16 @@ namespace TShockAPI.Database
 		/// <param name="id">The AccountId of the region to change.</param>
 		/// <param name="state">New protected state of the region.</param>
 		/// <returns>Whether the region's state was successfully changed.</returns>
-		public static async Task<bool> SetRegionState(int id, bool state)
+		public static bool SetRegionState(int id, bool state)
 		{
 			try
 			{
 				var worldId = Main.worldID.ToString();
 
-				var region = await DB.Find<Region>().Match(x=>x.RegionId == id && x.WorldID == worldId)
-					.ExecuteFirstAsync();
+				// change region.DisabledBuild = state
+				var region = regions.UpdateOne<Region>(x => x.RegionId == id && x.WorldID == worldId,
+					Builders<Region>.Update.Set(x => x.DisableBuild, state));
 
-				if (region is not null)
-				{
-					region.DisableBuild = state;
-					await region.SaveAsync();
-				}
 				return true;
 			}
 			catch (Exception ex)
@@ -164,16 +150,13 @@ namespace TShockAPI.Database
 		/// <param name="name">The name of the region to change.</param>
 		/// <param name="state">New protected state of the region.</param>
 		/// <returns>Whether the region's state was successfully changed.</returns>
-		public static async Task<bool> SetRegionState(string name, bool state)
+		public static bool SetRegionState(string name, bool state)
 		{
 			try
 			{
-				var region = await GetRegionByName(name);
-				if (region is not null)
-				{
-					region.DisableBuild = state;
-					await region.SaveAsync();
-				}
+				var region = regions.UpdateOne<Region>(x => x.Name == name && x.WorldID == Main.worldID.ToString(),
+					Builders<Region>.Update.Set(x => x.DisableBuild, state));
+
 
 				return true;
 			}
@@ -191,18 +174,18 @@ namespace TShockAPI.Database
 		/// <param name="y">Y coordinate</param>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player can build at the given (x, y) coordinate</returns>
-		public static async Task<bool> CanBuild(int x, int y, ServerPlayer ply)
+		public static bool CanBuild(int x, int y, ServerPlayer ply)
 		{
-			if (!(await ply.HasPermission(Permissions.canbuild)))
+			if (!(ply.HasPermission(Permissions.canbuild)))
 			{
 				return false;
 			}
 			Region top = null;
 
-			var regions = await DB.Find<Region>().Match(r => r.InArea(x, y) && r.WorldID == Main.worldID.ToString())
-				.ExecuteAsync();
+			var regionList = regions.Find<Region>(r => r.InArea(x, y) && r.WorldID == Main.worldID.ToString())
+				.ToList();
 
-			foreach (Region region in regions)
+			foreach (Region region in regionList)
 			{
 				if (region.InArea(x, y))
 				{
@@ -210,7 +193,7 @@ namespace TShockAPI.Database
 						top = region;
 				}
 			}
-			return top == null || await top.HasPermissionToBuildInRegion(ply);
+			return top == null || top.HasPermissionToBuildInRegion(ply);
 		}
 
 		/// <summary>
@@ -219,9 +202,9 @@ namespace TShockAPI.Database
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
 		/// <returns>Whether any regions exist at the given (x, y) coordinate</returns>
-		public static async Task<bool> InArea(int x, int y)
+		public static bool InArea(int x, int y)
 		{
-			return await DB.CountAsync<Region>(r => r.InArea(x, y)) > 0;
+			return regions.CountDocuments<Region>(r => r.InArea(x, y)) > 0;
 		}
 
 		/// <summary>
@@ -231,9 +214,9 @@ namespace TShockAPI.Database
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
 		/// <returns>The <see cref="Region"/> objects of any regions that exist at the given (x, y) coordinate</returns>
-		public static async Task<IEnumerable<Region>> InAreaRegion(int x, int y)
+		public static IEnumerable<Region> GetRegionsInArea(int x, int y)
 		{
-			return await DB.Find<Region>().Match(r => r.InArea(x, y)).ExecuteAsync();
+			return regions.Find<Region>(r => r.InArea(x, y)).ToList();
 		}
 
 		/// <summary>
@@ -260,7 +243,7 @@ namespace TShockAPI.Database
 
 			try
 			{
-				Region region = await GetRegionByName(regionName);
+				Region region = GetRegionByName(regionName);
 				if (region is null)
 				{
 					return false;
@@ -287,7 +270,7 @@ namespace TShockAPI.Database
 				}
 
 				region.Area = new Rectangle(X, Y, width, height);
-				await region.SaveAsync();
+				regions.ReplaceOne(r => r.Id == region.Id, region);
 				return true;
 			}
 			catch (Exception ex)
@@ -303,11 +286,11 @@ namespace TShockAPI.Database
 		/// <param name="oldName">Name of the region to rename</param>
 		/// <param name="newName">New name of the region</param>
 		/// <returns>true if renamed successfully, false otherwise</returns>
-		public static async Task<bool> RenameRegion(string oldName, string newName)
+		public static bool RenameRegion(string oldName, string newName)
 		{
 			try
 			{
-				Region region = await GetRegionByName(oldName);
+				Region region = GetRegionByName(oldName);
 				if (region is null)
 				{
 					return false;
@@ -315,7 +298,7 @@ namespace TShockAPI.Database
 
 
 				region.Name = newName;
-				await region.SaveAsync();
+				regions.ReplaceOne(r => r.Id == region.Id, region);
 				Hooks.RegionHooks.OnRegionRenamed(region, oldName, newName);
 				return true;
 
@@ -334,17 +317,17 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Name of the region to modify</param>
 		/// <param name="userName">Username to remove</param>
 		/// <returns>true if removed successfully</returns>
-		public static async Task<bool> RemoveUser(string regionName, string userName)
+		public static bool RemoveUser(string regionName, string userName)
 		{
-			Region r = await GetRegionByName(regionName);
+			Region r = GetRegionByName(regionName);
 			if (r == null) return false;
 
-			if (!r.RemoveID((await UserAccountManager.GetUserAccountByName(userName))?.AccountId ?? 0))
+			if (!r.RemoveID((UserAccountManager.GetUserAccountByName(userName))?.AccountId ?? 0))
 			{
 				return false;
 			}
 
-			await r.SaveAsync();
+			regions.ReplaceOne(x => x.Id == r.Id, r);
 			return true;
 		}
 
@@ -354,12 +337,12 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Name of the region to modify</param>
 		/// <param name="userName">Username to add</param>
 		/// <returns>true if added successfully</returns>
-		public static async Task<bool> AddNewUser(string regionName, string userName)
+		public static bool AddNewUser(string regionName, string userName)
 		{
 			try
 			{
-				Region region = await GetRegionByName(regionName);
-				var userId = (await UserAccountManager.GetUserAccountByName(userName))?.AccountId;
+				Region region = GetRegionByName(regionName);
+				var userId = (UserAccountManager.GetUserAccountByName(userName))?.AccountId;
 
 				if (userId is null)
 					return false;
@@ -369,7 +352,7 @@ namespace TShockAPI.Database
 					return true;
 
 				region.AllowedIDs.Add(userId.GetValueOrDefault());
-				await region.SaveAsync();
+				regions.ReplaceOne(x => x.Id == region.Id, region);
 				return true;
 			}
 			catch (Exception ex)
@@ -388,11 +371,11 @@ namespace TShockAPI.Database
 		/// <param name="height">The height.</param>
 		/// <param name="width">The width.</param>
 		/// <returns>Whether the operation succeeded.</returns>
-		public static async Task<bool> PositionRegion(string regionName, int x, int y, int width, int height)
+		public static bool PositionRegion(string regionName, int x, int y, int width, int height)
 		{
 			try
 			{
-				Region region = await GetRegionByName(regionName);
+				Region region = GetRegionByName(regionName);
 				if (region is null)
 				{
 					throw new Exception("Region not found");
@@ -400,7 +383,7 @@ namespace TShockAPI.Database
 
 				region.Area = new Rectangle(x, y, width, height);
 
-				await region.SaveAsync();
+				regions.ReplaceOne(x=>x.Id==region.Id, region);
 				return true;
 			}
 			catch (Exception ex)
@@ -415,18 +398,18 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="worldId">World name to get regions from</param>
 		/// <returns>List of regions with only their names</returns>
-		public static async Task<List<Region>> ListAllRegions(string worldId)
+		public static List<Region> ListAllRegions(string worldId)
 		{
-			var regions = new List<Region>();
+			var regionList = new List<Region>();
 			try
 			{
-				regions = await DB.Find<Region>().Match(x => x.WorldID == worldId).ExecuteAsync();
+				regionList = regions.Find<Region>(x => x.WorldID == worldId).ToList();
 			}
 			catch (Exception ex)
 			{
 				TShock.Log.Error(ex.ToString());
 			}
-			return regions;
+			return regionList;
 		}
 
 		/// <summary>
@@ -434,10 +417,10 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="name">Region name</param>
 		/// <returns>The region with the given name, or null if not found</returns>
-		public static async Task<Region?> GetRegionByName(String name)
+		public static Region? GetRegionByName(String name)
 		{
-			return await DB.Find<Region>().Match(x => x.Name == name && x.WorldID == Main.worldID.ToString())
-				.ExecuteFirstAsync();
+			return regions.Find<Region>(x => x.Name == name && x.WorldID == Main.worldID.ToString())
+				.FirstOrDefault();
 		}
 
 		/// <summary>
@@ -445,10 +428,10 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="id">Region AccountId</param>
 		/// <returns>The region with the given AccountId, or null if not found</returns>
-		public static async Task<Region?> GetRegionByID(int id)
+		public static Region? GetRegionByID(int id)
 		{
-			return await DB.Find<Region>().Match(x => x.RegionId == id && x.WorldID == Main.worldID.ToString())
-				.ExecuteFirstAsync();
+			return regions.Find<Region>(x => x.RegionId == id && x.WorldID == Main.worldID.ToString())
+				.FirstOrDefault();
 		}
 
 		/// <summary>
@@ -459,11 +442,8 @@ namespace TShockAPI.Database
 		/// <returns>Whether the change was successful</returns>
 		public static async Task<bool> ChangeOwner(string regionName, string newOwner)
 		{
-			var region = await GetRegionByName(regionName);
-			if (region == null) return false;
-
-			region.Owner = newOwner;
-			await region.SaveAsync();
+			var region = regions.FindOneAndUpdate<Region>(x => x.Name == regionName && x.WorldID == Main.worldID.ToString(),
+								Builders<Region>.Update.Set(x => x.Owner, newOwner));
 			return true;
 		}
 
@@ -473,9 +453,9 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Region name</param>
 		/// <param name="groupName">Group's name</param>
 		/// <returns>Whether the change was successful</returns>
-		public static async Task<bool> AllowGroup(string regionName, string groupName)
+		public static bool AllowGroup(string regionName, string groupName)
 		{
-			var region = await GetRegionByName(regionName);
+			var region = GetRegionByName(regionName);
 			if (region is null)
 			{
 				return false;
@@ -486,7 +466,7 @@ namespace TShockAPI.Database
 				return true;
 
 			region.AllowedGroups.Add(groupName);
-			await region.SaveAsync();
+			regions.ReplaceOne(x=>x.Id==region.Id, region);
 			return true;
 		}
 
@@ -496,9 +476,9 @@ namespace TShockAPI.Database
 		/// <param name="regionName">Region name</param>
 		/// <param name="group">Group name</param>
 		/// <returns>Whether the change was successful</returns>
-		public static async Task<bool> RemoveGroup(string regionName, string group)
+		public static bool RemoveGroup(string regionName, string group)
 		{
-			var region = await GetRegionByName(regionName);
+			var region = GetRegionByName(regionName);
 			if (region is null)
 			{
 				return false;
@@ -509,7 +489,7 @@ namespace TShockAPI.Database
 				return false;
 			}
 
-			await region.SaveAsync();
+			regions.ReplaceOne(x=>x.Id==region.Id, region);
 			return true;
 		}
 
@@ -518,7 +498,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="regions">List of Regions to compare</param>
 		/// <returns></returns>
-		public static async Task<Region> GetTopRegion(IEnumerable<Region> regions)
+		public static Region GetTopRegion(IEnumerable<Region> regions)
 		{
 			Region ret = null;
 			foreach (Region r in regions)
@@ -540,15 +520,15 @@ namespace TShockAPI.Database
 		/// <param name="name">Region name</param>
 		/// <param name="z">New Z index</param>
 		/// <returns>Whether the change was successful</returns>
-		public static async Task<bool> SetZ(string name, int z)
+		public static bool SetZ(string name, int z)
 		{
 			try
 			{
-				var region = await GetRegionByName(name);
+				var region = GetRegionByName(name);
 				if (region is null) return false;
 
 				region.Z = z;
-				await region.SaveAsync();
+				regions.ReplaceOne(x=>x.Id==region.Id, region);
 				return true;
 			}
 			catch (Exception ex)
@@ -559,8 +539,9 @@ namespace TShockAPI.Database
 		}
 	}
 
-	public class Region : Entity
+	public class Region
 	{
+		public ObjectId Id { get; set; }
 		public int RegionId { get; set; }
 		public Rectangle Area { get; set; }
 		public string Name { get; set; }
@@ -625,7 +606,7 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="ply">Player to check permissions with</param>
 		/// <returns>Whether the player has permission</returns>
-		public async Task<bool> HasPermissionToBuildInRegion(ServerPlayer ply)
+		public bool HasPermissionToBuildInRegion(ServerPlayer ply)
 		{
 			if (!DisableBuild)
 			{
@@ -641,7 +622,7 @@ namespace TShockAPI.Database
 				return false;
 			}
 
-			return await ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.AccountId) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
+			return ply.HasPermission(Permissions.editregion) || AllowedIDs.Contains(ply.Account.AccountId) || AllowedGroups.Contains(ply.Group.Name) || Owner == ply.Account.Name;
 		}
 
 		/// <summary>

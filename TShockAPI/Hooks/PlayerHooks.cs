@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using MongoDB.Driver;
 using TShockAPI.Database;
 using TShockAPI.ServerCommands;
 
@@ -310,7 +309,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerPostLogin"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerPostLoginD(PlayerPostLoginEventArgs e);
+		public delegate void PlayerPostLoginD(PlayerPostLoginEventArgs e);
 		/// <summary>
 		/// Fired by players after they've successfully logged in to a user account.
 		/// </summary>
@@ -320,7 +319,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerPreLogin"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerPreLoginD(PlayerPreLoginEventArgs e);
+		public delegate void PlayerPreLoginD(PlayerPreLoginEventArgs e);
 		/// <summary>
 		/// Fired by players when sending login credentials to the server.
 		/// </summary>
@@ -330,7 +329,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerLogout"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerLogoutD(PlayerLogoutEventArgs e);
+		public delegate void PlayerLogoutD(PlayerLogoutEventArgs e);
 		/// <summary>
 		/// Fired by players upon logging out from a user account.
 		/// </summary>
@@ -340,7 +339,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerCommand"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerCommandD(PlayerCommandEventArgs e);
+		public delegate void PlayerCommandD(PlayerCommandEventArgs e);
 		/// <summary>
 		/// Fired by players when using a command.
 		/// </summary>
@@ -350,7 +349,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerChat"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerChatD(PlayerChatEventArgs e);
+		public delegate void PlayerChatD(PlayerChatEventArgs e);
 		/// <summary>
 		/// Fired by players when they send a chat message packet to the server
 		/// and before it is transmitted to the rest of the players.
@@ -361,7 +360,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerPermission"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerPermissionD(PlayerPermissionEventArgs e);
+		public delegate void PlayerPermissionD(PlayerPermissionEventArgs e);
 		/// <summary>
 		/// Fired by players every time a permission check involving them occurs.
 		/// </summary>
@@ -371,7 +370,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerItembanPermission"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerItembanPermissionD(PlayerItembanPermissionEventArgs e);
+		public delegate void PlayerItembanPermissionD(PlayerItembanPermissionEventArgs e);
 		/// <summary>
 		/// Fired by players every time a permission check on banned items involving them occurs.
 		/// </summary>
@@ -381,7 +380,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerProjbanPermission"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerProjbanPermissionD(PlayerProjbanPermissionEventArgs e);
+		public delegate void PlayerProjbanPermissionD(PlayerProjbanPermissionEventArgs e);
 		/// <summary>
 		/// Fired by players every time a permission check on banned projectiles involving them occurs.
 		/// </summary>
@@ -391,7 +390,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerTilebanPermission"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerTilebanPermissionD(PlayerTilebanPermissionEventArgs e);
+		public delegate void PlayerTilebanPermissionD(PlayerTilebanPermissionEventArgs e);
 		/// <summary>
 		/// Fired by players every time a permission check on banned tiles involving them occurs.
 		/// </summary>
@@ -401,7 +400,7 @@ namespace TShockAPI.Hooks
 		/// The delegate of the <see cref="PlayerHasBuildPermission"/> event.
 		/// </summary>
 		/// <param name="e">The EventArgs for this event.</param>
-		public delegate Task PlayerHasBuildPermissionD(PlayerHasBuildPermissionEventArgs e);
+		public delegate void PlayerHasBuildPermissionD(PlayerHasBuildPermissionEventArgs e);
 		/// <summary>
 		/// Fired by players every time a build permission check occurs.
 		/// </summary>
@@ -412,16 +411,15 @@ namespace TShockAPI.Hooks
 		/// Fires the <see cref="PlayerPostLogin"/> event.
 		/// </summary>
 		/// <param name="ply">The player firing the event.</param>
-		public static Task OnPlayerPostLogin(ServerPlayer ply)
+		public static void OnPlayerPostLogin(ServerPlayer ply)
 		{
 			if (PlayerPostLogin == null)
 			{
-					return Task.CompletedTask;
+				return;
 			}
 
 			PlayerPostLoginEventArgs args = new PlayerPostLoginEventArgs(ply);
 			PlayerPostLogin(args);
-			return Task.CompletedTask;
 		}
 
 		/// <summary>
@@ -434,11 +432,11 @@ namespace TShockAPI.Hooks
 		/// <param name="commands">The list of commands.</param>
 		/// <param name="cmdPrefix">The command specifier used.</param>
 		/// <returns>True if the event has been handled.</returns>
-		public static Task<bool> OnPlayerCommand(ServerPlayer player, string cmdName, string cmdText, List<string> args, ref IEnumerable<Command> commands, string cmdPrefix)
+		public static bool OnPlayerCommand(ServerPlayer player, string cmdName, string cmdText, List<string> args, ref IEnumerable<Command> commands, string cmdPrefix)
 		{
 			if (PlayerCommand == null)
 			{
-				return Task.FromResult(false);
+				return false;
 			}
 			PlayerCommandEventArgs playerCommandEventArgs = new PlayerCommandEventArgs()
 			{
@@ -450,7 +448,7 @@ namespace TShockAPI.Hooks
 				CommandPrefix = cmdPrefix,
 			};
 			PlayerCommand(playerCommandEventArgs);
-			return Task.FromResult(playerCommandEventArgs.Handled);
+			return playerCommandEventArgs.Handled;
 		}
 
 		/// <summary>
@@ -460,14 +458,14 @@ namespace TShockAPI.Hooks
 		/// <param name="name">The user name.</param>
 		/// <param name="pass">The password.</param>
 		/// <returns>True if the event has been handled.</returns>
-		public static Task<bool> OnPlayerPreLogin(ServerPlayer ply, string name, string pass)
+		public static bool OnPlayerPreLogin(ServerPlayer ply, string name, string pass)
 		{
 			if (PlayerPreLogin == null)
-				return Task.FromResult(false);
+				return false;
 
 			var args = new PlayerPreLoginEventArgs {Player = ply, LoginName = name, Password = pass};
 			PlayerPreLogin(args);
-			return Task.FromResult(args.Handled);
+			return args.Handled;
 		}
 
 		/// <summary>
@@ -489,16 +487,16 @@ namespace TShockAPI.Hooks
 		/// <param name="ply">The player firing the event.</param>
 		/// <param name="rawtext">The raw chat text sent by the player.</param>
 		/// <param name="tshockText">The chat text after being formatted.</param>
-		public static Task<bool> OnPlayerChat(ServerPlayer ply, string rawtext, ref string tshockText)
+		public static bool OnPlayerChat(ServerPlayer ply, string rawtext, ref string tshockText)
 		{
 			if (PlayerChat is null)
-				return Task.FromResult(false);
+				return false;
 
 			var args = new PlayerChatEventArgs {Player = ply, RawText = rawtext, TShockFormattedText = tshockText};
 			PlayerChat(args);
 			tshockText = args.TShockFormattedText;
 
-			return Task.FromResult(args.Handled);
+			return args.Handled;
 		}
 
 		/// <summary>

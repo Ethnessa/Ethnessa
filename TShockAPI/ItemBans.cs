@@ -59,17 +59,17 @@ namespace TShockAPI
 
 		/// <summary>Called on the game update loop (the XNA tickrate).</summary>
 		/// <param name="args">The standard event arguments.</param>
-		internal async Task OnGameUpdate(EventArgs args)
+		internal void OnGameUpdate(EventArgs args)
 		{
 			if ((DateTime.UtcNow - LastTimelyRun).TotalSeconds >= 1)
 			{
-				await OnSecondlyUpdate(args);
+				OnSecondlyUpdate(args);
 			}
 		}
 
 		/// <summary>Called by OnGameUpdate once per second to execute tasks regularly but not too often.</summary>
 		/// <param name="args">The standard event arguments.</param>
-		internal async Task OnSecondlyUpdate(EventArgs args)
+		internal void OnSecondlyUpdate(EventArgs args)
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 
@@ -84,7 +84,7 @@ namespace TShockAPI
 				UnTaint(player);
 
 				// No matter the player type, we do a check when a player is holding an item that's banned.
-				if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[player.TPlayer.selectedItem].netID), player))
+				if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[player.TPlayer.selectedItem].netID), player))
 				{
 					string itemName = player.TPlayer.inventory[player.TPlayer.selectedItem].Name;
 					player.Disable(GetString($"holding banned item: {itemName}"), disableFlags);
@@ -101,7 +101,7 @@ namespace TShockAPI
 					// Armor ban checks
 					foreach (Item item in player.TPlayer.armor)
 					{
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -111,7 +111,7 @@ namespace TShockAPI
 					// Dye ban checks
 					foreach (Item item in player.TPlayer.dye)
 					{
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -121,7 +121,7 @@ namespace TShockAPI
 					// Misc equip ban checks
 					foreach (Item item in player.TPlayer.miscEquips)
 					{
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -131,7 +131,7 @@ namespace TShockAPI
 					// Misc dye ban checks
 					foreach (Item item in player.TPlayer.miscDyes)
 					{
-						if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
+						if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), player))
 						{
 							Taint(player);
 							SendCorrectiveMessage(player, item.Name);
@@ -146,14 +146,14 @@ namespace TShockAPI
 			LastTimelyRun = DateTime.UtcNow;
 		}
 
-		internal async Task OnPlayerUpdate(PlayerUpdateEventArgs args)
+		internal void OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
 		{
 			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 			bool useItem = args.Control.IsUsingItem;
 			ServerPlayer player = args.Player;
 			string itemName = player.TPlayer.inventory[args.SelectedItem].Name;
 
-			if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[args.SelectedItem].netID), args.Player))
+			if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(player.TPlayer.inventory[args.SelectedItem].netID), args.Player))
 			{
 				player.TPlayer.controlUseItem = false;
 				player.Disable(GetString($"holding banned item: {itemName}"), disableFlags);
@@ -171,13 +171,13 @@ namespace TShockAPI
 			return;
 		}
 
-		internal async Task OnChestItemChange(ChestItemEventArgs args)
+		internal void OnChestItemChange(object sender, ChestItemEventArgs args)
 		{
 			Item item = new Item();
 			item.netDefaults(args.Type);
 
 
-			if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player))
+			if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(item.type), args.Player))
 			{
 				SendCorrectiveMessage(args.Player, item.Name);
 				args.Handled = true;
@@ -188,11 +188,11 @@ namespace TShockAPI
 			return;
 		}
 
-		internal async Task OnTileEdit(TileEditEventArgs args)
+		internal void OnTileEdit(object sender, TileEditEventArgs args)
 		{
 			if (args.Action == EditAction.PlaceTile || args.Action == EditAction.PlaceWall)
 			{
-				if (args.Player.TPlayer.autoActuator && await ItemBanManager.ItemIsBanned("Actuator", args.Player))
+				if (args.Player.TPlayer.autoActuator && ItemBanManager.ItemIsBanned("Actuator", args.Player))
 				{
 					args.Player.SendTileSquareCentered(args.X, args.Y, 1);
 					args.Player.SendErrorMessage(GetString("You do not have permission to place actuators."));
@@ -200,7 +200,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (await ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(args.Player.SelectedItem.netID), args.Player))
+				if (ItemBanManager.ItemIsBanned(EnglishLanguage.GetItemNameById(args.Player.SelectedItem.netID), args.Player))
 				{
 					args.Player.SendTileSquareCentered(args.X, args.Y, 4);
 					args.Handled = true;

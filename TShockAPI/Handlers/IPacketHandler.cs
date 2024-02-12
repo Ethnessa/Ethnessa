@@ -13,6 +13,6 @@ namespace TShockAPI.Handlers
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="args"></param>
-		public Task OnReceive(TEventArgs args);
+		public void OnReceive(object sender, TEventArgs args);
 	}
 }

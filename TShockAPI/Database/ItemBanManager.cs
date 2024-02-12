@@ -21,22 +21,26 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Entities;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using TShockAPI.Hooks;
 
 namespace TShockAPI.Database
 {
 	public static class ItemBanManager
 	{
+		private static IMongoCollection<ItemBan> itemBans => TShock.GlobalDatabase.GetCollection<ItemBan>("itembans");
 
-		public static async Task AddNewBan(string itemname = "")
+		public static void AddNewBan(string itemname = "")
 		{
 			try
 			{
 				ItemBan itemban = new ItemBan(itemname);
 
-				if (!(await ItemIsBanned(itemname, null)))
-					await itemban.SaveAsync();
+				if (!(ItemIsBanned(itemname, null)))
+				{
+					itemBans.InsertOne(itemban);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -44,13 +48,13 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task RemoveBan(string itemname)
+		public static void RemoveBan(string itemname)
 		{
-			if (!(await ItemIsBanned(itemname, null)))
+			if (!(ItemIsBanned(itemname, null)))
 				return;
 			try
 			{
-				await DB.DeleteAsync<ItemBan>(x => x.Name == itemname);
+				itemBans.DeleteMany<ItemBan>(x => x.Name == itemname);
 			}
 			catch (Exception ex)
 			{
@@ -58,47 +62,27 @@ namespace TShockAPI.Database
 			}
 		}
 
-		public static async Task<bool> ItemIsBanned(string name)
+		public static bool ItemIsBanned(string name)
 		{
-			return await DB.CountAsync<ItemBan>(x => x.Name == name) > 0;
+			return itemBans.CountDocuments<ItemBan>(x => x.Name == name) > 0;
 		}
 
-		public static async Task<bool> ItemIsBanned(string name, ServerPlayer ply)
+		public static bool ItemIsBanned(string name, ServerPlayer ply)
 		{
-			ItemBan b = await GetItemBanByName(name);
-			return b != null &&!(await b.HasPermissionToUseItem(ply));
+			ItemBan b = GetItemBanByName(name);
+			return b != null &&!(b.HasPermissionToUseItem(ply));
 		}
 
-		public static async Task<bool> AllowGroup(string item, string name)
+		public static bool AllowGroup(string item, string name)
 		{
 			string groupsNew = "";
-			ItemBan b = await GetItemBanByName(item);
+			ItemBan b = GetItemBanByName(item);
 			if (b != null)
 			{
 				try
 				{
 					b.AllowedGroups.Add(name);
-					await b.SaveAsync();
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.Error(ex.ToString());
-				}
-			}
-
-			return false;
-		}
-
-		public static async Task<bool> RemoveGroup(string item, string group)
-		{
-			ItemBan b = await GetItemBanByName(item);
-			if (b != null)
-			{
-				try
-				{
-					b.AllowedGroups.Remove(group);
-					await b.SaveAsync();
-
+					itemBans.FindOneAndReplace(x=> x.Id == b.Id, b);
 					return true;
 				}
 				catch (Exception ex)
@@ -110,14 +94,36 @@ namespace TShockAPI.Database
 			return false;
 		}
 
-		public static async Task<ItemBan?> GetItemBanByName(string name)
+		public static bool RemoveGroup(string item, string group)
 		{
-			return await DB.Find<ItemBan>().Match(x => x.Name == name).ExecuteFirstAsync();
+			ItemBan b = GetItemBanByName(item);
+			if (b != null)
+			{
+				try
+				{
+					b.AllowedGroups.Remove(group);
+					itemBans.FindOneAndReplace(x => x.Id == b.Id, b);
+					return true;
+				}
+				catch (Exception ex)
+				{
+					TShock.Log.Error(ex.ToString());
+				}
+			}
+
+			return false;
+		}
+
+		public static ItemBan? GetItemBanByName(string name)
+		{
+			return itemBans.Find<ItemBan>(x => x.Name == name).FirstOrDefault();
 		}
 	}
 
-	public class ItemBan : MongoDB.Entities.Entity, IEquatable<ItemBan>
+	public class ItemBan : IEquatable<ItemBan>
 	{
+		public ObjectId Id { get; set; }
+
 		public string Name { get; set; }
 		public List<string> AllowedGroups { get; set; }
 
@@ -139,12 +145,12 @@ namespace TShockAPI.Database
 			return Name == other.Name;
 		}
 
-		public async Task<bool> HasPermissionToUseItem(ServerPlayer ply)
+		public bool HasPermissionToUseItem(ServerPlayer ply)
 		{
 			if (ply == null)
 				return false;
 
-			if (await ply.HasPermission(Permissions.usebanneditem))
+			if (ply.HasPermission(Permissions.usebanneditem))
 				return true;
 
 			PermissionHookResult hookResult = PlayerHooks.OnPlayerItembanPermission(ply, this);
@@ -164,7 +170,7 @@ namespace TShockAPI.Database
 					throw new InvalidOperationException("Infinite group parenting ({0})".SFormat(cur.Name));
 				}
 				traversed.Add(cur);
-				cur = await GroupManager.GetGroupByName(cur.ParentGroupName);
+				cur = GroupManager.GetGroupByName(cur.ParentGroupName);
 			}
 			return false;
 			// could add in the other permissions in this class instead of a giant if switch.

@@ -54,25 +54,25 @@ namespace TShockAPI
 			GetDataHandlers.TileEdit -= OnTileEdit;
 		}
 
-		private async Task OnGemLockToggle(GetDataHandlers.GemLockToggleEventArgs e)
+		private void OnGemLockToggle(object sender, GetDataHandlers.GemLockToggleEventArgs e)
 		{
 			if (TShock.Config.Settings.RegionProtectGemLocks)
 			{
-				if (!(await RegionManager.CanBuild(e.X, e.Y, e.Player)))
+				if (!(RegionManager.CanBuild(e.X, e.Y, e.Player)))
 				{
 					e.Handled = true;
 				}
 			}
 		}
 
-		private async Task OnPlayerUpdate(GetDataHandlers.PlayerUpdateEventArgs e)
+		private void OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs e)
 		{
 			var player = e.Player;
 
 			// Store the player's last known region and update the current based on known regions at their coordinates.
 			var oldRegion = player.CurrentRegion;
 			player.CurrentRegion =
-				(await RegionManager.GetTopRegion(await RegionManager.InAreaRegion(player.TileX, player.TileY)));
+				(RegionManager.GetTopRegion(RegionManager.GetRegionsInArea(player.TileX, player.TileY)));
 
 			// Do not fire any hooks if the player has not left and/or entered a region.
 			if (player.CurrentRegion == oldRegion)
@@ -93,7 +93,7 @@ namespace TShockAPI
 			}
 		}
 
-		private async Task OnTileEdit(GetDataHandlers.TileEditEventArgs e)
+		private void OnTileEdit(object sender,GetDataHandlers.TileEditEventArgs e)
 		{
 			var player = e.Player;
 
@@ -128,7 +128,7 @@ namespace TShockAPI
 				}
 
 				var output = new List<string>();
-				var regions = (await RegionManager.ListAllRegions(Main.worldID.ToString())).OrderBy(r => r.Z).Reverse();
+				var regions = (RegionManager.ListAllRegions(Main.worldID.ToString())).OrderBy(r => r.Z).Reverse();
 				foreach (Region region in regions)
 				{
 					// Ensure that the specified tile is region protected

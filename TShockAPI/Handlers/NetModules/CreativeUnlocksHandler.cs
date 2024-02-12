@@ -49,7 +49,7 @@ namespace TShockAPI.Handlers.NetModules
 		/// </summary>
 		/// <param name="player"></param>
 		/// <param name="rejectPacket"></param>
-		public async Task<bool> HandlePacket(ServerPlayer player)
+		public bool HandlePacket(ServerPlayer player)
 		{
 			if (!Main.GameModeInfo.IsJourneyMode)
 			{
@@ -69,13 +69,13 @@ namespace TShockAPI.Handlers.NetModules
 				return true;
 			}
 
-			if (!(await player.HasPermission(Permissions.journey_contributeresearch)))
+			if (!(player.HasPermission(Permissions.journey_contributeresearch)))
 			{
 				player.SendErrorMessage(GetString("You do not have permission to contribute research."));
 				return true;
 			}
 
-			var totalSacrificed = await ResearchDatastore.SacrificeItem(ItemId, Amount, player);
+			var totalSacrificed = ResearchDatastore.SacrificeItem(ItemId, Amount, player);
 
 			var response = NetCreativeUnlocksModule.SerializeItemSacrifice(ItemId, totalSacrificed);
 			NetManager.Instance.Broadcast(response);

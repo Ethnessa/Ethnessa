@@ -24,10 +24,9 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using MongoDB.Entities;
 using TShockAPI.Database.Models;
 using Entity = Terraria.Entity;
+using MongoDB.Driver;
 
 namespace TShockAPI.Database
 {
@@ -36,13 +35,15 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class BanManager
 	{
+		private static IMongoCollection<Ban> bans => TShock.GlobalDatabase.GetCollection<Ban>("bans");
+
 		/// <summary>
 		/// Returns the number of bans that already exist
 		/// </summary>
 		/// <returns>Total number of bans</returns>
-		public static async Task<long> CountBans()
+		public static long CountBans()
 		{
-			return await DB.CountAsync<Ban>();
+			return bans.CountDocuments(Builders<Ban>.Filter.Empty);
 		}
 
 		/// <summary>
@@ -56,7 +57,7 @@ namespace TShockAPI.Database
 		public static event Action<Ban> OnBanRemove;
 
 
-		internal static async Task<bool> IsPlayerBanned(ServerPlayer player)
+		internal static bool IsPlayerBanned(ServerPlayer player)
 		{
 			// Attempt to find a ban by account name if the player is logged in,
 			// otherwise, find by IP address or UUID.
@@ -67,7 +68,7 @@ namespace TShockAPI.Database
 					Builders<Ban>.Filter.Eq(b => b.Uuid, player.UUID));
 
 			// Execute the database query to find a matching ban.
-			var ban = await DB.Find<Ban>().Match(banFilter).ExecuteFirstAsync();
+			var ban = bans.Find(banFilter).FirstOrDefault();
 
 			// If no ban is found, the player is not banned.
 			if (ban == null) return false;
@@ -101,17 +102,16 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="id">The ban identifier</param>
 		/// <returns>The requested ban</returns>
-		public static async Task<Ban?> GetBanById(int id)
+		public static Ban? GetBanById(int id)
 		{
-			return await DB.Find<Ban>()
-				.Match(x => x.BanId == id)
-				.ExecuteFirstAsync();
+			return bans.Find<Ban>(x => x.BanId == id)
+				.FirstOrDefault();
 		}
 
 		/// <summary>
 		/// Retrieves a list of bans from the database, sorted by their addition date from newest to oldest
 		/// </summary>
-		public static async Task<IEnumerable<Ban>> RetrieveAllBans() => await RetrieveAllBansSorted(BanSortMethod.DateBanned, true);
+		public static IEnumerable<Ban> RetrieveAllBans() => RetrieveAllBansSorted(BanSortMethod.DateBanned, true);
 
 		/// <summary>
 		/// Retrieves an enumerable of Bans from the database, sorted using the provided sort method
@@ -119,13 +119,13 @@ namespace TShockAPI.Database
 		/// <param name="sortMethod">The method to sort the bans.</param>
 		/// <param name="descending">Whether the sort should be in descending order.</param>
 		/// <returns>A sorted enumerable of Ban objects.</returns>
-		public static async Task<IEnumerable<Ban>> RetrieveAllBansSorted(BanSortMethod sortMethod, bool descending = true)
+		public static IEnumerable<Ban> RetrieveAllBansSorted(BanSortMethod sortMethod, bool descending = true)
 		{
 			var sortDefinition = descending
 				? Builders<Ban>.Sort.Descending(GetSortField(sortMethod))
 				: Builders<Ban>.Sort.Ascending(GetSortField(sortMethod));
 
-			var banList = await DB.Find<Ban>().Sort(x=>sortDefinition).ExecuteAsync();
+			var banList = bans.Find(Builders<Ban>.Filter.Empty).Sort(sortDefinition).ToList();
 			return banList;
 		}
 
@@ -140,7 +140,7 @@ namespace TShockAPI.Database
 			};
 		}
 
-		public static async Task<Ban> CreateBan(BanType type, string value, string reason, string banningUser, DateTime start,
+		public static Ban CreateBan(BanType type, string value, string reason, string banningUser, DateTime start,
 			DateTime? endDate = null)
 		{
 			Ban ban = new()
@@ -171,7 +171,7 @@ namespace TShockAPI.Database
 				default: throw new Exception("Invalid ban type!");
 			}
 
-			await ban.SaveAsync();
+			bans.InsertOne(ban);
 
 			TShock.Log.Info("A new ban has been created, AccountId:  " + ban.BanId);
 			OnBanAdd?.Invoke(ban);
@@ -183,24 +183,19 @@ namespace TShockAPI.Database
 		/// </summary>
 		/// <param name="value">An account name, ban AccountId, Ip Address, or Uuid</param>
 		/// <returns>True if the ban was found and removed</returns>
-		public static async Task<bool> RemoveBan(string value)
+		public static bool RemoveBan(string value)
 		{
-			var ban = await DB.Find<Ban>()
-				.Match(x => x.AccountName == value || x.BanId.ToString() == value
-				|| x.IpAddress == value || x.Uuid == value)
-				.ExecuteFirstAsync();
-
-			if (ban == null) return false;
 
 			try
 			{
+				var ban = bans.FindOneAndDelete<Ban>(x =>
+					x.AccountName == value || x.BanId.ToString() == value || x.IpAddress == value || x.Uuid == value);
 				OnBanRemove?.Invoke(ban);
-				await ban.DeleteAsync();
 				return true;
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error("There was an error removing the ban: " + ban.BanId);
+				TShock.Log.Error("There was an error removing the ban with value " + value);
 				TShock.Log.ConsoleError(ex.ToString());
 				return false;
 			}
@@ -209,7 +204,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Removes all bans from the database
 		/// </summary>
-		public static async Task ClearBans() => await DB.DeleteAsync<Ban>(Builders<Ban>.Filter.Empty);
+		public static void ClearBans() => bans.DeleteMany(Builders<Ban>.Filter.Empty);
 
 	}
 
@@ -306,8 +301,13 @@ namespace TShockAPI.Database
 	/// <summary>
 	/// Model class that represents a ban entry in the database.
 	/// </summary>
-	public class Ban : MongoDB.Entities.Entity
+	public class Ban
 	{
+		/// <summary>
+		/// MongoDB ObjectId
+		/// </summary>
+		public ObjectId Id { get; set; }
+
 		/// <summary>
 		/// A unique id assigned to this ban
 		/// </summary>
@@ -353,7 +353,7 @@ namespace TShockAPI.Database
 		/// <summary>
 		/// Returns whether or not the ban is still in effect
 		/// </summary>
-		[Ignore] public bool Valid => ExpirationDateTime > BanDateTime;
+		[BsonIgnore] public bool Valid => ExpirationDateTime > BanDateTime;
 
 		/// <summary>
 		/// Returns a string in the format dd:mm:hh:ss indicating the time until the ban expires.

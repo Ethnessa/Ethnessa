@@ -43,7 +43,7 @@ using TShockAPI.ServerCommands;
 
 namespace TShockAPI
 {
-	public delegate Task CommandDelegate(CommandArgs args);
+	public delegate void CommandDelegate(CommandArgs args);
 
 	// TODO: Make each command a class, and have a CommandManager class that handles all the commands.
 	// We want to make this disaster a bit more readable and easy to maintain in the future.
@@ -524,7 +524,7 @@ namespace TShockAPI
 			TShockCommands = new List<Command>(tshockCommands);
 		}
 
-		public static async Task<bool> HandleCommand(ServerPlayer player, string text)
+		public static bool HandleCommand(ServerPlayer player, string text)
 		{
 			string cmdText = text.Remove(0, 1);
 			string cmdPrefix = text[0].ToString();
@@ -558,7 +558,7 @@ namespace TShockAPI
 
 			IEnumerable<Command> cmds = ChatCommands.FindAll(c => c.HasAlias(cmdName));
 
-			if (await Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
+			if (Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
 				return true;
 
 			if (!cmds.Any())
@@ -575,14 +575,14 @@ namespace TShockAPI
 			}
 			foreach (Command cmd in cmds)
 			{
-				if (!await cmd.CanRun(player))
+				if (!cmd.CanRun(player))
 				{
 					if (cmd.DoLog)
 						TShock.Utils.SendLogs(GetString("{0} tried to execute {1}{2}.", player.Name, Specifier, cmdText), Color.PaleVioletRed, player);
 					else
 						TShock.Utils.SendLogs(GetString("{0} tried to execute (args omitted) {1}{2}.", player.Name, Specifier, cmdName), Color.PaleVioletRed, player);
 					player.SendErrorMessage(GetString("You do not have access to this command."));
-					if (await player.HasPermission(Permissions.su))
+					if (player.HasPermission(Permissions.su))
 					{
 						player.SendInfoMessage(GetString("You can use '{0}sudo {0}{1}' to override this check.", Specifier, cmdText));
 					}
@@ -661,13 +661,13 @@ namespace TShockAPI
 
 		#region Account commands
 
-		private static async Task AttemptLogin(CommandArgs args)
+		private static void AttemptLogin(CommandArgs args)
 		{
 			if (args.Player.LoginAttempts > TShock.Config.Settings.MaximumLoginAttempts && (TShock.Config.Settings.MaximumLoginAttempts != -1))
 			{
 				TShock.Log.Warn(GetString("{0} ({1}) had {2} or more invalid login attempts and was kicked automatically.",
 					args.Player.IP, args.Player.Name, TShock.Config.Settings.MaximumLoginAttempts));
-				await args.Player.Kick(GetString("Too many invalid login attempts."));
+				args.Player.Kick(GetString("Too many invalid login attempts."));
 				return;
 			}
 
@@ -708,7 +708,7 @@ namespace TShockAPI
 				return;
 			}
 
-			var account = await UserAccountManager.GetUserAccountByName(args.Player.Name);
+			var account = UserAccountManager.GetUserAccountByName(args.Player.Name);
 			if (account is null)
 			{
 				args.Player.SendErrorMessage("You do not have an account to login to.");
@@ -719,13 +719,13 @@ namespace TShockAPI
 			bool usingUUID = false;
 			if (args.Parameters.Count == 0 && !TShock.Config.Settings.DisableUUIDLogin)
 			{
-				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, ""))
+				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, ""))
 					return;
 				usingUUID = true;
 			}
 			else if (args.Parameters.Count == 1)
 			{
-				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, args.Parameters[0]))
+				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, args.Parameters[0]))
 					return;
 				password = args.Parameters[0];
 			}
@@ -737,10 +737,10 @@ namespace TShockAPI
 					return;
 				}
 
-				if (await PlayerHooks.OnPlayerPreLogin(args.Player, args.Parameters[0], args.Parameters[1]))
+				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Parameters[0], args.Parameters[1]))
 					return;
 
-				account = await UserAccountManager.GetUserAccountByName(args.Parameters[0]);
+				account = UserAccountManager.GetUserAccountByName(args.Parameters[0]);
 				password = args.Parameters[1];
 			}
 			else
@@ -766,7 +766,7 @@ namespace TShockAPI
 						(usingUUID && account.UUID == args.Player.UUID && !TShock.Config.Settings.DisableUUIDLogin &&
 						!String.IsNullOrWhiteSpace(args.Player.UUID)))
 				{
-					var group = await GroupManager.GetGroupByName(account.Group);
+					var group = GroupManager.GetGroupByName(account.Group);
 
 					if (!(GroupManager.AssertGroupValid(args.Player, group, false)))
 					{
@@ -774,7 +774,7 @@ namespace TShockAPI
 						return;
 					}
 
-					args.Player.PlayerData = await CharacterManager.GetPlayerData(account.AccountId);
+					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Group = group;
 					args.Player.TempGroup = null;
@@ -784,19 +784,19 @@ namespace TShockAPI
 
 					if (Main.ServerSideCharacter)
 					{
-						if (await args.Player.HasPermission(Permissions.bypassssc))
+						if (args.Player.HasPermission(Permissions.bypassssc))
 						{
 							args.Player.PlayerData.CopyCharacter(args.Player);
-							await CharacterManager.InsertPlayerData(args.Player);
+							CharacterManager.InsertPlayerData(args.Player);
 						}
-						await args.Player.PlayerData.RestoreCharacter(args.Player);
+						args.Player.PlayerData.RestoreCharacter(args.Player);
 					}
 					args.Player.LoginFailsBySsi = false;
 
-					if (await args.Player.HasPermission(Permissions.ignorestackhackdetection))
+					if (args.Player.HasPermission(Permissions.ignorestackhackdetection))
 						args.Player.IsDisabledForStackDetection = false;
 
-					if (await args.Player.HasPermission(Permissions.usebanneditem))
+					if (args.Player.HasPermission(Permissions.usebanneditem))
 						args.Player.IsDisabledForBannedWearable = false;
 
 					args.Player.SendSuccessMessage(GetString("Authenticated as {0} successfully.", account.Name));
@@ -804,9 +804,9 @@ namespace TShockAPI
 					TShock.Log.ConsoleInfo(GetString("{0} authenticated successfully as user: {1}.", args.Player.Name, account.Name));
 					if ((args.Player.LoginHarassed) && (TShock.Config.Settings.RememberLeavePos))
 					{
-						if (await RememberedPosManager.GetLeavePos(args.Player.Account.AccountId) != Vector2.Zero)
+						if (RememberedPosManager.GetLeavePos(args.Player.Account.AccountId) != Vector2.Zero)
 						{
-							var pos = await RememberedPosManager.GetLeavePos(args.Player.Account.AccountId);
+							var pos = RememberedPosManager.GetLeavePos(args.Player.Account.AccountId);
 							if (pos is null)
 								return;
 							args.Player.Teleport((int)pos.Value.X * 16, (int)pos.Value.Y * 16);
@@ -814,9 +814,9 @@ namespace TShockAPI
 						args.Player.LoginHarassed = false;
 
 					}
-					await UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
+					UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
 
-					await Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
+					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
 				else
 				{
@@ -839,7 +839,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static async Task Logout(CommandArgs args)
+		private static void Logout(CommandArgs args)
 		{
 			if (!args.Player.IsLoggedIn)
 			{
@@ -853,7 +853,7 @@ namespace TShockAPI
 				return;
 			}
 
-			await args.Player.Logout();
+			args.Player.Logout();
 			args.Player.SendSuccessMessage(GetString("You have been successfully logged out of your account."));
 			if (Main.ServerSideCharacter)
 			{
@@ -861,7 +861,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static async Task ChangePassword(CommandArgs args)
+		private static void ChangePassword(CommandArgs args)
 		{
 			try
 			{
@@ -873,7 +873,7 @@ namespace TShockAPI
 						try
 						{
 							args.Player.SendSuccessMessage(GetString("You have successfully changed your password."));
-							await UserAccountManager.SetUserAccountPassword(args.Player.Account, args.Parameters[1]); // SetUserPassword will hash it for you.
+							UserAccountManager.SetUserAccountPassword(args.Player.Account, args.Parameters[1]); // SetUserPassword will hash it for you.
 							TShock.Log.ConsoleInfo(GetString("{0} ({1}) changed the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
 						}
 						catch (ArgumentOutOfRangeException)
@@ -899,7 +899,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static async Task RegisterUser(CommandArgs args)
+		private static void RegisterUser(CommandArgs args)
 		{
 			try
 			{
@@ -942,7 +942,7 @@ namespace TShockAPI
 				account.Group = TShock.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
 				account.UUID = args.Player.UUID;
 
-				if (await UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != ServerConsolePlayer.AccountName) // Cheap way of checking for existance of a user
+				if (UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != ServerConsolePlayer.AccountName) // Cheap way of checking for existance of a user
 				{
 					args.Player.SendSuccessMessage(GetString("Your account, \"{0}\", has been registered.", account.Name));
 					args.Player.SendSuccessMessage(GetString("Your password is {0}.", echoPassword));
@@ -955,7 +955,7 @@ namespace TShockAPI
 					else
 						args.Player.SendMessage(GetString($"Type {Specifier}login {echoPassword.Color(Utils.BoldHighlight)} to log-in to your account."), Color.White);
 
-					await UserAccountManager.AddUserAccount(account);
+					UserAccountManager.AddUserAccount(account);
 					TShock.Log.ConsoleInfo(GetString("{0} registered an account: \"{1}\".", args.Player.Name, account.Name));
 				}
 				else
@@ -972,7 +972,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static async Task ManageUsers(CommandArgs args)
+		private static void ManageUsers(CommandArgs args)
 		{
 			// This guy needs to be here so that people don't get exceptions when they type /user
 			if (args.Parameters.Count < 1)
@@ -1002,7 +1002,7 @@ namespace TShockAPI
 
 				try
 				{
-					await UserAccountManager.AddUserAccount(account);
+					UserAccountManager.AddUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account {0} has been added to group {1}.", account.Name, account.Group));
 					TShock.Log.ConsoleInfo(GetString("{0} added account {1} to group {2}.", args.Player.Name, account.Name, account.Group));
 				}
@@ -1028,7 +1028,7 @@ namespace TShockAPI
 
 				try
 				{
-					await UserAccountManager.RemoveUserAccount(account);
+					UserAccountManager.RemoveUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account removed successfully."));
 					TShock.Log.ConsoleInfo(GetString("{0} successfully deleted account: {1}.", args.Player.Name, args.Parameters[1]));
 				}
@@ -1051,7 +1051,7 @@ namespace TShockAPI
 
 				try
 				{
-					await UserAccountManager.SetUserAccountPassword(account, args.Parameters[2]);
+					UserAccountManager.SetUserAccountPassword(account, args.Parameters[2]);
 					TShock.Log.ConsoleInfo(GetString("{0} changed the password for account {1}", args.Player.Name, account.Name));
 					args.Player.SendSuccessMessage(GetString("Password change succeeded for {0}.", account.Name));
 				}
@@ -1077,7 +1077,7 @@ namespace TShockAPI
 
 				try
 				{
-					await UserAccountManager.SetUserGroup(account, args.Parameters[2]);
+					UserAccountManager.SetUserGroup(account, args.Parameters[2]);
 					TShock.Log.ConsoleInfo(GetString("{0} changed account {1} to group {2}.", args.Player.Name, account.Name, args.Parameters[2]));
 					args.Player.SendSuccessMessage(GetString("Account {0} has been changed to group {1}.", account.Name, args.Parameters[2]));
 
@@ -1143,12 +1143,11 @@ namespace TShockAPI
 
 		#region Player Management Commands
 
-		private static Task GrabUserUserInfo(CommandArgs args)
+		private static void GrabUserUserInfo(CommandArgs args)
 		{
 			if (args.Parameters.Count < 1)
 			{
 				args.Player.SendErrorMessage(GetString("Invalid syntax. Proper syntax: {0}userinfo <player>.", Specifier));
-				return Task.CompletedTask;
 			}
 
 			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
@@ -1162,10 +1161,9 @@ namespace TShockAPI
 				if (players[0].Account != null && players[0].IsLoggedIn)
 					args.Player.SendSuccessMessage(GetString($" -> Logged-in as: {players[0].Account.Name}; in group {players[0].Group.Name}."));
 			}
-			return Task.CompletedTask;
 		}
 
-		private static async Task ViewAccountInfo(CommandArgs args)
+		private static void ViewAccountInfo(CommandArgs args)
 		{
 			if (args.Parameters.Count < 1)
 			{
@@ -1176,7 +1174,7 @@ namespace TShockAPI
 			string username = String.Join(" ", args.Parameters);
 			if (!string.IsNullOrWhiteSpace(username))
 			{
-				var account = await UserAccountManager.GetUserAccountByName(username);
+				var account = UserAccountManager.GetUserAccountByName(username);
 				if (account != null)
 				{
 					DateTime LastSeen;
@@ -1188,7 +1186,7 @@ namespace TShockAPI
 							LastSeen.ToShortTimeString(), Timezone));
 
 
-					if (await args.Player.Group.HasPermission(Permissions.advaccountinfo))
+					if (args.Player.Group.HasPermission(Permissions.advaccountinfo))
 					{
 						List<string> KnownIps = JsonConvert.DeserializeObject<List<string>>(account.KnownIps?.ToString() ?? string.Empty);
 						string ip = KnownIps?[KnownIps.Count - 1] ?? GetString("N/A");
@@ -1233,7 +1231,7 @@ namespace TShockAPI
 				string reason = args.Parameters.Count > 1
 									? String.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 1))
 									: GetString("Misbehaviour.");
-				if (!await players[0].Kick(reason, !args.Player.RealPlayer, false, args.Player.Name))
+				if (!players[0].Kick(reason, !args.Player.RealPlayer, false, args.Player.Name))
 				{
 					args.Player.SendErrorMessage(GetString("You can't kick another admin."));
 				}
@@ -1663,7 +1661,7 @@ namespace TShockAPI
 				{
 					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
 					{
-						TShock.CharacterDB.InsertPlayerData(player, true);
+						TShock.CharacterGlobalDatabase.InsertPlayerData(player, true);
 					}
 				}
 			}
@@ -1712,7 +1710,7 @@ namespace TShockAPI
 				return;
 			}
 
-			await CharacterManager.InsertPlayerData(matchedPlayer);
+			CharacterManager.InsertPlayerData(matchedPlayer);
 			args.Player.SendSuccessMessage(GetString("ServerConsole-side character data from \"{0}\" has been replaced by their current local data.", matchedPlayer.Name));
 		}
 /*
@@ -1756,7 +1754,7 @@ namespace TShockAPI
 
 			if (targetPlayer.IsLoggedIn)
 			{
-				if (TShock.CharacterDB.InsertSpecificPlayerData(targetPlayer, targetPlayer.DataWhenJoined))
+				if (TShock.CharacterGlobalDatabase.InsertSpecificPlayerData(targetPlayer, targetPlayer.DataWhenJoined))
 				{
 					targetPlayer.DataWhenJoined.RestoreCharacter(targetPlayer);
 					targetPlayer.SendSuccessMessage(GetString("Your local character data, from your initial connection, has been uploaded to the server."));
@@ -1928,7 +1926,7 @@ namespace TShockAPI
 			}
 		}
 
-		private static Task Off(CommandArgs args)
+		private static void Off(CommandArgs args)
 		{
 
 			if (Main.ServerSideCharacter)
@@ -1944,8 +1942,6 @@ namespace TShockAPI
 
 			string reason = ((args.Parameters.Count > 0) ? GetString("ServerConsole shutting down: ") + String.Join(" ", args.Parameters) : GetString("ServerConsole shutting down!"));
 			TShock.Utils.StopServer(true, reason);
-
-			return Task.CompletedTask;
 		}
 
 		private static void OffNoSave(CommandArgs args)
@@ -1970,7 +1966,7 @@ namespace TShockAPI
 
 
 
-		private static async Task Help(CommandArgs args)
+		private static void Help(CommandArgs args)
 		{
 			if (args.Parameters.Count > 1)
 			{
@@ -1986,7 +1982,7 @@ namespace TShockAPI
 					return;
 				}
 
-				IEnumerable<string> cmdNames = ChatCommands.Where(cmd => cmd.CanRun(args.Player).GetAwaiter().GetResult()).Select(cmd => Specifier + cmd.Name);
+				IEnumerable<string> cmdNames = ChatCommands.Where(cmd => cmd.CanRun(args.Player)).Select(cmd => Specifier + cmd.Name);
 
 				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(cmdNames),
 					new PaginationTools.Settings
@@ -2009,7 +2005,7 @@ namespace TShockAPI
 					args.Player.SendErrorMessage(GetString("Invalid command."));
 					return;
 				}
-				if (!await command.CanRun(args.Player))
+				if (!command.CanRun(args.Player))
 				{
 					args.Player.SendErrorMessage(GetString("You do not have access to this command."));
 					return;

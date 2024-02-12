@@ -68,14 +68,14 @@ public class Command
 			Permissions = new List<string>();
 		}
 
-		public async Task<bool> Run(string msg, bool silent, ServerPlayer ply, List<string> parms)
+		public bool Run(string msg, bool silent, ServerPlayer ply, List<string> parms)
 		{
-			if (!await CanRun(ply))
+			if (!CanRun(ply))
 				return false;
 
 			try
 			{
-				await CommandDelegate(new CommandArgs(msg, silent, ply, parms));
+				CommandDelegate(new CommandArgs(msg, silent, ply, parms));
 			}
 			catch (Exception e)
 			{
@@ -86,9 +86,9 @@ public class Command
 			return true;
 		}
 
-		public async Task<bool> Run(string msg, ServerPlayer ply, List<string> parms)
+		public bool Run(string msg, ServerPlayer ply, List<string> parms)
 		{
-			return await Run(msg, false, ply, parms);
+			return Run(msg, false, ply, parms);
 		}
 
 		public bool HasAlias(string name)
@@ -96,13 +96,13 @@ public class Command
 			return Names.Contains(name);
 		}
 
-		public async Task<bool> CanRun(ServerPlayer ply)
+		public bool CanRun(ServerPlayer ply)
 		{
 			if (Permissions == null || Permissions.Count < 1)
 				return true;
 			foreach (var Permission in Permissions)
 			{
-				if (await ply.HasPermission(Permission))
+				if (ply.HasPermission(Permission))
 					return true;
 			}
 			return false;
