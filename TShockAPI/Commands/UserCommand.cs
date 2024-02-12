@@ -40,7 +40,7 @@ namespace TShockAPI.ServerCommands
 				}
 				catch (ArgumentOutOfRangeException)
 				{
-					args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", TShock.Config.Settings.MinimumPasswordLength));
+					args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 					return;
 				}
 				account.Group = args.Parameters[3];
@@ -49,7 +49,7 @@ namespace TShockAPI.ServerCommands
 				{
 					UserAccountManager.AddUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account {0} has been added to group {1}.", account.Name, account.Group));
-					TShock.Log.ConsoleInfo(GetString("{0} added account {1} to group {2}.", args.Player.Name, account.Name, account.Group));
+					ServerBase.Log.ConsoleInfo(GetString("{0} added account {1} to group {2}.", args.Player.Name, account.Name, account.Group));
 				}
 				catch (UserAccountManager.GroupNotExistsException)
 				{
@@ -62,7 +62,7 @@ namespace TShockAPI.ServerCommands
 				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString("User {0} could not be added, check console for details.", account.Name));
-					TShock.Log.ConsoleError(e.ToString());
+					ServerBase.Log.ConsoleError(e.ToString());
 				}
 			}
 			// User deletion requires a username
@@ -75,7 +75,7 @@ namespace TShockAPI.ServerCommands
 				{
 					UserAccountManager.RemoveUserAccount(account);
 					args.Player.SendSuccessMessage(GetString("Account removed successfully."));
-					TShock.Log.ConsoleInfo(GetString("{0} successfully deleted account: {1}.", args.Player.Name, args.Parameters[1]));
+					ServerBase.Log.ConsoleInfo(GetString("{0} successfully deleted account: {1}.", args.Player.Name, args.Parameters[1]));
 				}
 				catch (UserAccountManager.UserAccountNotExistException)
 				{
@@ -84,7 +84,7 @@ namespace TShockAPI.ServerCommands
 				catch (UserAccountManager.UserAccountManagerException ex)
 				{
 					args.Player.SendErrorMessage(ex.Message);
-					TShock.Log.ConsoleError(ex.ToString());
+					ServerBase.Log.ConsoleError(ex.ToString());
 				}
 			}
 
@@ -97,7 +97,7 @@ namespace TShockAPI.ServerCommands
 				try
 				{
 					UserAccountManager.SetUserAccountPassword(account, args.Parameters[2]);
-					TShock.Log.ConsoleInfo(GetString("{0} changed the password for account {1}", args.Player.Name, account.Name));
+					ServerBase.Log.ConsoleInfo(GetString("{0} changed the password for account {1}", args.Player.Name, account.Name));
 					args.Player.SendSuccessMessage(GetString("Password change succeeded for {0}.", account.Name));
 				}
 				catch (UserAccountManager.UserAccountNotExistException)
@@ -107,11 +107,11 @@ namespace TShockAPI.ServerCommands
 				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString("Password change attempt for {0} failed for an unknown reason. Check the server console for more details.", account.Name));
-					TShock.Log.ConsoleError(e.ToString());
+					ServerBase.Log.ConsoleError(e.ToString());
 				}
 				catch (ArgumentOutOfRangeException)
 				{
-					args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", TShock.Config.Settings.MinimumPasswordLength));
+					args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 				}
 			}
 			// Group changing requires a username or IP address, and a new group to set
@@ -123,11 +123,11 @@ namespace TShockAPI.ServerCommands
 				try
 				{
 					UserAccountManager.SetUserGroup(account, args.Parameters[2]);
-					TShock.Log.ConsoleInfo(GetString("{0} changed account {1} to group {2}.", args.Player.Name, account.Name, args.Parameters[2]));
+					ServerBase.Log.ConsoleInfo(GetString("{0} changed account {1} to group {2}.", args.Player.Name, account.Name, args.Parameters[2]));
 					args.Player.SendSuccessMessage(GetString("Account {0} has been changed to group {1}.", account.Name, args.Parameters[2]));
 
 					//send message to player with matching account name
-					var player = TShock.Players.FirstOrDefault(p => p != null && p.Account?.Name == account.Name);
+					var player = ServerBase.Players.FirstOrDefault(p => p != null && p.Account?.Name == account.Name);
 					if (player != null && !args.Silent)
 						player.SendSuccessMessage(GetString($"{args.Player.Name} has changed your group to {args.Parameters[2]}."));
 				}
@@ -142,7 +142,7 @@ namespace TShockAPI.ServerCommands
 				catch (UserAccountManager.UserAccountManagerException e)
 				{
 					args.Player.SendErrorMessage(GetString($"User {account.Name} could not be added. Check console for details."));
-					TShock.Log.ConsoleError(e.ToString());
+					ServerBase.Log.ConsoleError(e.ToString());
 				}
 			}
 			else if (subcmd == "help")

@@ -29,7 +29,7 @@ namespace TShockAPI.Database
 {
 	public static class ItemBanManager
 	{
-		private static IMongoCollection<ItemBan> itemBans => TShock.GlobalDatabase.GetCollection<ItemBan>("itembans");
+		private static IMongoCollection<ItemBan> itemBans => ServerBase.GlobalDatabase.GetCollection<ItemBan>("itembans");
 
 		public static void AddNewBan(string itemname = "")
 		{
@@ -44,7 +44,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace TShockAPI.Database
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.Error(ex.ToString());
+					ServerBase.Log.Error(ex.ToString());
 				}
 			}
 
@@ -107,7 +107,7 @@ namespace TShockAPI.Database
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.Error(ex.ToString());
+					ServerBase.Log.Error(ex.ToString());
 				}
 			}
 

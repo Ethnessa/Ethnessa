@@ -33,7 +33,7 @@ namespace TShockAPI.Database
 	/// <summary>UserAccountManager - Methods for dealing with database user accounts and other related functionality within TShock.</summary>
 	public static class UserAccountManager
 	{
-		private static IMongoCollection<UserAccount> userAccounts => TShock.GlobalDatabase.GetCollection<UserAccount>("useraccounts");
+		private static IMongoCollection<UserAccount> userAccounts => ServerBase.GlobalDatabase.GetCollection<UserAccount>("useraccounts");
 		/// <summary>
 		/// Adds the given user account to the database
 		/// </summary>
@@ -142,7 +142,7 @@ namespace TShockAPI.Database
 			try
 			{
 				// Update player group reference for any logged in player
-				foreach (var player in TShock.Players.Where(p =>
+				foreach (var player in ServerBase.Players.Where(p =>
 					         p != null && p.Account != null && p.Account.Name == account.Name))
 				{
 					player.Group = grp;
@@ -180,7 +180,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.ConsoleError(GetString($"FetchHashedPasswordAndGroup returned an error: {ex}"));
+				ServerBase.Log.ConsoleError(GetString($"FetchHashedPasswordAndGroup returned an error: {ex}"));
 			}
 
 			return -1;
@@ -239,7 +239,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return null;
@@ -265,7 +265,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 				return null;
 			}
 		}

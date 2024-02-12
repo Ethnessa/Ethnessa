@@ -28,7 +28,7 @@ namespace TShockAPI.Database
 {
 	public static class RememberedPosManager
 	{
-		private static IMongoCollection<RememberedPosition> rememberedPos => TShock.GlobalDatabase.GetCollection<RememberedPosition>("rememberedpos");
+		private static IMongoCollection<RememberedPosition> rememberedPos => ServerBase.GlobalDatabase.GetCollection<RememberedPosition>("rememberedpos");
 		public static Vector2? GetLeavePos(int accountId)
 		{
 			try
@@ -44,7 +44,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return null;
@@ -59,7 +59,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 	}

@@ -237,14 +237,14 @@ namespace Rests
 				tokenBucketTimer = new Timer((e) =>
 				{
 					DegradeBucket();
-				}, null, TimeSpan.Zero, TimeSpan.FromMinutes(Math.Max(TShock.Config.Settings.RESTRequestBucketDecreaseIntervalMinutes, 1)));
+				}, null, TimeSpan.Zero, TimeSpan.FromMinutes(Math.Max(ServerBase.Config.Settings.RESTRequestBucketDecreaseIntervalMinutes, 1)));
 
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(GetString("Fatal Startup Exception"));
-				TShock.Log.Error(ex.ToString());
-				TShock.Log.ConsoleError(GetString("Invalid REST configuration: \nYou may already have a REST service bound to port {0}. \nPlease adjust your configuration and restart the server. \nPress any key to exit.", Port));
+				ServerBase.Log.Error(GetString("Fatal Startup Exception"));
+				ServerBase.Log.Error(ex.ToString());
+				ServerBase.Log.ConsoleError(GetString("Invalid REST configuration: \nYou may already have a REST service bound to port {0}. \nPlease adjust your configuration and restart the server. \nPress any key to exit.", Port));
 				Console.ReadLine();
 				Environment.Exit(1);
 			}
@@ -446,10 +446,10 @@ namespace Rests
 		protected virtual object ExecuteCommand(RestCommand cmd, RestVerbs verbs, IParameterCollection parms, IRequest request, IHttpContext context)
 		{
 			object result = cmd.Execute(verbs, parms, request, context);
-			if (cmd.DoLog && TShock.Config.Settings.LogRest)
+			if (cmd.DoLog && ServerBase.Config.Settings.LogRest)
 			{
 				var endpoint = BuildRequestUri(cmd, verbs, parms, false);
-				TShock.Log.ConsoleInfo(GetString($"Anonymous requested REST endpoint: {endpoint}"));
+				ServerBase.Log.ConsoleInfo(GetString($"Anonymous requested REST endpoint: {endpoint}"));
 			}
 
 			return result;

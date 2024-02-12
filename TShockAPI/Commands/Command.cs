@@ -80,7 +80,7 @@ public class Command
 			catch (Exception e)
 			{
 				ply.SendErrorMessage(GetString("Command failed, check logs for more details."));
-				TShock.Log.Error(e.ToString());
+				ServerBase.Log.Error(e.ToString());
 			}
 
 			return true;

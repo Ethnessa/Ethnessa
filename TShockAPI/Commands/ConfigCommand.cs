@@ -34,7 +34,7 @@ namespace TShockAPI.ServerCommands
 						}
 
 						// get field from config, case in-sensitive
-						var setting = TShock.Config.GetType().GetField(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+						var setting = ServerBase.Config.GetType().GetField(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 						if (setting == null)
 						{
 							args.Player.SendErrorMessage("Invalid key!");
@@ -44,16 +44,16 @@ namespace TShockAPI.ServerCommands
 						// if valid value, set the setting and write to file
 						if (setting.FieldType == typeof(string))
 						{
-							setting.SetValue(TShock.Config, value);
-							TShock.Config.Write(FileTools.ConfigPath);
+							setting.SetValue(ServerBase.Config, value);
+							ServerBase.Config.Write(FileTools.ConfigPath);
 							args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 						}
 						else if (setting.FieldType == typeof(int))
 						{
 							if (int.TryParse(value, out int result))
 							{
-								setting.SetValue(TShock.Config, result);
-								TShock.Config.Write(FileTools.ConfigPath);
+								setting.SetValue(ServerBase.Config, result);
+								ServerBase.Config.Write(FileTools.ConfigPath);
 								args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 							}
 							else
@@ -65,8 +65,8 @@ namespace TShockAPI.ServerCommands
 						{
 							if (bool.TryParse(value, out bool result))
 							{
-								setting.SetValue(TShock.Config, result);
-								TShock.Config.Write(FileTools.ConfigPath);
+								setting.SetValue(ServerBase.Config, result);
+								ServerBase.Config.Write(FileTools.ConfigPath);
 								args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 							}
 							else
@@ -82,7 +82,7 @@ namespace TShockAPI.ServerCommands
 					}
 					case "reload":
 					{
-						TShock.Utils.Reload();
+						ServerBase.Utils.Reload();
 						Hooks.GeneralHooks.OnReloadEvent(args.Player);
 						args.Player.SendSuccessMessage("Reloaded TShock configuration.");
 						break;

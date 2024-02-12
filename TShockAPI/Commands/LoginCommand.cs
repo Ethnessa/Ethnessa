@@ -17,10 +17,10 @@ namespace TShockAPI.ServerCommands
 		public override List<string> Permissions { get; protected set; } = new() {TShockAPI.Permissions.canlogin };
 		private static void AttemptLogin(CommandArgs args)
 		{
-			if (args.Player.LoginAttempts > TShock.Config.Settings.MaximumLoginAttempts && (TShock.Config.Settings.MaximumLoginAttempts != -1))
+			if (args.Player.LoginAttempts > ServerBase.Config.Settings.MaximumLoginAttempts && (ServerBase.Config.Settings.MaximumLoginAttempts != -1))
 			{
-				TShock.Log.Warn(GetString("{0} ({1}) had {2} or more invalid login attempts and was kicked automatically.",
-					args.Player.IP, args.Player.Name, TShock.Config.Settings.MaximumLoginAttempts));
+				ServerBase.Log.Warn(GetString("{0} ({1}) had {2} or more invalid login attempts and was kicked automatically.",
+					args.Player.IP, args.Player.Name, ServerBase.Config.Settings.MaximumLoginAttempts));
 				args.Player.Kick(GetString("Too many invalid login attempts."));
 				return;
 			}
@@ -71,7 +71,7 @@ namespace TShockAPI.ServerCommands
 
 			string password = "";
 			bool usingUUID = false;
-			if (args.Parameters.Count == 0 && !TShock.Config.Settings.DisableUUIDLogin)
+			if (args.Parameters.Count == 0 && !ServerBase.Config.Settings.DisableUUIDLogin)
 			{
 				if (PlayerHooks.OnPlayerPreLogin(args.Player, args.Player.Name, ""))
 					return;
@@ -83,7 +83,7 @@ namespace TShockAPI.ServerCommands
 					return;
 				password = args.Parameters[0];
 			}
-			else if (args.Parameters.Count == 2 && TShock.Config.Settings.AllowLoginAnyUsername)
+			else if (args.Parameters.Count == 2 && ServerBase.Config.Settings.AllowLoginAnyUsername)
 			{
 				if (String.IsNullOrEmpty(args.Parameters[0]))
 				{
@@ -99,10 +99,10 @@ namespace TShockAPI.ServerCommands
 			}
 			else
 			{
-				if (!TShock.Config.Settings.DisableUUIDLogin)
+				if (!ServerBase.Config.Settings.DisableUUIDLogin)
 					args.Player.SendMessage(GetString($"{Commands.Specifier}login - Authenticates you using your UUID and character name."), Color.White);
 
-				if (TShock.Config.Settings.AllowLoginAnyUsername)
+				if (ServerBase.Config.Settings.AllowLoginAnyUsername)
 					args.Player.SendMessage(GetString($"{Commands.Specifier}login <username> <password> - Authenticates you using your username and password."), Color.White);
 				else
 					args.Player.SendMessage(GetString($"{Commands.Specifier}login <password> - Authenticates you using your password and character name."), Color.White);
@@ -117,7 +117,7 @@ namespace TShockAPI.ServerCommands
 					args.Player.SendErrorMessage(GetString("A user account by that name does not exist."));
 				}
 				else if (account.VerifyPassword(password) ||
-						(usingUUID && account.UUID == args.Player.UUID && !TShock.Config.Settings.DisableUUIDLogin &&
+						(usingUUID && account.UUID == args.Player.UUID && !ServerBase.Config.Settings.DisableUUIDLogin &&
 						!String.IsNullOrWhiteSpace(args.Player.UUID)))
 				{
 					var group = GroupManager.GetGroupByName(account.Group);
@@ -155,8 +155,8 @@ namespace TShockAPI.ServerCommands
 
 					args.Player.SendSuccessMessage(GetString("Authenticated as {0} successfully.", account.Name));
 
-					TShock.Log.ConsoleInfo(GetString("{0} authenticated successfully as user: {1}.", args.Player.Name, account.Name));
-					if ((args.Player.LoginHarassed) && (TShock.Config.Settings.RememberLeavePos))
+					ServerBase.Log.ConsoleInfo(GetString("{0} authenticated successfully as user: {1}.", args.Player.Name, account.Name));
+					if ((args.Player.LoginHarassed) && (ServerBase.Config.Settings.RememberLeavePos))
 					{
 						if (RememberedPosManager.GetLeavePos(args.Player.Account.AccountId) != Vector2.Zero)
 						{
@@ -174,7 +174,7 @@ namespace TShockAPI.ServerCommands
 				}
 				else
 				{
-					if (usingUUID && !TShock.Config.Settings.DisableUUIDLogin)
+					if (usingUUID && !ServerBase.Config.Settings.DisableUUIDLogin)
 					{
 						args.Player.SendErrorMessage(GetString("UUID does not match this character."));
 					}
@@ -182,14 +182,14 @@ namespace TShockAPI.ServerCommands
 					{
 						args.Player.SendErrorMessage(GetString("Invalid password."));
 					}
-					TShock.Log.Warn(GetString("{0} failed to authenticate as user: {1}.", args.Player.IP, account.Name));
+					ServerBase.Log.Warn(GetString("{0} failed to authenticate as user: {1}.", args.Player.IP, account.Name));
 					args.Player.LoginAttempts++;
 				}
 			}
 			catch (Exception ex)
 			{
 				args.Player.SendErrorMessage(GetString("There was an error processing your login or authentication related request."));
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 

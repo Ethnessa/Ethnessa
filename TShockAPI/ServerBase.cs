@@ -1,57 +1,36 @@
-/*
-TShock, a server mod for Terraria
-Copyright (C) 2011-2019 Pryaxis & TShock Contributors
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+using MaxMind;
+using Microsoft.Xna.Framework;
+using MongoDB.Driver;
+using MonoMod.Cil;
+using Newtonsoft.Json;
+using Rests;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using MaxMind;
-using Newtonsoft.Json;
-using Rests;
-using Terraria;
-using Terraria.ID;
-using Terraria.Localization;
-using TerrariaApi.Server;
-using TShockAPI.Hooks;
-using Terraria.Utilities;
-using Microsoft.Xna.Framework;
-using TShockAPI.Sockets;
-using TShockAPI.CLI;
-using TShockAPI.Localization;
-using TShockAPI.Configuration;
-using Terraria.GameContent.Creative;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using MongoDB.Driver;
-using MonoMod.Cil;
+using Terraria;
 using Terraria.Achievements;
+using Terraria.GameContent.Creative;
+using Terraria.ID;
 using Terraria.Initializers;
+using Terraria.Localization;
 using Terraria.UI.Chat;
+using Terraria.Utilities;
+using TerrariaApi.Server;
+using TShockAPI.CLI;
+using TShockAPI.Configuration;
 using TShockAPI.Database;
+using TShockAPI.Hooks;
+using TShockAPI.Localization;
 using TShockAPI.Modules;
+using TShockAPI.Sockets;
 using ServerApi = TerrariaApi.Server.ServerApi;
 
 namespace TShockAPI
@@ -61,7 +40,7 @@ namespace TShockAPI
 	/// TShock also complies with the API versioning system, and defines its required API version here.
 	/// </summary>
 	[ApiVersion(2, 1)]
-	public class TShock : TerrariaPlugin
+	public class ServerBase : TerrariaPlugin
 	{
 		/// <summary>VersionNum - The version number the TerrariaAPI will return back to the API. We just use the Assembly info.</summary>
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
@@ -150,40 +129,36 @@ namespace TShockAPI
 		/// Called after TShock is initialized. Useful for plugins that needs hooks before tshock but also depend on tshock being loaded.
 		/// </summary>
 		public static event Action Initialized;
+
+		/// <summary>
+		/// Global database connection, used for global (multi-server) data.
+		/// </summary>
 		public static IMongoDatabase GlobalDatabase { get; private set; }
+
+		/// <summary>
+		/// Local database connection, used for local (single-server) data.
+		/// </summary>
 		public static IMongoDatabase LocalDatabase { get; private set; }
 
 		public static ModuleManager ModuleManager { get; } = new ModuleManager();
 
 		/// <summary>Version - The version required by the TerrariaAPI to be passed back for checking &amp; loading the plugin.</summary>
 		/// <value>value - The version number specified in the Assembly, based on the VersionNum variable set in this class.</value>
-		public override Version Version
-		{
-			get { return VersionNum; }
-		}
+		public override Version Version => VersionNum;
 
 		/// <summary>Name - The plugin name.</summary>
 		/// <value>value - "TShock"</value>
-		public override string Name
-		{
-			get { return "TShockModified"; }
-		}
+		public override string Name => "TShockModified";
 
 		/// <summary>Author - The author of the plugin.</summary>
-		public override string Author
-		{
-			get { return "TSD"; }
-		}
+		public override string Author => "TSD";
 
 		/// <summary>Description - The plugin description.</summary>
-		public override string Description
-		{
-			get { return "A modified version of TShock to fit the needs of TSD."; }
-		}
+		public override string Description => "A modified version of TShock to fit the needs of TSD.";
 
 		/// <summary>TShock - The constructor for the TShock plugin.</summary>
 		/// <param name="game">game - The Terraria main game.</param>
-		public TShock(Main game)
+		public ServerBase(Main game)
 			: base(game)
 		{
 			Config = new TShockConfig();
@@ -268,17 +243,14 @@ namespace TShockAPI
 		}
 
 		/// <summary>Initialize - Called by the TerrariaServerAPI during initialization.</summary>
-		[SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands")]
 		public override void Initialize()
 		{
 			string logFilename;
 
-			OTAPI.Hooks.Netplay.CreateTcpListener += (sender, args) => { args.Result = new LinuxTcpSocket(); };
+			OTAPI.Hooks.Netplay.CreateTcpListener += (sender, args) => args.Result = new LinuxTcpSocket();
 			OTAPI.Hooks.NetMessage.PlayerAnnounce += (sender, args) =>
-			{
 				//TShock handles this
 				args.Result = OTAPI.Hooks.NetMessage.PlayerAnnounceResult.None;
-			};
 
 			Main.SettingsUnlock_WorldEvil = true;
 
@@ -364,7 +336,7 @@ namespace TShockAPI
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
-					if (TShock.Config.Settings.DisplayClosedImproperlyWarning) // bcuz who gives a fuck
+					if (ServerBase.Config.Settings.DisplayClosedImproperlyWarning) // bcuz who gives a fuck
 					{
 						Log.ConsoleInfo(GetString(
 							"TShock was improperly shut down. Please use the exit command in the future to prevent this."));
@@ -501,7 +473,7 @@ namespace TShockAPI
 
 		protected void CrashReporter_HeapshotRequesting(object sender, EventArgs e)
 		{
-			foreach (ServerPlayer player in TShock.Players)
+			foreach (ServerPlayer player in ServerBase.Players)
 			{
 				player.Account = null;
 			}
@@ -567,35 +539,34 @@ namespace TShockAPI
 		/// <param name="args">args - The PlayerPostLoginEventArgs object.</param>
 		private void OnPlayerLogin(PlayerPostLoginEventArgs args)
 		{
-			List<String> KnownIps = new List<string>();
-			if (!string.IsNullOrWhiteSpace(args.Player.Account.KnownIps))
-			{
-				KnownIps = JsonConvert.DeserializeObject<List<String>>(args.Player.Account.KnownIps);
-			}
+			var currentIP = args.Player.IP; // Current player's IP address for readability
+			var account = args.Player.Account; // Reference to the player's account for readability
 
-			if (KnownIps.Count == 0)
+			// Initialize an empty list for Known IPs
+			var knownIps = string.IsNullOrWhiteSpace(account.KnownIps) ?
+						   new List<string>() :
+						   JsonConvert.DeserializeObject<List<string>>(account.KnownIps);
+
+			// Add current IP if it's not the last known IP or if the list is empty
+			if (knownIps.LastOrDefault() != currentIP)
 			{
-				KnownIps.Add(args.Player.IP);
-			}
-			else
-			{
-				bool last = KnownIps.Last() == args.Player.IP;
-				if (!last)
+				// Ensure the list does not exceed 100 entries
+				if (knownIps.Count >= 100)
 				{
-					if (KnownIps.Count == 100)
-					{
-						KnownIps.RemoveAt(0);
-					}
-
-					KnownIps.Add(args.Player.IP);
+					knownIps.RemoveAt(0); // Remove the oldest IP
 				}
+
+				knownIps.Add(currentIP); // Add the current IP to the list
 			}
 
-			args.Player.Account.KnownIps = JsonConvert.SerializeObject(KnownIps, Formatting.Indented);
-			UserAccountManager.UpdateLogin(args.Player.Account);
+			// Update the account with the new or modified list of known IPs
+			account.KnownIps = JsonConvert.SerializeObject(knownIps, Formatting.Indented);
+			UserAccountManager.UpdateLogin(account);
 
+			// Check if the player is banned
 			BanManager.IsPlayerBanned(args.Player);
 		}
+
 
 		/// <summary>OnAccountDelete - Internal hook fired on account delete.</summary>
 		/// <param name="args">args - The AccountDeleteEventArgs object.</param>
@@ -781,7 +752,7 @@ namespace TShockAPI
 			Log.ConsoleInfo(GetString("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again."));
 
 			// Perform a safe shutdown
-			TShock.Utils.StopServer(true, GetString("ServerConsole console interrupted!"));
+			ServerBase.Utils.StopServer(true, GetString("ServerConsole console interrupted!"));
 		}
 
 		/// <summary>HandleCommandLine - Handles the command line parameters passed to the server.</summary>
@@ -1047,7 +1018,7 @@ namespace TShockAPI
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
 			if (File.Exists(Path.Combine(SavePath, "setup.lock")) ||
-				((UserAccountManager.GetUserAccounts())?.Count() > 0))
+				(UserAccountManager.GetUserAccounts()?.Count() > 0))
 			{
 				SetupToken = 0;
 
@@ -1212,14 +1183,14 @@ namespace TShockAPI
 					if (player.RecentFuse > 0)
 						player.RecentFuse--;
 
-					if ((Main.ServerSideCharacter) && (player.TPlayer.SpawnX > 0) &&
+					if (Main.ServerSideCharacter && (player.TPlayer.SpawnX > 0) &&
 						(player.sX != player.TPlayer.SpawnX))
 					{
 						player.sX = player.TPlayer.SpawnX;
 						player.sY = player.TPlayer.SpawnY;
 					}
 
-					if ((Main.ServerSideCharacter) && (player.sX > 0) && (player.sY > 0) && (player.TPlayer.SpawnX < 0))
+					if (Main.ServerSideCharacter && (player.sX > 0) && (player.sY > 0) && (player.TPlayer.SpawnX < 0))
 					{
 						player.TPlayer.SpawnX = player.sX;
 						player.TPlayer.SpawnY = player.sY;
@@ -1274,7 +1245,7 @@ namespace TShockAPI
 						player.PaintThreshold = 0;
 					}
 
-					if (player.HealOtherThreshold >= TShock.Config.Settings.HealOtherThreshold)
+					if (player.HealOtherThreshold >= ServerBase.Config.Settings.HealOtherThreshold)
 					{
 						player.Disable(GetString("Reached HealOtherPlayer threshold"), flags);
 					}
@@ -1357,7 +1328,7 @@ namespace TShockAPI
 				return false;
 			}
 
-			if (!Config.Settings.AllowHallowCreep && (TileID.Sets.Hallow[tileType]))
+			if (!Config.Settings.AllowHallowCreep && TileID.Sets.Hallow[tileType])
 			{
 				return false;
 			}
@@ -1602,7 +1573,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (TShock.Config.Settings.EnableChatAboveHeads) // if chat above heads is enabled
+				if (ServerBase.Config.Settings.EnableChatAboveHeads) // if chat above heads is enabled
 				{
 					var terrariaPlayer = player.TPlayer;
 					string playerName = terrariaPlayer.name;
@@ -1732,18 +1703,18 @@ namespace TShockAPI
 
 			player.LoginMS = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-			if (Config.Settings.EnableGeoIP && TShock.Geo != null)
+			if (Config.Settings.EnableGeoIP && ServerBase.Geo != null)
 			{
 				Log.Info(GetString("{0} ({1}) from '{2}' group from '{3}' joined. ({4}/{5})", player.Name, player.IP,
-					player.Group.Name, player.Country, TShock.Utils.GetActivePlayerCount(),
-					TShock.Config.Settings.MaxSlots));
+					player.Group.Name, player.Country, ServerBase.Utils.GetActivePlayerCount(),
+					ServerBase.Config.Settings.MaxSlots));
 				if (!player.SilentJoinInProgress)
 					Utils.Broadcast(GetString("{0} ({1}) has joined.", player.Name, player.Country), Color.Yellow);
 			}
 			else
 			{
 				Log.Info(GetString("{0} ({1}) from '{2}' group joined. ({3}/{4})", player.Name, player.IP,
-					player.Group.Name, TShock.Utils.GetActivePlayerCount(), TShock.Config.Settings.MaxSlots));
+					player.Group.Name, ServerBase.Utils.GetActivePlayerCount(), ServerBase.Config.Settings.MaxSlots));
 				if (!player.SilentJoinInProgress)
 					Utils.Broadcast(GetString("{0} has joined.", player.Name), Color.Yellow);
 			}
@@ -1767,7 +1738,7 @@ namespace TShockAPI
 				{
 					player.IsDisabledForSSC = true;
 					player.SendErrorMessage(GetString(
-						"ServerConsole side characters is enabled! Please {0}register or {0}login to play!",
+						"Server side characters are enabled! Please {0}register or {0}login to play!",
 						Commands.Specifier));
 					player.LoginHarassed = true;
 				}

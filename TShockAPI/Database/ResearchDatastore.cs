@@ -18,7 +18,7 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class ResearchDatastore
 	{
-		private static IMongoCollection<SacrificedItem> sacrificedItems => TShock.GlobalDatabase.GetCollection<SacrificedItem>("sacrificeditems");
+		private static IMongoCollection<SacrificedItem> sacrificedItems => ServerBase.GlobalDatabase.GetCollection<SacrificedItem>("sacrificeditems");
 		/// <summary>
 		/// In-memory cache of what items have been sacrificed.
 		/// The first call to GetSacrificedItems will load this with data from the database.
@@ -75,7 +75,7 @@ namespace TShockAPI.Database
 
 			}catch(Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return itemsSacrificed[itemId];

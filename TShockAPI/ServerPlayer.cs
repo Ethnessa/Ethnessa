@@ -111,7 +111,7 @@ namespace TShockAPI
 
 			if (byte.TryParse(search, out var searchId) && searchId < Main.maxPlayers)
 			{
-				var player = TShock.Players.ElementAtOrDefault(searchId);
+				var player = ServerBase.Players.ElementAtOrDefault(searchId);
 				if (player is { Active: true })
 				{
 					if (exactIndexOnly)
@@ -123,7 +123,7 @@ namespace TShockAPI
 			}
 
 			var searchLower = search.ToLower();
-			foreach (var player in TShock.Players)
+			foreach (var player in ServerBase.Players)
 			{
 				if (player != null)
 				{
@@ -370,7 +370,7 @@ namespace TShockAPI
 			|| IsDisabledForStackDetection
 			|| IsDisabledForBannedWearable
 			|| IsDisabledPendingTrashRemoval
-			|| !IsLoggedIn && TShock.Config.Settings.RequireLogin;
+			|| !IsLoggedIn && ServerBase.Config.Settings.RequireLogin;
 		}
 
 		/// <summary>Checks to see if a player has hacked item stacks in their inventory, and messages them as it checks.</summary>
@@ -758,9 +758,9 @@ namespace TShockAPI
 		{
 			int rgX = Math.Abs(TileX - x);
 			int rgY = Math.Abs(TileY - y);
-			if (TShock.Config.Settings.RangeChecks && ((rgX > range) || (rgY > range)))
+			if (ServerBase.Config.Settings.RangeChecks && ((rgX > range) || (rgY > range)))
 			{
-				TShock.Log.ConsoleDebug(GetString("Rangecheck failed for {0} ({1}, {2}) (rg: {3}/{5}, {4}/{5})", Name, x, y, rgX, rgY, range));
+				ServerBase.Log.ConsoleDebug(GetString("Rangecheck failed for {0} ({1}, {2}) (rg: {3}/{5}, {4}/{5})", Name, x, y, rgX, rgY, range));
 				return false;
 			}
 			return true;
@@ -793,12 +793,12 @@ namespace TShockAPI
 
 			// If the player has bypass on build protection or building is enabled; continue
 			// (General build protection takes precedence over spawn protection)
-			if (!TShock.Config.Settings.DisableBuild || HasPermission(Permissions.antibuild))
+			if (!ServerBase.Config.Settings.DisableBuild || HasPermission(Permissions.antibuild))
 			{
 				failure = BuildPermissionFailPoint.SpawnProtect;
 				// If they have spawn protect bypass, or it isn't spawn, or it isn't in spawn; continue
 				// (If they have spawn protect bypass, we don't care if it's spawn or not)
-				if (!TShock.Config.Settings.SpawnProtection || HasPermission(Permissions.editspawn) || !Utils.IsInSpawn(x, y))
+				if (!ServerBase.Config.Settings.SpawnProtection || HasPermission(Permissions.editspawn) || !Utils.IsInSpawn(x, y))
 				{
 					failure = BuildPermissionFailPoint.Regions;
 					// If they have build permission in this region, then they're allowed to continue
@@ -823,7 +823,7 @@ namespace TShockAPI
 			}
 
 			// If they should be warned, warn them.
-			if (!TShock.Config.Settings.SuppressPermissionFailureNotices)
+			if (!ServerBase.Config.Settings.SuppressPermissionFailureNotices)
 			{
 				switch (failure)
 				{
@@ -889,7 +889,7 @@ namespace TShockAPI
 		{
 			// The goal is to short circuit ASAP.
 			// A subsequent call to HasBuildPermission can figure this out if not explicitly ice.
-			if (!TShock.Config.Settings.AllowIce)
+			if (!ServerBase.Config.Settings.AllowIce)
 			{
 				return false;
 			}
@@ -1018,7 +1018,7 @@ namespace TShockAPI
 				if (string.IsNullOrEmpty(CacheIP))
 					return
 						CacheIP = RealPlayer ? (Client.Socket.IsConnected()
-								? TShock.Utils.GetRealIP(Client.Socket.GetRemoteAddress().ToString())
+								? ServerBase.Utils.GetRealIP(Client.Socket.GetRemoteAddress().ToString())
 								: "")
 							: "127.0.0.1";
 				else
@@ -1064,7 +1064,7 @@ namespace TShockAPI
 			{
 				if (HasPermission(Permissions.bypassssc))
 				{
-					TShock.Log.ConsoleInfo(GetString($"Skipping SSC save (due to tshock.ignore.ssc) for {Account.Name}"));
+					ServerBase.Log.ConsoleInfo(GetString($"Skipping SSC save (due to tshock.ignore.ssc) for {Account.Name}"));
 					return true;
 				}
 				PlayerData.CopyCharacter(this);
@@ -1073,7 +1073,7 @@ namespace TShockAPI
 			}
 			catch (Exception e)
 			{
-				TShock.Log.Error(e.Message);
+				ServerBase.Log.Error(e.Message);
 				return false;
 			}
 		}
@@ -1095,7 +1095,7 @@ namespace TShockAPI
 			}
 			catch (Exception e)
 			{
-				TShock.Log.Error(e.Message);
+				ServerBase.Log.Error(e.Message);
 				return false;
 			}
 
@@ -1252,7 +1252,7 @@ namespace TShockAPI
 			}
 
 			PlayerData = new PlayerData(this);
-			Group = GroupManager.GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
+			Group = GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
 			TempGroup = null;
 			if (tempGroupTimer != null)
 			{
@@ -1389,7 +1389,7 @@ namespace TShockAPI
 					PlayerIndex = (byte)Index,
 					TileX = (short)tilex,
 					TileY = (short)tiley,
-					RespawnTimer = respawnTimer ?? TShock.Players[Index].RespawnTimer * 60,
+					RespawnTimer = respawnTimer ?? ServerBase.Players[Index].RespawnTimer * 60,
 					NumberOfDeathsPVE = numberOfDeathsPVE ?? (short)TPlayer.numberOfDeathsPVE,
 					NumberOfDeathsPVP = numberOfDeathsPVP ?? (short)TPlayer.numberOfDeathsPVP,
 					PlayerSpawnContext = context,
@@ -1466,7 +1466,7 @@ namespace TShockAPI
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -1516,8 +1516,8 @@ namespace TShockAPI
 		/// <returns>True or false, depending if the item passed the check or not.</returns>
 		public async Task<bool> GiveItemCheck(int type, string name, int stack, int prefix = 0)
 		{
-			if ((ItemBanManager.ItemIsBanned(name) && TShock.Config.Settings.PreventBannedItemSpawn) &&
-				(ItemBanManager.ItemIsBanned(name, this) || !TShock.Config.Settings.AllowAllowedGroupsToSpawnBannedItems))
+			if ((ItemBanManager.ItemIsBanned(name) && ServerBase.Config.Settings.PreventBannedItemSpawn) &&
+				(ItemBanManager.ItemIsBanned(name, this) || !ServerBase.Config.Settings.AllowAllowedGroupsToSpawnBannedItems))
 				return false;
 
 			GiveItem(type, stack, prefix);
@@ -1532,7 +1532,7 @@ namespace TShockAPI
 		/// <param name="prefix">The item prefix.</param>
 		public virtual void GiveItem(int type, int stack, int prefix = 0)
 		{
-			if (TShock.Config.Settings.GiveItemsDirectly)
+			if (ServerBase.Config.Settings.GiveItemsDirectly)
 				GiveItemDirectly(type, stack, prefix);
 			else
 				GiveItemByDrop(type, stack, prefix);
@@ -1800,7 +1800,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Sends the text of a given file to the player. Replacement of %map% and %players% if in the file.
 		/// </summary>
-		/// <param name="file">Filename relative to <see cref="TShock.SavePath"></see></param>
+		/// <param name="file">Filename relative to <see cref="ServerBase.SavePath"></see></param>
 		public void SendFileTextAsMessage(string file)
 		{
 			string foo = "";
@@ -1818,7 +1818,7 @@ namespace TShockAPI
 
 					var players = new List<string>();
 
-					foreach (ServerPlayer ply in TShock.Players)
+					foreach (ServerPlayer ply in ServerBase.Players)
 					{
 						if (ply != null && ply.Active)
 						{
@@ -1826,11 +1826,11 @@ namespace TShockAPI
 						}
 					}
 
-					foo = foo.Replace("%map%", (TShock.Config.Settings.UseServerName ? TShock.Config.Settings.ServerName : Main.worldName));
+					foo = foo.Replace("%map%", (ServerBase.Config.Settings.UseServerName ? ServerBase.Config.Settings.ServerName : Main.worldName));
 					foo = foo.Replace("%players%", String.Join(", ", players));
-					foo = foo.Replace("%specifier%", TShock.Config.Settings.CommandSpecifier);
-					foo = foo.Replace("%onlineplayers%", TShock.Utils.GetActivePlayerCount().ToString());
-					foo = foo.Replace("%serverslots%", TShock.Config.Settings.MaxSlots.ToString());
+					foo = foo.Replace("%specifier%", ServerBase.Config.Settings.CommandSpecifier);
+					foo = foo.Replace("%onlineplayers%", ServerBase.Utils.GetActivePlayerCount().ToString());
+					foo = foo.Replace("%serverslots%", ServerBase.Config.Settings.MaxSlots.ToString());
 
 					SendMessage(foo, lineColor);
 				}
@@ -1934,7 +1934,7 @@ namespace TShockAPI
 					{
 						if (flags.HasFlag(DisableFlags.WriteToLog))
 						{
-							TShock.Log.ConsoleInfo(GetString("Player {0} has been disabled for {1}.", Name, reason));
+							ServerBase.Log.ConsoleInfo(GetString("Player {0} has been disabled for {1}.", Name, reason));
 						}
 						else
 						{
@@ -1980,13 +1980,13 @@ namespace TShockAPI
 			}
 
 			Disconnect(GetString("Kicked: {0}", reason));
-			TShock.Log.ConsoleInfo(GetString("Kicked {0} for : '{1}'", Name, reason));
+			ServerBase.Log.ConsoleInfo(GetString("Kicked {0} for : '{1}'", Name, reason));
 			if (silent)
 			{
 				return true;
 			}
 
-			TShock.Utils.Broadcast(
+			ServerBase.Utils.Broadcast(
 				string.IsNullOrWhiteSpace(adminUserName)
 					? GetString("{0} was kicked for '{1}'", Name, reason)
 					: GetString("{0} kicked {1} for '{2}'", adminUserName, Name, reason), Color.Green);
@@ -2041,7 +2041,7 @@ namespace TShockAPI
 			StackFrame frame = null;
 			frame = trace.GetFrame(1);
 			if (frame != null && frame.GetMethod().DeclaringType != null)
-				TShock.Log.Debug(frame.GetMethod().DeclaringType.Name + " called Disable().");
+				ServerBase.Log.Debug(frame.GetMethod().DeclaringType.Name + " called Disable().");
 		}
 
 		//TODO: Could remove this

@@ -30,7 +30,7 @@ namespace TShockAPI.Database
 {
 	public static class CharacterManager
 	{
-		private static IMongoCollection<PlayerData> playerData => TShock.GlobalDatabase.GetCollection<PlayerData>("playerdata");
+		private static IMongoCollection<PlayerData> playerData => ServerBase.GlobalDatabase.GetCollection<PlayerData>("playerdata");
 
 		public static PlayerData? GetPlayerData(int accountId)
 		{
@@ -47,11 +47,11 @@ namespace TShockAPI.Database
 		{
 			try
 			{
-				var items = new List<NetItem>(TShock.ServerSideCharacterConfig.Settings.StartingInventory);
+				var items = new List<NetItem>(ServerBase.ServerSideCharacterConfig.Settings.StartingInventory);
 				if (items.Count < NetItem.MaxInventory)
 					items.AddRange(new NetItem[NetItem.MaxInventory - items.Count]);
 
-				var tsSettings = TShock.ServerSideCharacterConfig.Settings;
+				var tsSettings = ServerBase.ServerSideCharacterConfig.Settings;
 
 				PlayerData initialData = new()
 				{
@@ -71,7 +71,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.ConsoleError($"Something went wrong while seeding initial player data: {ex.ToString()}");
+				ServerBase.Log.ConsoleError($"Something went wrong while seeding initial player data: {ex.ToString()}");
 				return false;
 			}
 		}
@@ -93,7 +93,7 @@ namespace TShockAPI.Database
 
 			if (player.HasPermission(Permissions.bypassssc) && !fromCommand)
 			{
-				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
+				ServerBase.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
 				return false;
 			}
@@ -105,7 +105,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return false;
@@ -131,7 +131,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return false;
@@ -152,7 +152,7 @@ namespace TShockAPI.Database
 
 			if (player.HasPermission(Permissions.bypassssc))
 			{
-				TShock.Log.ConsoleInfo(GetParticularString("{0} is a player name",
+				ServerBase.Log.ConsoleInfo(GetParticularString("{0} is a player name",
 					$"Skipping SSC save (due to tshock.ignore.ssc) for {player.Account.Name}"));
 				return true;
 			}

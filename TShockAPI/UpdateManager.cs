@@ -83,8 +83,8 @@ namespace TShockAPI
 				Console.WriteLine(GetString($"UpdateManager warning: {msg}"));
 				Console.ForegroundColor = ConsoleColor.Gray;
 				//And log the full exception
-				TShock.Log.Warn(GetString($"UpdateManager warning: {ex.ToString()}"));
-				TShock.Log.ConsoleError(GetString("Retrying in 5 minutes."));
+				ServerBase.Log.Warn(GetString($"UpdateManager warning: {ex.ToString()}"));
+				ServerBase.Log.ConsoleError(GetString("Retrying in 5 minutes."));
 				CheckXMinutes = 5;
 			}
 		}
@@ -124,7 +124,7 @@ namespace TShockAPI
 			var update = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
 
 			var version = new Version(update["version"]);
-			if (TShock.VersionNum.CompareTo(version) < 0)
+			if (ServerBase.VersionNum.CompareTo(version) < 0)
 			{
 				return update;
 			}
@@ -136,7 +136,7 @@ namespace TShockAPI
 		{
 			var changes = update["changes"].Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			NotifyAdministrator(ServerPlayer.ServerConsole, changes);
-			foreach (ServerPlayer player in TShock.Players)
+			foreach (ServerPlayer player in ServerBase.Players)
 			{
 				if (player != null && player.Active && player.HasPermission(Permissions.maintenance))
 				{

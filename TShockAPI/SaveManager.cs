@@ -50,18 +50,18 @@ namespace TShockAPI
 		/// </summary>
 		public void OnSaveWorld(WorldSaveEventArgs args)
 		{
-			if (TShock.Config.Settings.AnnounceSave)
+			if (ServerBase.Config.Settings.AnnounceSave)
 			{
 				// Protect against internal errors causing save failures
 				// These can be caused by an unexpected error such as a bad or out of date plugin
 				try
 				{
-					TShock.Utils.Broadcast(GetString("Saving world..."), Color.Yellow);
+					ServerBase.Utils.Broadcast(GetString("Saving world..."), Color.Yellow);
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.Error("World saved notification failed");
-					TShock.Log.Error(ex.ToString());
+					ServerBase.Log.Error("World saved notification failed");
+					ServerBase.Log.Error(ex.ToString());
 				}
 			}
 
@@ -134,15 +134,15 @@ namespace TShockAPI
 								else
 									WorldFile.SaveWorld(task.resetTime);
 
-								if (TShock.Config.Settings.AnnounceSave)
-									TShock.Utils.Broadcast(GetString("World saved."), Color.Yellow);
+								if (ServerBase.Config.Settings.AnnounceSave)
+									ServerBase.Utils.Broadcast(GetString("World saved."), Color.Yellow);
 
-								TShock.Log.Info(GetString("World saved at ({0})", Main.worldPathName));
+								ServerBase.Log.Info(GetString("World saved at ({0})", Main.worldPathName));
 							}
 							catch (Exception e)
 							{
-								TShock.Log.Error("World saved failed");
-								TShock.Log.Error(e.ToString());
+								ServerBase.Log.Error("World saved failed");
+								ServerBase.Log.Error(e.ToString());
 							}
 						}
 					}

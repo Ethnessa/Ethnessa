@@ -103,7 +103,7 @@ namespace TShockAPI.Sockets
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 

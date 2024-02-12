@@ -27,7 +27,7 @@ namespace TShockAPI.Database
 {
 	public static class ProjectileManager
 	{
-		private static IMongoCollection<ProjectileBan> projectiles => TShock.GlobalDatabase.GetCollection<ProjectileBan>("projectiles");
+		private static IMongoCollection<ProjectileBan> projectiles => ServerBase.GlobalDatabase.GetCollection<ProjectileBan>("projectiles");
 		public static void AddNewBan(short id = 0)
 		{
 			try
@@ -37,7 +37,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace TShockAPI.Database
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.Error(ex.ToString());
+					ServerBase.Log.Error(ex.ToString());
 				}
 			}
 
@@ -105,7 +105,7 @@ namespace TShockAPI.Database
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.Error(ex.ToString());
+					ServerBase.Log.Error(ex.ToString());
 				}
 			}
 

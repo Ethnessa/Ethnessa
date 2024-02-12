@@ -30,7 +30,7 @@ namespace TShockAPI.Database
 {
 	public static class TileManager
 	{
-		private static IMongoCollection<TileBan> tileBans => TShock.GlobalDatabase.GetCollection<TileBan>("tilebans");
+		private static IMongoCollection<TileBan> tileBans => ServerBase.GlobalDatabase.GetCollection<TileBan>("tilebans");
 		public static List<TileBan> ToListAsync()
 		{
 			return tileBans.Find(Builders<TileBan>.Filter.Empty).ToList();
@@ -44,7 +44,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 

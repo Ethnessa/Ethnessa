@@ -1,21 +1,4 @@
-﻿/*
-TShock, a server mod for Terraria
-Copyright (C) 2011-2019 Pryaxis & TShock Contributors
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,9 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
-using Terraria.Utilities;
-using Microsoft.Xna.Framework;
-using Terraria.Localization;
 using TShockAPI.Database;
 using TShockAPI.Localization;
 
@@ -40,7 +20,6 @@ namespace TShockAPI
 	/// </summary>
 	public class Utils
 	{
-		public delegate Task AsynchronousEventHandler<TEventArgs>(object? sender, TEventArgs e);
 		/// <summary>
 		/// Hex code for a blue pastel color
 		/// </summary>
@@ -88,16 +67,16 @@ namespace TShockAPI
 
 		/// <summary>Instance - An instance of the utils class.</summary>
 		/// <value>value - the Utils instance</value>
-		public static Utils Instance { get { return instance; } }
+		public static Utils Instance => instance;
 
 		/// <summary>
 		/// Provides the real IP address from a RemoteEndPoint string that contains a port and an IP
 		/// </summary>
-		/// <param name="mess">A string IPv4 address in IP:PORT form.</param>
+		/// <param name="ipString">A string IPv4 address in IP:PORT form.</param>
 		/// <returns>A string IPv4 address.</returns>
-		public string GetRealIP(string mess)
+		public string GetRealIP(string ipString)
 		{
-			return mess.Split(':')[0];
+			return ipString.Split(':')[0];
 		}
 
 		/// <summary>
@@ -136,7 +115,7 @@ namespace TShockAPI
 		{
 			ServerPlayer.All.SendMessage(msg, red, green, blue);
 			ServerPlayer.ServerConsole.SendMessage(msg, red, green, blue);
-			TShock.Log.Info(GetString("Broadcast: {0}", msg));
+			ServerBase.Log.Info(GetString("Broadcast: {0}", msg));
 		}
 
 		/// <summary>>Broadcast - Broadcasts a message to all players on the server, as well as the server console, and the logs.</summary>
@@ -159,14 +138,14 @@ namespace TShockAPI
 		{
 			ServerPlayer.All.SendMessageFromPlayer(msg, red, green, blue, ply);
 			ServerPlayer.ServerConsole.SendMessage(Main.player[ply].name + ": " + msg, red, green, blue);
-			TShock.Log.Info(GetString("Broadcast: {0}: {1}", Main.player[ply].name, msg));
+			ServerBase.Log.Info(GetString("Broadcast: {0}: {1}", Main.player[ply].name, msg));
 		}
 
 		public bool IsCommand(string text)
 		{
-			return (text.StartsWith(TShock.Config.Settings.CommandSpecifier) ||
-			        text.StartsWith(TShock.Config.Settings.CommandSilentSpecifier)) &&
-			       !string.IsNullOrWhiteSpace(text.Substring(1));
+			return (text.StartsWith(ServerBase.Config.Settings.CommandSpecifier) ||
+					text.StartsWith(ServerBase.Config.Settings.CommandSilentSpecifier)) &&
+				   !string.IsNullOrWhiteSpace(text.Substring(1));
 		}
 
 		/// <summary>
@@ -177,12 +156,12 @@ namespace TShockAPI
 		/// <param name="excludedPlayer">The player to not send the message to.</param>
 		public void SendLogs(string log, Color color, ServerPlayer excludedPlayer = null)
 		{
-			TShock.Log.Info(log);
+			ServerBase.Log.Info(log);
 			ServerPlayer.ServerConsole.SendMessage(log, color);
-			foreach (ServerPlayer player in TShock.Players)
+			foreach (ServerPlayer player in ServerBase.Players)
 			{
 				if (player != null && player != excludedPlayer && player.Active && player.HasPermission(Permissions.logs) &&
-						player.DisplayLogs && TShock.Config.Settings.DisableSpewLogs == false)
+						player.DisplayLogs && ServerBase.Config.Settings.DisableSpewLogs == false)
 					player.SendMessage(log, color);
 			}
 		}
@@ -584,12 +563,12 @@ namespace TShockAPI
 		/// <param name="reason">string reason (default: "ServerConsole shutting down!")</param>
 		public void StopServer(bool save = true, string reason = "ServerConsole shutting down!")
 		{
-			TShock.ShuttingDown = true;
+			ServerBase.ShuttingDown = true;
 
 			if (save)
 				SaveManager.Instance.SaveWorld();
 
-			foreach (var player in TShock.Players.Where(p => p != null))
+			foreach (var player in ServerBase.Players.Where(p => p != null))
 			{
 				if (player.IsLoggedIn)
 				{
@@ -599,7 +578,7 @@ namespace TShockAPI
 			}
 
 			// Broadcast so console can see we are shutting down as well
-			TShock.Utils.Broadcast(reason, Color.Red);
+			ServerBase.Utils.Broadcast(reason, Color.Red);
 
 			// Disconnect after kick as that signifies server is exiting and could cause a race
 			Netplay.Disconnect = true;
@@ -611,7 +590,7 @@ namespace TShockAPI
 		public void Reload()
 		{
 			FileTools.SetupConfig();
-			TShock.HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
+			ServerBase.HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
 		}
 
 		/// <summary>
@@ -846,7 +825,7 @@ namespace TShockAPI
 			int result = 0;
 			for (int i = 0; i < bools.Length; i++)
 				if (bools[i])
-					result |= (1 << i);
+					result |= 1 << i;
 
 			return result;
 		}
@@ -863,7 +842,7 @@ namespace TShockAPI
 
 			bool[] result = new bool[10];
 			for (int i = 0; i < result.Length; i++)
-				result[i] = (encodedbools & 1 << i) != 0;
+				result[i] = (encodedbools & (1 << i)) != 0;
 
 			return result;
 		}
@@ -894,7 +873,7 @@ namespace TShockAPI
 
 			BitsByte result = new BitsByte();
 			for (int i = 0; i < 8; i++)
-				result[i] = (encodedBitsByte & 1 << i) != 0;
+				result[i] = (encodedBitsByte & (1 << i)) != 0;
 
 			return result;
 		}
@@ -1111,14 +1090,14 @@ namespace TShockAPI
 		{
 			int invasionSize = 0;
 
-			if (TShock.Config.Settings.InfiniteInvasion)
+			if (ServerBase.Config.Settings.InfiniteInvasion)
 			{
 				// Not really an infinite size
 				invasionSize = 20000000;
 			}
 			else
 			{
-				invasionSize = 100 + (TShock.Config.Settings.InvasionMultiplier * GetActivePlayerCount());
+				invasionSize = 100 + (ServerBase.Config.Settings.InvasionMultiplier * GetActivePlayerCount());
 			}
 
 			// Order matters
@@ -1135,7 +1114,7 @@ namespace TShockAPI
 		/// <summary>Verifies that each stack in each chest is valid and not over the max stack count.</summary>
 		internal void FixChestStacks()
 		{
-			if (TShock.Config.Settings.IgnoreChestStacksOnLoad)
+			if (ServerBase.Config.Settings.IgnoreChestStacksOnLoad)
 				return;
 
 			foreach (Chest chest in Main.chest)
@@ -1156,9 +1135,9 @@ namespace TShockAPI
 		internal void SetConsoleTitle(bool empty)
 		{
 			Console.Title = GetString("{0}{1}/{2} on {3} @ {4}:{5} (TShock for Terraria v{6})",
-					!string.IsNullOrWhiteSpace(TShock.Config.Settings.ServerName) ? TShock.Config.Settings.ServerName + " - " : "",
+					!string.IsNullOrWhiteSpace(ServerBase.Config.Settings.ServerName) ? ServerBase.Config.Settings.ServerName + " - " : "",
 					empty ? 0 : GetActivePlayerCount(),
-					TShock.Config.Settings.MaxSlots, Main.worldName, Netplay.ServerIP.ToString(), Netplay.ListenPort, TShock.VersionNum);
+					ServerBase.Config.Settings.MaxSlots, Main.worldName, Netplay.ServerIP.ToString(), Netplay.ListenPort, ServerBase.VersionNum);
 		}
 
 		/// <summary>Determines the distance between two vectors.</summary>
@@ -1181,7 +1160,7 @@ namespace TShockAPI
 		{
 			Vector2 tile = new Vector2(x, y);
 			Vector2 spawn = new Vector2(Main.spawnTileX, Main.spawnTileY);
-			return Distance(spawn, tile) <= TShock.Config.Settings.SpawnProtectionRadius;
+			return Distance(spawn, tile) <= ServerBase.Config.Settings.SpawnProtectionRadius;
 		}
 
 		/// <summary>Computes the max styles...</summary>

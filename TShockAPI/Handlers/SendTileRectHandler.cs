@@ -410,7 +410,7 @@ namespace TShockAPI.Handlers
 			// this permission bypasses all checks for direct access to the world
 			if (args.Player.HasPermission(Permissions.allowclientsideworldedit))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect accepted clientside world edit from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect accepted clientside world edit from {args.Player.Name}"));
 
 				// use vanilla handling
 				args.Handled = false;
@@ -424,7 +424,7 @@ namespace TShockAPI.Handlers
 			// see default matches above and special cases below
 			if (args.Width > 4 || args.Length > 4)
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from size from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from size from {args.Player.Name}"));
 
 				// definitely invalid; do not send any correcting data
 				return;
@@ -433,7 +433,7 @@ namespace TShockAPI.Handlers
 			// player throttled?
 			if (args.Player.IsBouncerThrottled())
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from throttle from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from throttle from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -443,7 +443,7 @@ namespace TShockAPI.Handlers
 			// player disabled?
 			if (args.Player.IsBeingDisabled())
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from being disabled from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from being disabled from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -456,7 +456,7 @@ namespace TShockAPI.Handlers
 			// check if the positioning is valid
 			if (!IsRectPositionValid(args.Player, rect))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from out of bounds / build permission from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from out of bounds / build permission from {args.Player.Name}"));
 
 				// send nothing due to out of bounds
 				return;
@@ -465,7 +465,7 @@ namespace TShockAPI.Handlers
 			// a very special case, due to the clentaminator having a larger range than ServerPlayer.IsInRange() allows
 			if (MatchesConversionSpread(args.Player, rect))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -475,7 +475,7 @@ namespace TShockAPI.Handlers
 			// check if the distance is valid
 			if (!IsRectDistanceValid(args.Player, rect))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from out of range from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from out of range from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -485,7 +485,7 @@ namespace TShockAPI.Handlers
 			// a very special case, due to the flower seed check otherwise hijacking this
 			if (MatchesFlowerBoots(args.Player, rect))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -497,7 +497,7 @@ namespace TShockAPI.Handlers
 			{
 				if (match.Matches(args.Player, rect))
 				{
-					TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
+					ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
 					// send correcting data
 					args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
@@ -508,14 +508,14 @@ namespace TShockAPI.Handlers
 			// a few special cases
 			if (MatchesGrassMow(args.Player, rect) || MatchesChristmasTree(args.Player, rect))
 			{
-				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
+				ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from {args.Player.Name}"));
 
 				// send correcting data
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
 				return;
 			}
 
-			TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from matches from {args.Player.Name}"));
+			ServerBase.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from matches from {args.Player.Name}"));
 
 			// send correcting data
 			args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);

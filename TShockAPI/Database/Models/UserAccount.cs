@@ -77,7 +77,7 @@ public class UserAccount
 		}
 		catch (SaltParseException)
 		{
-			TShock.Log.ConsoleError(GetString($"Unable to verify the password hash for user {Name} ({AccountId})"));
+			ServerBase.Log.ConsoleError(GetString($"Unable to verify the password hash for user {Name} ({AccountId})"));
 			return false;
 		}
 
@@ -96,12 +96,12 @@ public class UserAccount
 		}
 		catch (FormatException)
 		{
-			TShock.Log.ConsoleWarn(
+			ServerBase.Log.ConsoleWarn(
 				GetString("Not upgrading work factor because bcrypt hash in an invalid format."));
 			return;
 		}
 
-		if (currentWorkFactor < TShock.Config.Settings.BCryptWorkFactor)
+		if (currentWorkFactor < ServerBase.Config.Settings.BCryptWorkFactor)
 		{
 			try
 			{
@@ -109,7 +109,7 @@ public class UserAccount
 			}
 			catch (UserAccountManager.UserAccountManagerException e)
 			{
-				TShock.Log.ConsoleError(e.ToString());
+				ServerBase.Log.ConsoleError(e.ToString());
 			}
 		}
 	}
@@ -118,20 +118,20 @@ public class UserAccount
 	/// <param name="password">The plain text password to hash</param>
 	public void CreateBCryptHash(string password)
 	{
-		if (password.Trim().Length < Math.Max(4, TShock.Config.Settings.MinimumPasswordLength))
+		if (password.Trim().Length < Math.Max(4, ServerBase.Config.Settings.MinimumPasswordLength))
 		{
-			int minLength = TShock.Config.Settings.MinimumPasswordLength;
+			int minLength = ServerBase.Config.Settings.MinimumPasswordLength;
 			throw new ArgumentOutOfRangeException("password",
 				GetString($"Password must be at least {minLength} characters."));
 		}
 
 		try
 		{
-			Password = BCrypt.Net.BCrypt.HashPassword(password.Trim(), TShock.Config.Settings.BCryptWorkFactor);
+			Password = BCrypt.Net.BCrypt.HashPassword(password.Trim(), ServerBase.Config.Settings.BCryptWorkFactor);
 		}
 		catch (ArgumentOutOfRangeException)
 		{
-			TShock.Log.ConsoleError(GetString(
+			ServerBase.Log.ConsoleError(GetString(
 				"Invalid BCrypt work factor in config file! Creating new hash using default work factor."));
 			Password = BCrypt.Net.BCrypt.HashPassword(password.Trim());
 		}
@@ -142,9 +142,9 @@ public class UserAccount
 	/// <param name="workFactor">The work factor to use in generating the password hash</param>
 	public void CreateBCryptHash(string password, int workFactor)
 	{
-		if (password.Trim().Length < Math.Max(4, TShock.Config.Settings.MinimumPasswordLength))
+		if (password.Trim().Length < Math.Max(4, ServerBase.Config.Settings.MinimumPasswordLength))
 		{
-			int minLength = TShock.Config.Settings.MinimumPasswordLength;
+			int minLength = ServerBase.Config.Settings.MinimumPasswordLength;
 			throw new ArgumentOutOfRangeException("password",
 				GetString($"Password must be at least {minLength} characters."));
 		}

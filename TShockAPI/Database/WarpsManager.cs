@@ -31,7 +31,7 @@ namespace TShockAPI.Database
 {
 	public static class WarpManager
 	{
-		private static IMongoCollection<Warp> warps => TShock.GlobalDatabase.GetCollection<Warp>("warps");
+		private static IMongoCollection<Warp> warps => ServerBase.GlobalDatabase.GetCollection<Warp>("warps");
 		/// <summary>
 		/// Adds a warp.
 		/// </summary>
@@ -48,7 +48,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -67,7 +67,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -97,7 +97,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -116,7 +116,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}

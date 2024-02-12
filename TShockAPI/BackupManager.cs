@@ -68,7 +68,7 @@ namespace TShockAPI
 				if (worldpath != null && !Directory.Exists(worldpath))
 					Directory.CreateDirectory(worldpath);
 
-				if (TShock.Config.Settings.ShowBackupAutosaveMessages)
+				if (ServerBase.Config.Settings.ShowBackupAutosaveMessages)
 				{
 					ServerPlayer.All.SendInfoMessage(GetString("ServerConsole map saving..."));
 				}
@@ -77,7 +77,7 @@ namespace TShockAPI
 				SaveManager.Instance.SaveWorld();
 				Console.WriteLine(GetString("World backed up."));
 				Console.ForegroundColor = ConsoleColor.Gray;
-				TShock.Log.Info(GetString("World backed up ({0}).", Main.worldPathName));
+				ServerBase.Log.Info(GetString("World backed up ({0}).", Main.worldPathName));
 
 				Main.ActiveWorldFileData._path = worldname;
 			}
@@ -86,8 +86,8 @@ namespace TShockAPI
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(GetString("Backup failed!"));
 				Console.ForegroundColor = ConsoleColor.Gray;
-				TShock.Log.Error(GetString("Backup failed!"));
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(GetString("Backup failed!"));
+				ServerBase.Log.Error(ex.ToString());
 			}
 		}
 

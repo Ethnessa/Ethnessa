@@ -29,17 +29,17 @@ namespace TShockAPI.ServerCommands
 						{
 							args.Player.SendSuccessMessage(GetString("You have successfully changed your password."));
 							UserAccountManager.SetUserAccountPassword(args.Player.Account, args.Parameters[1]); // SetUserPassword will hash it for you.
-							TShock.Log.ConsoleInfo(GetString("{0} ({1}) changed the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
+							ServerBase.Log.ConsoleInfo(GetString("{0} ({1}) changed the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
 						}
 						catch (ArgumentOutOfRangeException)
 						{
-							args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", TShock.Config.Settings.MinimumPasswordLength));
+							args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 						}
 					}
 					else
 					{
 						args.Player.SendErrorMessage(GetString("You failed to change your password."));
-						TShock.Log.ConsoleInfo(GetString("{0} ({1}) failed to change the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
+						ServerBase.Log.ConsoleInfo(GetString("{0} ({1}) failed to change the password for account {2}.", args.Player.IP, args.Player.Name, args.Player.Account.Name));
 					}
 				}
 				else
@@ -50,7 +50,7 @@ namespace TShockAPI.ServerCommands
 			catch (UserAccountManager.UserAccountManagerException ex)
 			{
 				args.Player.SendErrorMessage(GetString("Sorry, an error occurred: {0}.", ex.Message));
-				TShock.Log.ConsoleError(GetString("ChangePassword returned an error: {0}.", ex));
+				ServerBase.Log.ConsoleError(GetString("ChangePassword returned an error: {0}.", ex));
 			}
 		}
 

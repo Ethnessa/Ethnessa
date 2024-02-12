@@ -56,12 +56,12 @@ namespace TShockAPI
 		/// <summary>
 		/// The command specifier, defaults to "/"
 		/// </summary>
-		public static string Specifier => string.IsNullOrWhiteSpace(TShock.Config.Settings.CommandSpecifier) ? "/" : TShock.Config.Settings.CommandSpecifier;
+		public static string Specifier => string.IsNullOrWhiteSpace(ServerBase.Config.Settings.CommandSpecifier) ? "/" : ServerBase.Config.Settings.CommandSpecifier;
 
 		/// <summary>
 		/// The silent command specifier, defaults to "."
 		/// </summary>
-		public static string SilentSpecifier => string.IsNullOrWhiteSpace(TShock.Config.Settings.CommandSilentSpecifier) ? "." : TShock.Config.Settings.CommandSilentSpecifier;
+		public static string SilentSpecifier => string.IsNullOrWhiteSpace(ServerBase.Config.Settings.CommandSilentSpecifier) ? "." : ServerBase.Config.Settings.CommandSilentSpecifier;
 
 		private delegate void AddChatCommand(string permission, CommandDelegate command, params string[] names);
 
@@ -159,9 +159,9 @@ namespace TShockAPI
 				if (!cmd.CanRun(player))
 				{
 					if (cmd.DoLog)
-						TShock.Utils.SendLogs(GetString("{0} tried to execute {1}{2}.", player.Name, Specifier, cmdText), Color.PaleVioletRed, player);
+						ServerBase.Utils.SendLogs(GetString("{0} tried to execute {1}{2}.", player.Name, Specifier, cmdText), Color.PaleVioletRed, player);
 					else
-						TShock.Utils.SendLogs(GetString("{0} tried to execute (args omitted) {1}{2}.", player.Name, Specifier, cmdName), Color.PaleVioletRed, player);
+						ServerBase.Utils.SendLogs(GetString("{0} tried to execute (args omitted) {1}{2}.", player.Name, Specifier, cmdName), Color.PaleVioletRed, player);
 					player.SendErrorMessage(GetString("You do not have access to this command."));
 					if (player.HasPermission(Permissions.su))
 					{
@@ -175,9 +175,9 @@ namespace TShockAPI
 				else
 				{
 					if (cmd.DoLog)
-						TShock.Utils.SendLogs(GetString("{0} executed: {1}{2}.", player.Name, silent ? SilentSpecifier : Specifier, cmdText), Color.PaleVioletRed, player);
+						ServerBase.Utils.SendLogs(GetString("{0} executed: {1}{2}.", player.Name, silent ? SilentSpecifier : Specifier, cmdText), Color.PaleVioletRed, player);
 					else
-						TShock.Utils.SendLogs(GetString("{0} executed (args omitted): {1}{2}.", player.Name, silent ? SilentSpecifier : Specifier, cmdName), Color.PaleVioletRed, player);
+						ServerBase.Utils.SendLogs(GetString("{0} executed (args omitted): {1}{2}.", player.Name, silent ? SilentSpecifier : Specifier, cmdName), Color.PaleVioletRed, player);
 					cmd.Run(cmdText, silent, player, args);
 				}
 			}

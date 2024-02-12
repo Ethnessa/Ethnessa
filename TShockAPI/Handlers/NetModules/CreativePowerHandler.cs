@@ -50,7 +50,7 @@ namespace TShockAPI.Handlers.NetModules
 		{
 			if (!PowerToPermissionMap.ContainsKey(powerType))
 			{
-				TShock.Log.ConsoleDebug(GetString("CreativePowerHandler received permission check request for unknown creative power"));
+				ServerBase.Log.ConsoleDebug(GetString("CreativePowerHandler received permission check request for unknown creative power"));
 				return false;
 			}
 

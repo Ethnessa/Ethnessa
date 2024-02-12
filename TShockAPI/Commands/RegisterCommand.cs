@@ -33,11 +33,11 @@ namespace TShockAPI.ServerCommands
 					}
 					catch (ArgumentOutOfRangeException)
 					{
-						args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", TShock.Config.Settings.MinimumPasswordLength));
+						args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 						return;
 					}
 				}
-				else if (args.Parameters.Count == 2 && TShock.Config.Settings.AllowRegisterAnyUsername)
+				else if (args.Parameters.Count == 2 && ServerBase.Config.Settings.AllowRegisterAnyUsername)
 				{
 					account.Name = args.Parameters[0];
 					echoPassword = args.Parameters[1];
@@ -47,7 +47,7 @@ namespace TShockAPI.ServerCommands
 					}
 					catch (ArgumentOutOfRangeException)
 					{
-						args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", TShock.Config.Settings.MinimumPasswordLength));
+						args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 						return;
 					}
 				}
@@ -57,7 +57,7 @@ namespace TShockAPI.ServerCommands
 					return;
 				}
 
-				account.Group = TShock.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
+				account.Group = ServerBase.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
 				account.UUID = args.Player.UUID;
 
 				if (UserAccountManager.GetUserAccountByName(account.Name) == null && account.Name != ServerConsolePlayer.AccountName) // Cheap way of checking for existance of a user
@@ -65,28 +65,28 @@ namespace TShockAPI.ServerCommands
 					args.Player.SendSuccessMessage(GetString("Your account, \"{0}\", has been registered.", account.Name));
 					args.Player.SendSuccessMessage(GetString("Your password is {0}.", echoPassword));
 
-					if (!TShock.Config.Settings.DisableUUIDLogin)
+					if (!ServerBase.Config.Settings.DisableUUIDLogin)
 						args.Player.SendMessage(GetString($"Type {Commands.Specifier}login to log-in to your account using your UUID."), Color.White);
 
-					if (TShock.Config.Settings.AllowLoginAnyUsername)
+					if (ServerBase.Config.Settings.AllowLoginAnyUsername)
 						args.Player.SendMessage(GetString($"Type {Commands.Specifier}login \"{account.Name.Color(Utils.GreenHighlight)}\" {echoPassword.Color(Utils.BoldHighlight)} to log-in to your account."), Color.White);
 					else
 						args.Player.SendMessage(GetString($"Type {Commands.Specifier}login {echoPassword.Color(Utils.BoldHighlight)} to log-in to your account."), Color.White);
 
 					UserAccountManager.AddUserAccount(account);
-					TShock.Log.ConsoleInfo(GetString("{0} registered an account: \"{1}\".", args.Player.Name, account.Name));
+					ServerBase.Log.ConsoleInfo(GetString("{0} registered an account: \"{1}\".", args.Player.Name, account.Name));
 				}
 				else
 				{
 					args.Player.SendErrorMessage(GetString("Sorry, {0} was already taken by another person.", account.Name));
 					args.Player.SendErrorMessage(GetString("Please try a different username."));
-					TShock.Log.ConsoleInfo(GetString("{0} attempted to register for the account {1} but it was already taken.", args.Player.Name, account.Name));
+					ServerBase.Log.ConsoleInfo(GetString("{0} attempted to register for the account {1} but it was already taken.", args.Player.Name, account.Name));
 				}
 			}
 			catch (UserAccountManager.UserAccountManagerException ex)
 			{
 				args.Player.SendErrorMessage(GetString("Sorry, an error occurred: {0}.", ex.Message));
-				TShock.Log.ConsoleError(GetString("RegisterUser returned an error: {0}.", ex));
+				ServerBase.Log.ConsoleError(GetString("RegisterUser returned an error: {0}.", ex));
 			}
 		}
 	}

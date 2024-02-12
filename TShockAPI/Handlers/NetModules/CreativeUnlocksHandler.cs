@@ -53,7 +53,7 @@ namespace TShockAPI.Handlers.NetModules
 		{
 			if (!Main.GameModeInfo.IsJourneyMode)
 			{
-				TShock.Log.ConsoleDebug(
+				ServerBase.Log.ConsoleDebug(
 					GetString($"NetModuleHandler received attempt to unlock sacrifice while not in journey mode from {player.Name}")
 				);
 
@@ -62,7 +62,7 @@ namespace TShockAPI.Handlers.NetModules
 
 			if (UnknownField != 0)
 			{
-				TShock.Log.ConsoleDebug(
+				ServerBase.Log.ConsoleDebug(
 					GetString($"CreativeUnlocksHandler received non-vanilla unlock request. Random field value: {UnknownField} but should be 0 from {player.Name}")
 				);
 

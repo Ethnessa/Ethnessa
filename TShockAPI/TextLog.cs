@@ -200,7 +200,7 @@ namespace TShockAPI
 		/// <param name="message">The message to be written.</param>
 		public void ConsoleDebug(string message)
 		{
-			if (TShock.Config.Settings.DebugLogs)
+			if (ServerBase.Config.Settings.DebugLogs)
 			{
 				Console.WriteLine("Debug: " + message);
 				Write(message, TraceLevel.Verbose);
@@ -223,7 +223,7 @@ namespace TShockAPI
 		/// <param name="message">The message to be written.</param>
 		public void Debug(string message)
 		{
-			if (TShock.Config.Settings.DebugLogs)
+			if (ServerBase.Config.Settings.DebugLogs)
 				Write(message, TraceLevel.Verbose);
 		}
 
@@ -234,7 +234,7 @@ namespace TShockAPI
 		/// <param name="args">The format arguments.</param>
 		public void Debug(string format, params object[] args)
 		{
-			if (TShock.Config.Settings.DebugLogs)
+			if (ServerBase.Config.Settings.DebugLogs)
 				Debug(string.Format(format, args));
 		}
 
@@ -268,7 +268,7 @@ namespace TShockAPI
 			}
 			catch (ObjectDisposedException)
 			{
-				ServerApi.LogWriter.PluginWriteLine(TShock.instance, logEntry, TraceLevel.Error);
+				ServerApi.LogWriter.PluginWriteLine(ServerBase.instance, logEntry, TraceLevel.Error);
 				Console.WriteLine("Unable to write to log as log has been disposed.");
 				Console.WriteLine("{0} - {1}: {2}: {3}",
 					DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),

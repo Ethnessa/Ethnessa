@@ -41,13 +41,13 @@ namespace TShockAPI
 		private DateTime LastTimelyRun = DateTime.UtcNow;
 
 		/// <summary>A reference to the TShock plugin so we can register events.</summary>
-		private TShock Plugin;
+		private ServerBase Plugin;
 
 		/// <summary>Creates an ItemBan system given a plugin to register events to and a database.</summary>
 		/// <param name="plugin">The executing plugin.</param>
 		/// <param name="database">The database the item ban information is stored in.</param>
 		/// <returns>A new item ban system.</returns>
-		internal ItemBans(TShock plugin)
+		internal ItemBans(ServerBase plugin)
 		{
 			Plugin = plugin;
 
@@ -71,9 +71,9 @@ namespace TShockAPI
 		/// <param name="args">The standard event arguments.</param>
 		internal void OnSecondlyUpdate(EventArgs args)
 		{
-			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
+			DisableFlags disableFlags = ServerBase.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 
-			foreach (ServerPlayer player in TShock.Players)
+			foreach (ServerPlayer player in ServerBase.Players)
 			{
 				if (player == null || !player.Active)
 				{
@@ -148,7 +148,7 @@ namespace TShockAPI
 
 		internal void OnPlayerUpdate(object sender, PlayerUpdateEventArgs args)
 		{
-			DisableFlags disableFlags = TShock.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
+			DisableFlags disableFlags = ServerBase.Config.Settings.DisableSecondUpdateLogs ? DisableFlags.WriteToConsole : DisableFlags.WriteToLogAndConsole;
 			bool useItem = args.Control.IsUsingItem;
 			ServerPlayer player = args.Player;
 			string itemName = player.TPlayer.inventory[args.SelectedItem].Name;

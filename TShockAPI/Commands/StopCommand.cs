@@ -17,7 +17,7 @@ namespace TShockAPI.ServerCommands
 
 			if (Main.ServerSideCharacter)
 			{
-				foreach (ServerPlayer player in TShock.Players)
+				foreach (ServerPlayer player in ServerBase.Players)
 				{
 					if (player != null && player.IsLoggedIn && !player.IsDisabledPendingTrashRemoval)
 					{
@@ -27,7 +27,7 @@ namespace TShockAPI.ServerCommands
 			}
 
 			string reason = ((args.Parameters.Count > 0) ? GetString("ServerConsole shutting down: ") + String.Join(" ", args.Parameters) : GetString("ServerConsole shutting down!"));
-			TShock.Utils.StopServer(true, reason);
+			ServerBase.Utils.StopServer(true, reason);
 		}
 
 	}

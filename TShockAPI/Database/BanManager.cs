@@ -35,7 +35,7 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class BanManager
 	{
-		private static IMongoCollection<Ban> bans => TShock.GlobalDatabase.GetCollection<Ban>("bans");
+		private static IMongoCollection<Ban> bans => ServerBase.GlobalDatabase.GetCollection<Ban>("bans");
 
 		/// <summary>
 		/// Returns the number of bans that already exist
@@ -173,7 +173,7 @@ namespace TShockAPI.Database
 
 			bans.InsertOne(ban);
 
-			TShock.Log.Info("A new ban has been created, AccountId:  " + ban.BanId);
+			ServerBase.Log.Info("A new ban has been created, AccountId:  " + ban.BanId);
 			OnBanAdd?.Invoke(ban);
 			return ban;
 		}
@@ -195,8 +195,8 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error("There was an error removing the ban with value " + value);
-				TShock.Log.ConsoleError(ex.ToString());
+				ServerBase.Log.Error("There was an error removing the ban with value " + value);
+				ServerBase.Log.ConsoleError(ex.ToString());
 				return false;
 			}
 		}

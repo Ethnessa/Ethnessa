@@ -32,7 +32,7 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class GroupManager
 	{
-		public static IMongoCollection<Group> groups => TShock.GlobalDatabase.GetCollection<Group>("groups");
+		public static IMongoCollection<Group> groups => ServerBase.GlobalDatabase.GetCollection<Group>("groups");
 		public static List<Group> GetGroups()
 		{
 			return groups.Find(Builders<Group>.Filter.Empty).ToList();
@@ -66,21 +66,21 @@ namespace TShockAPI.Database
 					Permissions.magicconch,
 					Permissions.demonconch});
 
-			Group.DefaultGroup = GetGroupByName(TShock.Config.Settings.DefaultGuestGroupName);
+			Group.DefaultGroup = GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
 			AssertCoreGroupsPresent();
 		}
 
 		internal static void AssertCoreGroupsPresent()
 		{
-			if (!(GroupExists(TShock.Config.Settings.DefaultGuestGroupName)))
+			if (!(GroupExists(ServerBase.Config.Settings.DefaultGuestGroupName)))
 			{
-				TShock.Log.ConsoleError(GetString("The guest group could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
+				ServerBase.Log.ConsoleError(GetString("The guest group could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The guest group could not be found."));
 			}
 
-			if (!(GroupExists(TShock.Config.Settings.DefaultRegistrationGroupName)))
+			if (!(GroupExists(ServerBase.Config.Settings.DefaultRegistrationGroupName)))
 			{
-				TShock.Log.ConsoleError(GetString("The default usergroup could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
+				ServerBase.Log.ConsoleError(GetString("The default usergroup could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The default usergroup could not be found."));
 			}
 		}
@@ -168,7 +168,7 @@ namespace TShockAPI.Database
 				if (parent == null || name == parentName)
 				{
 					var error = GetString($"Invalid parent group {parentName} for group {group.Name}");
-					TShock.Log.ConsoleError(error);
+					ServerBase.Log.ConsoleError(error);
 					throw new GroupManagerException(error);
 				}
 				group.ParentGroupName = parent.Name;
@@ -263,22 +263,22 @@ namespace TShockAPI.Database
 				groups.ReplaceOne(g => g.Id == grp.Id, grp);
 			}
 
-			TShock.Config.Read(FileTools.ConfigPath, out bool writeConfig);
-			if (TShock.Config.Settings.DefaultGuestGroupName == name)
+			ServerBase.Config.Read(FileTools.ConfigPath, out bool writeConfig);
+			if (ServerBase.Config.Settings.DefaultGuestGroupName == name)
 			{
-				TShock.Config.Settings.DefaultGuestGroupName = newName;
+				ServerBase.Config.Settings.DefaultGuestGroupName = newName;
 				Group.DefaultGroup = group;
 			}
-			if (TShock.Config.Settings.DefaultRegistrationGroupName == name)
+			if (ServerBase.Config.Settings.DefaultRegistrationGroupName == name)
 			{
-				TShock.Config.Settings.DefaultRegistrationGroupName = newName;
+				ServerBase.Config.Settings.DefaultRegistrationGroupName = newName;
 			}
 			if (writeConfig)
 			{
-				TShock.Config.Write(FileTools.ConfigPath);
+				ServerBase.Config.Write(FileTools.ConfigPath);
 			}
 
-			foreach (var player in TShock.Players.Where(p => p?.Group.Name == name))
+			foreach (var player in ServerBase.Players.Where(p => p?.Group.Name == name))
 			{
 				player.Group = group;
 			}

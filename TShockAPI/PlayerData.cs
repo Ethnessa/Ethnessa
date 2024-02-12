@@ -34,10 +34,10 @@ namespace TShockAPI
 		public ObjectId Id { get; set; }
 		public int UserId { get; set; }
 		public NetItem[] inventory = new NetItem[NetItem.MaxInventory];
-		public int health = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
-		public int maxHealth = TShock.ServerSideCharacterConfig.Settings.StartingHealth;
-		public int mana = TShock.ServerSideCharacterConfig.Settings.StartingMana;
-		public int maxMana = TShock.ServerSideCharacterConfig.Settings.StartingMana;
+		public int health = ServerBase.ServerSideCharacterConfig.Settings.StartingHealth;
+		public int maxHealth = ServerBase.ServerSideCharacterConfig.Settings.StartingHealth;
+		public int mana = ServerBase.ServerSideCharacterConfig.Settings.StartingMana;
+		public int maxMana = ServerBase.ServerSideCharacterConfig.Settings.StartingMana;
 		public bool exists;
 		public int spawnX = -1;
 		public int spawnY = -1;
@@ -75,9 +75,9 @@ namespace TShockAPI
 				this.inventory[i] = new NetItem();
 			}
 
-			for (int i = 0; i < TShock.ServerSideCharacterConfig.Settings.StartingInventory.Count; i++)
+			for (int i = 0; i < ServerBase.ServerSideCharacterConfig.Settings.StartingInventory.Count; i++)
 			{
-				var item = TShock.ServerSideCharacterConfig.Settings.StartingInventory[i];
+				var item = ServerBase.ServerSideCharacterConfig.Settings.StartingInventory[i];
 				StoreSlot(i, item.NetId, item.PrefixId, item.Stack);
 			}
 		}

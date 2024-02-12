@@ -90,7 +90,7 @@ namespace TShockAPI.Localization
 				}
 				catch (Exception ex)
 				{
-					TShock.Log.ConsoleError($"Error processing fields: {ex.Message}");
+					ServerBase.Log.ConsoleError($"Error processing fields: {ex.Message}");
 				}
 
 			}

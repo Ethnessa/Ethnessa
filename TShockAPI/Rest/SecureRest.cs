@@ -56,12 +56,12 @@ namespace Rests
 			Register(new SecureRestCommand("/token/destroy/{token}", DestroyToken));
 			Register(new SecureRestCommand("/v3/token/destroy/all", DestroyAllTokens, RestPermissions.restmanage));
 
-			foreach (KeyValuePair<string, TokenData> t in TShock.RESTStartupTokens)
+			foreach (KeyValuePair<string, TokenData> t in ServerBase.RESTStartupTokens)
 			{
 				AppTokens.Add(t.Key, t.Value);
 			}
 
-			foreach (KeyValuePair<string, TokenData> t in TShock.Config.Settings.ApplicationRestTokens)
+			foreach (KeyValuePair<string, TokenData> t in ServerBase.Config.Settings.ApplicationRestTokens)
 			{
 				AppTokens.Add(t.Key, t.Value);
 			}
@@ -117,9 +117,9 @@ namespace Rests
 			int tokens = 0;
 			if (tokenBucket.TryGetValue(context.RemoteEndPoint.Address.ToString(), out tokens))
 			{
-				if (tokens >= TShock.Config.Settings.RESTMaximumRequestsPerInterval)
+				if (tokens >= ServerBase.Config.Settings.RESTMaximumRequestsPerInterval)
 				{
-					TShock.Log.ConsoleError(GetString("A REST login from {0} was blocked as it currently has {1} rate-limit tokens and is at the RESTMaximumRequestsPerInterval threshold.", context.RemoteEndPoint.Address.ToString(), tokens));
+					ServerBase.Log.ConsoleError(GetString("A REST login from {0} was blocked as it currently has {1} rate-limit tokens and is at the RESTMaximumRequestsPerInterval threshold.", context.RemoteEndPoint.Address.ToString(), tokens));
 					tokenBucket[context.RemoteEndPoint.Address.ToString()] += 1; // Tokens over limit, increment by one and reject request
 					return new RestObject("403")
 					{
@@ -228,8 +228,8 @@ namespace Rests
 			}
 
 			object result = secureCmd.Execute(verbs, parms, tokenData, request, context);
-			if (cmd.DoLog && TShock.Config.Settings.LogRest)
-				TShock.Utils.SendLogs(GetString(
+			if (cmd.DoLog && ServerBase.Config.Settings.LogRest)
+				ServerBase.Utils.SendLogs(GetString(
 					"\"{0}\" requested REST endpoint: {1}", tokenData.Username, this.BuildRequestUri(cmd, verbs, parms, false)),
 					Color.PaleVioletRed);
 

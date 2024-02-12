@@ -33,7 +33,7 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class RegionManager
 	{
-		private static IMongoCollection<Region> regions => TShock.GlobalDatabase.GetCollection<Region>("regions");
+		private static IMongoCollection<Region> regions => ServerBase.GlobalDatabase.GetCollection<Region>("regions");
 		public static int CountRegions()
 		{
 			return Convert.ToInt32(regions.CountDocuments(Builders<Region>.Filter.Empty));
@@ -67,7 +67,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -90,7 +90,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -114,7 +114,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -139,7 +139,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 				return false;
 			}
 		}
@@ -162,7 +162,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 				return false;
 			}
 		}
@@ -275,7 +275,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -305,7 +305,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 
 			return false;
@@ -357,7 +357,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -388,7 +388,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return false;
 		}
@@ -407,7 +407,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 			}
 			return regionList;
 		}
@@ -533,7 +533,7 @@ namespace TShockAPI.Database
 			}
 			catch (Exception ex)
 			{
-				TShock.Log.Error(ex.ToString());
+				ServerBase.Log.Error(ex.ToString());
 				return false;
 			}
 		}

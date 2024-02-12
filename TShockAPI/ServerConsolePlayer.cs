@@ -165,7 +165,7 @@ namespace TShockAPI
 			{
 				int spawnTileX;
 				int spawnTileY;
-				TShock.Utils.GetRandomClearTileWithInRange(startTileX, startTileY, tileXRange, tileYRange, out spawnTileX,
+				ServerBase.Utils.GetRandomClearTileWithInRange(startTileX, startTileY, tileXRange, tileYRange, out spawnTileX,
 															 out spawnTileY);
 				NPC.NewNPC(new EntitySource_DebugCommand(), spawnTileX * 16, spawnTileY * 16, type);
 			}
