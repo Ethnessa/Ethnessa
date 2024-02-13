@@ -5,15 +5,18 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<AssemblyName>TShock.Server</AssemblyName> <!-- TShock was initially decided on by a community poll, however tshock already exists as a folder and will clash -->
+		<AssemblyName>TShock.Server</AssemblyName>
+		<!-- TShock was initially decided on by a community poll, however tshock already exists as a folder and will clash -->
 		<RunPostBuildEvent>Always</RunPostBuildEvent>
 		<DebugType>embedded</DebugType>
-		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- needed for sqlite native libs -->
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<!-- needed for sqlite native libs -->
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\TerrariaServerAPI\TerrariaServerAPI\TerrariaServerAPI.csproj" ExcludeFromSingleFile="true" />
-		<ProjectReference Include="..\TShockAPI\TShockAPI.csproj" ExcludeFromSingleFile="true" ReferenceOutputAssembly="false" /> <!-- allow api to rebuilt with this project, so ServerPlugins are refreshed -->
+		<ProjectReference Include="..\TShockAPI\TShockAPI.csproj" ExcludeFromSingleFile="true" ReferenceOutputAssembly="false" />
+		<!-- allow api to rebuilt with this project, so ServerPlugins are refreshed -->
 		<ProjectReference Include="..\TShockPluginManager\TShockPluginManager.csproj"/>
 		<Reference Include="HttpServer" ExcludeFromSingleFile="true">
 			<HintPath>..\prebuilts\HttpServer.dll</HintPath>
@@ -22,18 +25,19 @@
 
 	<ItemGroup>
 		<None Include="..\prebuilts\GeoIP.dat">
-		  <Link>GeoIP.dat</Link>
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<Link>GeoIP.dat</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</None>
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-		<PackageReference Include="MySql.Data" Version="8.0.31" />
-		<PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.11" />
-		<PackageReference Include="ModFramework" Version="1.1.7" GeneratePathProperty="true" /> <!-- only used to extract out to ./bin. -->
-		<PackageReference Include="GetText.NET" Version="1.7.14" /> <!-- only used to extract out to ./bin. -->
+		<PackageReference Include="ModFramework" Version="1.1.7" GeneratePathProperty="true" />
+		<!-- only used to extract out to ./bin. -->
+		<PackageReference Include="GetText.NET" Version="1.7.14" />
+		<!-- only used to extract out to ./bin. -->
+		<PackageReference Include="MongoDB.Driver" Version="2.23.1" GeneratePathProperty="true" />
 
 		<!-- the launcher doesnt need the direct OTAPI reference, but since PackageReference[ExcludeFromSingleFile] doesnt work, exclude the assets and copy manually -->
 		<PackageReference Include="OTAPI.Upcoming" Version="3.1.20" ExcludeAssets="all" GeneratePathProperty="true" />
@@ -46,8 +50,12 @@
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</None>
 		<None Include="$(PkgModFramework)\lib\net6.0\ModFramework.dll">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</None>
+		<None Include="$(PkgMongoDB_Driver)\lib\netstandard2.0\MongoDB.Driver.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</None>
 	</ItemGroup>
 
