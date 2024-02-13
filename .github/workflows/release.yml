@@ -8,8 +8,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+        # Removed the line for submodules: 'recursive'
 
       - uses: actions/setup-dotnet@v3
         with:
@@ -26,8 +25,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+        # Removed the line for submodules: 'recursive'
 
       - uses: actions/setup-dotnet@v3
         with:
