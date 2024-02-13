@@ -312,7 +312,9 @@ namespace TShockAPI
 			{
 				if (string.IsNullOrWhiteSpace(Config.Settings.MongoConnectionString))
 				{
-					throw new Exception("The mongo connection string was left empty!");
+					ServerApi.LogWriter.PluginWriteLine(this,
+												GetString("No MongoDB connection string was provided. TShock will not be able to start."),
+																		TraceLevel.Error);
 				}
 
 				var mongoConnectionSettings =
