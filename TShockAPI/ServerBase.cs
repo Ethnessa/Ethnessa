@@ -15,6 +15,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using HttpServer;
 using Terraria;
 using Terraria.Achievements;
 using Terraria.GameContent.Creative;
@@ -224,23 +225,28 @@ namespace TShockAPI
 		{
 			void SafeError(string message)
 			{
+				// Attempt to log the message if the Log is not null, else write to the console.
 				if (Log is not null) Log.ConsoleError(message);
 				else Console.WriteLine(message);
-			}
+			};
 
-			;
+			// Display a general error message about the crash.
+			SafeError("TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem.");
+			SafeError("Until the problem is resolved, TShock will not be able to start (and will crash on startup).");
 
-			SafeError(GetString(
-				"TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem."));
-			SafeError(GetString(
-				"Until the problem is resolved, TShock will not be able to start (and will crash on startup)."));
+			// If an exception was provided, log its details.
 			if (ex is not null)
 			{
 				SafeError(ex.ToString());
 			}
 
-			Environment.Exit(1);
+			// Before exiting, ensure there's a pause so the user can read the error message if running outside a debugger.
+			Console.WriteLine("Press enter to exit...");
+			Console.ReadLine(); // Wait for user input before closing.
+
+			Environment.Exit(1); // Exit the application.
 		}
+
 
 		/// <summary>Initialize - Called by the TerrariaServerAPI during initialization.</summary>
 		public override void Initialize()
@@ -315,14 +321,33 @@ namespace TShockAPI
 					ServerApi.LogWriter.PluginWriteLine(this,
 												GetString("No MongoDB connection string was provided. TShock will not be able to start."),
 																		TraceLevel.Error);
+					throw new Exception("No MongoDB connection string was found!");
 				}
 
-				var mongoConnectionSettings =
-					MongoClientSettings.FromConnectionString(Config.Settings.MongoConnectionString);
+				MongoClient mongoClient;
 
-				var mongoClient = new MongoClient(mongoConnectionSettings);
-
-
+				try
+				{
+					var mongoConnectionSettings =
+						MongoClientSettings.FromConnectionString(Config.Settings.MongoConnectionString);
+					mongoClient = new MongoClient(mongoConnectionSettings);
+				}
+				catch (MongoConfigurationException ex)
+				{
+					ServerApi.LogWriter.PluginWriteLine(this,
+						GetString(
+							"The provided MongoDB connection string is invalid. TShock will not be able to start."),
+						TraceLevel.Error);
+					throw new Exception("Invalid MongoDB connection string!", ex);
+				}
+				catch (TimeoutException ex)
+				{
+					ServerApi.LogWriter.PluginWriteLine(this,
+						GetString(
+							"Could not connect to the MongoDB server. TShock will not be able to start."),
+						TraceLevel.Error);
+					throw new Exception("Could not connect to the MongoDB server. Is it running?", ex);
+				}
 
 				// attempt to make connection to global database
 				GlobalDatabase = mongoClient.GetDatabase(Config.Settings.DefaultGlobalDatabase);
@@ -330,15 +355,13 @@ namespace TShockAPI
 				// attempt to make connection to local database
 				LocalDatabase = mongoClient.GetDatabase(Config.Settings.LocalDatabase);
 
-				// POSSIBLY REIMPLEMENT THIS LATER WITH MONGODB
-				/*if (Config.Settings.UseSqlLogs)
-					Log = new SqlLog(Database, logFilename, LogClear);
-				else*/
+				// TODO: Allow MongoDB logging to be enabled/disabled, like TShock's prev SQL logging
+
 				Log = new TextLog(logFilename, LogClear);
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
-					if (ServerBase.Config.Settings.DisplayClosedImproperlyWarning) // bcuz who gives a fuck
+					if (ServerBase.Config.Settings.DisplayClosedImproperlyWarning) // bcuz who gives a fuck, not me
 					{
 						Log.ConsoleInfo(GetString(
 							"TShock was improperly shut down. Please use the exit command in the future to prevent this."));
