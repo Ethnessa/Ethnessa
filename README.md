@@ -7,6 +7,13 @@ What is this? As of right now it is a fork of TShock which features a complete d
 > [!IMPORTANT]
 > A MongoDB connection is REQUIRED for this to run! Configure in `data/config.json`
 
+## How do I get MongoDB setup?
+Getting MongoDB installed and configured to run with your server is easy! 
+
+1. Download & Install [MongoDB](https://www.mongodb.com/try/download/community)
+2. If you are running it locally, you don't have to do anything else! Otherwise update `MongoConnectionString` in `data/config.json`.
+3. (Recommended, but optional) Setup authentication on your MongoDB!
+
 ## Notable changes:
 - TSPlayer has been renamed **ServerPlayer**
 - TShock main class is now **ServerBase**
