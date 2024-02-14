@@ -29,13 +29,13 @@ namespace TShockAPI.Localization
 	/// </summary>
 	public static class EnglishLanguage
 	{
-		private static readonly Dictionary<int, string> ItemNames = new Dictionary<int, string>();
+		public static readonly Dictionary<int, string> ItemNames = new Dictionary<int, string>();
 
-		private static readonly Dictionary<int, string> NpcNames = new Dictionary<int, string>();
+		public static readonly Dictionary<int, string> NpcNames = new Dictionary<int, string>();
 
-		private static readonly Dictionary<int, string> Prefixs = new Dictionary<int, string>();
+		public static readonly Dictionary<int, string> Prefixs = new Dictionary<int, string>();
 
-		private static readonly Dictionary<int, string> Buffs = new Dictionary<int, string>();
+		public static readonly Dictionary<int, string> Buffs = new Dictionary<int, string>();
 
 		internal static void Initialize()
 		{

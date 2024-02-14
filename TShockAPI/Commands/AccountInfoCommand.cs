@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TShockAPI.Database;
 
 namespace TShockAPI.ServerCommands
 {
+	/// <summary>
+	/// This command is used to view account information. Stolen from old TShock API.
+	/// </summary>
 	public class AccountInfoCommand : Command
 	{
 		public override List<string> Names { get; protected set; } = new List<string>() { "accountinfo", "ai" };
