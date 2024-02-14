@@ -80,6 +80,43 @@ namespace TShockAPI
 		}
 
 		/// <summary>
+		/// Parses a string into a TimeSpan object.
+		/// </summary>
+		/// <param name="input">The string input</param>
+		/// <returns>A timespan if valid string, or null</returns>
+		public TimeSpan? ParseDuration(string input)
+		{
+			try
+			{
+				// Define a pattern to match each time unit
+				var pattern = @"(?:(\d+)y)?(?:(\d+)m)?(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?";
+				var match = Regex.Match(input, pattern);
+
+				// Extract each component and convert to int, defaulting to 0 if not found
+				int years = string.IsNullOrEmpty(match.Groups[1].Value) ? 0 : int.Parse(match.Groups[1].Value);
+				int months = string.IsNullOrEmpty(match.Groups[2].Value) ? 0 : int.Parse(match.Groups[2].Value);
+				int weeks = string.IsNullOrEmpty(match.Groups[3].Value) ? 0 : int.Parse(match.Groups[3].Value);
+				int days = string.IsNullOrEmpty(match.Groups[4].Value) ? 0 : int.Parse(match.Groups[4].Value);
+				int hours = string.IsNullOrEmpty(match.Groups[5].Value) ? 0 : int.Parse(match.Groups[5].Value);
+				// Ensure minute and second groups are correctly captured by adjusting their indices
+				int minutes = string.IsNullOrEmpty(match.Groups[6].Value) ? 0 : int.Parse(match.Groups[6].Value);
+				int seconds = string.IsNullOrEmpty(match.Groups[7].Value) ? 0 : int.Parse(match.Groups[7].Value);
+
+				// Convert years and months to days (approximation)
+				int totalDays = years * 365 + months * 30 + weeks * 7 + days;
+
+				// Create TimeSpan
+				return new TimeSpan(totalDays, hours, minutes, seconds);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error parsing duration: {ex.Message}");
+				// Return null or handle the error as appropriate for your application
+				return null;
+			}
+		}
+
+		/// <summary>
 		/// It's a clamp function
 		/// </summary>
 		/// <typeparam name="T"></typeparam>

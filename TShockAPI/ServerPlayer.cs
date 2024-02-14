@@ -88,7 +88,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="search">Player name or AccountId</param>
 		/// <returns>A list of matching players</returns>
-		public static List<ServerPlayer> FindByNameOrId(string search)
+		public static List<ServerPlayer> GetByNameOrId(string search)
 		{
 			var found = new List<ServerPlayer>();
 
@@ -134,6 +134,12 @@ namespace TShockAPI
 				}
 			}
 			return found;
+		}
+
+		public static ServerPlayer? GetFirstByNameOrId(string search)
+		{
+			var players = GetByNameOrId(search);
+			return players.FirstOrDefault();
 		}
 
 		/// <summary>
@@ -282,7 +288,7 @@ namespace TShockAPI
 		/// UserAccount object associated with the player.
 		/// Set when the player logs in.
 		/// </summary>
-		public UserAccount Account { get; set; }
+		public UserAccount? Account { get; set; }
 
 		/// <summary>
 		/// Whether the player performed a valid login attempt (i.e. entered valid user name and password) but is still blocked

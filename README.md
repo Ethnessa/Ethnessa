@@ -12,7 +12,7 @@ What is this? As of right now it is a fork of TShock which features a complete d
 - TShock main class is now **ServerBase**
 - Accessing DB storage can be done from `ServerBase.GlobalDatabase` or `ServerBase.LocalDatabase`. These are both IMongoDatabase objects.
 - ServerPlayer has been renamed to **ServerConsolePlayer**
-- Ban system has been redone, however it is not implemented
+- Ban system has been redone
 - Most commands have been ripped out
 
 ## Why?

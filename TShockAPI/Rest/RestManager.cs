@@ -1235,7 +1235,7 @@ namespace TShockAPI
 			if (string.IsNullOrWhiteSpace(name))
 				return RestMissingParam("player");
 
-			var found = ServerPlayer.FindByNameOrId(name);
+			var found = ServerPlayer.GetByNameOrId(name);
 			switch (found.Count)
 			{
 				case 1:

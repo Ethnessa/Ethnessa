@@ -74,13 +74,7 @@ namespace TShockAPI
 				ChatCommands.Add(cmd);
 			};
 
-			/*add(new Command(SetupToken, "setup")
-			{
-				AllowServer = false,
-				HelpText = GetString("Used to authenticate as superadmin when first setting up TShock.")
-			});*/
-
-			// all commands will eventually just be instanceable objects like this
+			// TODO: just add these to a list, instead of calling the add action for each one
 			add(new UserCommand());
 			add(new StopCommand());
 			add(new GroupCommand());
@@ -95,6 +89,8 @@ namespace TShockAPI
 			add(new ConfigCommand());
 			add(new SetSpawnCommand());
 			add(new SpawnCommand());
+			add(new BanCommand());
+			add(new UuidCommand());
 
 			TShockCommands = new List<Command>(tshockCommands);
 		}

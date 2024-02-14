@@ -14,9 +14,6 @@ namespace TShockAPI.ServerCommands
 		public override List<string> Names { get; protected set; } = new() { "user" };
 		public override CommandDelegate CommandDelegate { get; set; } = Execute;
 		public override List<string> Permissions { get; protected set; } = new() { TShockAPI.Permissions.user };
-		public override bool AllowServer { get; set; } = false;
-		public override bool DoLog { get; set; } = false;
-
 		private static void Execute(CommandArgs args)
 		{
 			// This guy needs to be here so that people don't get exceptions when they type /user

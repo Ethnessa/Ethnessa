@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using HttpServer;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using TShockAPI.Database.Models;
@@ -151,21 +152,47 @@ namespace TShockAPI.Database
 				ExpirationDateTime = endDate ?? DateTime.MaxValue
 			};
 
+			var banMessage = BanManager.GetBanDisconnectMessage(ban);
+
 			switch (type)
 			{
 				case BanType.Uuid:
 				{
 					ban.Uuid = value;
+
+					// find player with uuid and disconnect
+					ServerBase.Players.FirstOrDefault(x=>x.UUID == value)?.Disconnect(banMessage);
 					break;
 				}
 				case BanType.AccountName:
 				{
 					ban.AccountName = value;
+
+					// find player with account name and disconnect
+					ServerBase.Players.FirstOrDefault(x=>x.Account?.Name == value)?.Disconnect(banMessage);
 					break;
 				}
 				case BanType.IpAddress:
 				{
 					ban.IpAddress = value;
+
+					// find all players with ip address, and disconnect
+					var players = ServerBase.Players.Where(x=>x?.IP == value);
+					foreach (var player in players)
+					{
+						if (player is null)
+						{
+							continue;
+						}
+
+						if (player?.RealPlayer is false)
+						{
+							continue;
+						}
+
+						player?.Disconnect(banMessage);
+					}
+
 					break;
 				}
 				default: throw new Exception("Invalid ban type!");

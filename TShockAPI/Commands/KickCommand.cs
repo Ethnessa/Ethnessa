@@ -26,7 +26,7 @@ namespace TShockAPI.ServerCommands
 			}
 
 			string plStr = args.Parameters[0];
-			var players = ServerPlayer.FindByNameOrId(plStr);
+			var players = ServerPlayer.GetByNameOrId(plStr);
 			if (players.Count == 0)
 			{
 				args.Player.SendErrorMessage(GetString("Player not found. Unable to kick the player."));

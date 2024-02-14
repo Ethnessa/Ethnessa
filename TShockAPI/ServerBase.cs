@@ -84,7 +84,7 @@ namespace TShockAPI
 		public static bool OverridePort;
 
 		/// <summary>Geo - Static reference to the GeoIP system which determines the location of an IP address.</summary>
-		public static GeoIPCountry Geo;
+		public static GeoIPCountry? Geo;
 
 		/// <summary>RestApi - Static reference to the Rest API authentication manager.</summary>
 		public static SecureRest RestApi;
@@ -228,10 +228,13 @@ namespace TShockAPI
 				// Attempt to log the message if the Log is not null, else write to the console.
 				if (Log is not null) Log.ConsoleError(message);
 				else Console.WriteLine(message);
-			};
+			}
+
+			;
 
 			// Display a general error message about the crash.
-			SafeError("TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem.");
+			SafeError(
+				"TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem.");
 			SafeError("Until the problem is resolved, TShock will not be able to start (and will crash on startup).");
 
 			// If an exception was provided, log its details.
@@ -319,8 +322,8 @@ namespace TShockAPI
 				if (string.IsNullOrWhiteSpace(Config.Settings.MongoConnectionString))
 				{
 					ServerApi.LogWriter.PluginWriteLine(this,
-												GetString("No MongoDB connection string was provided. TShock will not be able to start."),
-																		TraceLevel.Error);
+						GetString("No MongoDB connection string was provided. TShock will not be able to start."),
+						TraceLevel.Error);
 					throw new Exception("No MongoDB connection string was found!");
 				}
 
@@ -414,8 +417,7 @@ namespace TShockAPI
 
 				Log.ConsoleInfo(GetString("Paradox x TShock now running!"));
 
-				// TODO: We need a better way to do event handling with async methods... i dont like this at all
-				// we may possibly want to re-do the event system :shrug:
+				// TODO: look into better event handling :shrug:
 				ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit);
 				ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
 				ServerApi.Hooks.GameHardmodeTileUpdate.Register(this, OnHardUpdate);
@@ -496,7 +498,7 @@ namespace TShockAPI
 				il.Body.Instructions.RemoveAt(0);
 		}
 
-		protected void CrashReporter_HeapshotRequesting(object sender, EventArgs e)
+		private static void CrashReporter_HeapshotRequesting(object sender, EventArgs e)
 		{
 			foreach (ServerPlayer player in ServerBase.Players)
 			{
@@ -568,9 +570,9 @@ namespace TShockAPI
 			var account = args.Player.Account; // Reference to the player's account for readability
 
 			// Initialize an empty list for Known IPs
-			var knownIps = string.IsNullOrWhiteSpace(account.KnownIps) ?
-						   new List<string>() :
-						   JsonConvert.DeserializeObject<List<string>>(account.KnownIps);
+			var knownIps = string.IsNullOrWhiteSpace(account.KnownIps)
+				? new List<string>()
+				: JsonConvert.DeserializeObject<List<string>>(account.KnownIps);
 
 			// Add current IP if it's not the last known IP or if the list is empty
 			if (knownIps.LastOrDefault() != currentIP)
@@ -613,7 +615,6 @@ namespace TShockAPI
 		{
 			if (args.Player.IsLoggedIn)
 				args.Player.SaveServerCharacter();
-
 		}
 
 		/// <summary>NetHooks_NameCollision - Internal hook fired when a name collision happens.</summary>
@@ -647,8 +648,8 @@ namespace TShockAPI
 					}
 				}
 			}
-			return;
 
+			return;
 		}
 
 		/// <summary>OnItemForceIntoChest - Internal hook fired when a player quick stacks items into a chest.</summary>
@@ -678,7 +679,7 @@ namespace TShockAPI
 				// After checking for protected regions, no further range checking is necessarily because the client packet only specifies the
 				// inventory slot to quick stack. The vanilla Terraria server itself determines what chests are close enough to the player.
 				if (Config.Settings.RegionProtectChests &&
-					!RegionManager.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
+				    !RegionManager.CanBuild((int)args.WorldPosition.X, (int)args.WorldPosition.Y, tsplr))
 				{
 					args.Handled = true;
 					return;
@@ -698,8 +699,8 @@ namespace TShockAPI
 				args.Xmas = true;
 				args.Handled = true;
 			}
-			return;
 
+			return;
 		}
 
 		/// <summary>OnHalloweenCheck - Internal hook fired when the HalloweenCheck happens.</summary>
@@ -714,8 +715,8 @@ namespace TShockAPI
 				args.Halloween = true;
 				args.Handled = true;
 			}
-			return;
 
+			return;
 		}
 
 		/// <summary>
@@ -728,7 +729,7 @@ namespace TShockAPI
 			Log.Error(e.ExceptionObject.ToString());
 
 			if (e.ExceptionObject.ToString().Contains("Terraria.Netplay.ListenForClients") ||
-				e.ExceptionObject.ToString().Contains("Terraria.Netplay.ServerLoop"))
+			    e.ExceptionObject.ToString().Contains("Terraria.Netplay.ServerLoop"))
 			{
 				var sb = new List<string>();
 				for (int i = 0; i < Netplay.Clients.Length; i++)
@@ -1043,7 +1044,7 @@ namespace TShockAPI
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
 			if (File.Exists(Path.Combine(SavePath, "setup.lock")) ||
-				(UserAccountManager.GetUserAccounts()?.Count() > 0))
+			    (UserAccountManager.GetUserAccounts()?.Count() > 0))
 			{
 				SetupToken = 0;
 
@@ -1128,7 +1129,7 @@ namespace TShockAPI
 			}
 
 			if (Main.ServerSideCharacter && (DateTime.UtcNow - LastSave).TotalMinutes >=
-				ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
+			    ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
 			{
 				foreach (var player in Players)
 				{
@@ -1209,7 +1210,7 @@ namespace TShockAPI
 						player.RecentFuse--;
 
 					if (Main.ServerSideCharacter && (player.TPlayer.SpawnX > 0) &&
-						(player.sX != player.TPlayer.SpawnX))
+					    (player.sX != player.TPlayer.SpawnX))
 					{
 						player.sX = player.TPlayer.SpawnX;
 						player.sY = player.TPlayer.SpawnY;
@@ -1342,13 +1343,13 @@ namespace TShockAPI
 		private bool OnCreep(int tileType)
 		{
 			if (!Config.Settings.AllowCrimsonCreep && (tileType == TileID.Dirt || tileType == TileID.CrimsonGrass
-																			   || TileID.Sets.Crimson[tileType]))
+			                                                                   || TileID.Sets.Crimson[tileType]))
 			{
 				return false;
 			}
 
 			if (!Config.Settings.AllowCorruptionCreep && (tileType == TileID.Dirt || tileType == TileID.CorruptThorns
-					|| TileID.Sets.Corrupt[tileType]))
+				    || TileID.Sets.Corrupt[tileType]))
 			{
 				return false;
 			}
@@ -1366,7 +1367,7 @@ namespace TShockAPI
 		private void OnStatueSpawn(StatueSpawnEventArgs args)
 		{
 			if (args.Within200 < Config.Settings.StatueSpawn200 && args.Within600 < Config.Settings.StatueSpawn600 &&
-				args.WorldWide < Config.Settings.StatueSpawnWorld)
+			    args.WorldWide < Config.Settings.StatueSpawnWorld)
 			{
 				args.Handled = true;
 			}
@@ -1374,6 +1375,7 @@ namespace TShockAPI
 			{
 				args.Handled = false;
 			}
+
 			return;
 		}
 
@@ -1489,7 +1491,7 @@ namespace TShockAPI
 				Log.Info(GetString("{0} disconnected.", tsplr.Name));
 
 				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter &&
-					(!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
+				    (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
 				{
 					tsplr.PlayerData.CopyCharacter(tsplr);
 					CharacterManager.InsertPlayerData(tsplr);
@@ -1572,7 +1574,8 @@ namespace TShockAPI
 						// This is required in case anyone makes HandleCommand return false again
 						player.SendErrorMessage(
 							GetString("Unable to parse command. Please contact an administrator for assistance."));
-						Log.ConsoleError(GetString("Unable to parse command '{0}' from player {1}."), text, player.Name);
+						Log.ConsoleError(GetString("Unable to parse command '{0}' from player {1}."), text,
+							player.Name);
 					}
 				}
 				catch (Exception ex)
@@ -1695,8 +1698,8 @@ namespace TShockAPI
 			}
 
 			if ((player.State < 10 || player.Dead) && (int)type > 12 && (int)type != 16 && (int)type != 42 &&
-				(int)type != 50 &&
-				(int)type != 38 && (int)type != 21 && (int)type != 22 && type != PacketTypes.SyncLoadout)
+			    (int)type != 50 &&
+			    (int)type != 38 && (int)type != 21 && (int)type != 22 && type != PacketTypes.SyncLoadout)
 			{
 				e.Handled = true;
 				return;
@@ -1777,8 +1780,8 @@ namespace TShockAPI
 			player.LastNetPosition = new Vector2(Main.spawnTileX * 16f, Main.spawnTileY * 16f);
 
 			if (Config.Settings.RememberLeavePos &&
-				(RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
-				!player.LoginHarassed)
+			    (RememberedPosManager.GetLeavePos(player.Account.AccountId) != Vector2.Zero) &&
+			    !player.LoginHarassed)
 			{
 				player.RememberedPositionPending = 3;
 				player.SendInfoMessage(GetString("You will be teleported to your last known location..."));
@@ -1798,8 +1801,8 @@ namespace TShockAPI
 					Main.invasionSize = 20000000;
 				}
 			}
-			return;
 
+			return;
 		}
 
 		/// <summary>OnProjectileSetDefaults - Called when a projectile sets the default attributes for itself.</summary>
@@ -1808,8 +1811,8 @@ namespace TShockAPI
 		{
 			//tombstone fix.
 			if (e.Info == ProjectileID.Tombstone ||
-				(e.Info >= ProjectileID.GraveMarker && e.Info <= ProjectileID.Obelisk) ||
-				(e.Info >= ProjectileID.RichGravestone1 && e.Info <= ProjectileID.RichGravestone5))
+			    (e.Info >= ProjectileID.GraveMarker && e.Info <= ProjectileID.Obelisk) ||
+			    (e.Info >= ProjectileID.RichGravestone1 && e.Info <= ProjectileID.RichGravestone5))
 				if (Config.Settings.DisableTombstones)
 					e.Object.SetDefaults(0);
 			if (e.Info == ProjectileID.HappyBomb)
@@ -1823,7 +1826,6 @@ namespace TShockAPI
 					e.Object.SetDefaults(0);
 
 			return;
-
 		}
 
 		/// <summary>NetHooks_SendData - Fired when the server sends data.</summary>
@@ -1844,8 +1846,8 @@ namespace TShockAPI
 				{
 					var projectile = Main.projectile[e.number];
 					if (projectile.active && projectile.owner >= 0 &&
-						(GetDataHandlers.projectileCreatesLiquid.ContainsKey(projectile.type) ||
-						 GetDataHandlers.projectileCreatesTile.ContainsKey(projectile.type)))
+					    (GetDataHandlers.projectileCreatesLiquid.ContainsKey(projectile.type) ||
+					     GetDataHandlers.projectileCreatesTile.ContainsKey(projectile.type)))
 					{
 						var player = Players[projectile.owner];
 						if (player != null)
@@ -1868,8 +1870,8 @@ namespace TShockAPI
 					}
 				}
 			}
-			return;
 
+			return;
 		}
 
 		/// <summary>OnStartHardMode - Fired when hard mode is started.</summary>

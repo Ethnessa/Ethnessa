@@ -472,7 +472,7 @@ namespace TShockAPI.Configuration
 		#region MongoDB Settings
 
 		[Description("The connection string for MongoDB")]
-		public string MongoConnectionString = "required";
+		public string MongoConnectionString = "mongodb://localhost:27017";
 
 		[Description("The global database, or default. This database will be used to synchronize data between servers.")]
 		public string DefaultGlobalDatabase = "tsd";

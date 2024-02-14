@@ -18,7 +18,7 @@ namespace TShockAPI.ServerCommands
 				args.Player.SendErrorMessage(GetString("Invalid syntax. Proper syntax: {0}userinfo <player>.", Commands.Specifier));
 			}
 
-			var players = ServerPlayer.FindByNameOrId(args.Parameters[0]);
+			var players = ServerPlayer.GetByNameOrId(args.Parameters[0]);
 			if (players.Count < 1)
 				args.Player.SendErrorMessage(GetString("Invalid player."));
 			else if (players.Count > 1)
