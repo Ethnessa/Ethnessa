@@ -2,13 +2,17 @@ using System;
 using System.Threading.Tasks;
 using BCrypt.Net;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace TShockAPI.Database.Models;
 
 /// <summary>A database user account.</summary>
 public class UserAccount
 {
-	internal ObjectId Id { get; set; }
+	[BsonId]
+	[BsonRepresentation(BsonType.ObjectId)]
+	internal string Id { get; set; }
+
 	/// <summary>The database AccountId of the user account.</summary>
 	public int AccountId { get; set; }
 
