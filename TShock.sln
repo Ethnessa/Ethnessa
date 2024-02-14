@@ -18,15 +18,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		SECURITY.md = SECURITY.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TShockAPI", "TShockAPI\TShockAPI.csproj", "{49606449-072B-4CF5-8088-AA49DA586694}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EthnessaAPI", "EthnessaAPI\EthnessaAPI.csproj", "{49606449-072B-4CF5-8088-AA49DA586694}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TerrariaServerAPI", "TerrariaServerAPI\TerrariaServerAPI\TerrariaServerAPI.csproj", "{6877506E-ADC6-4142-98A6-79E4FA02855A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TShockLauncher", "TShockLauncher\TShockLauncher.csproj", "{2A312452-A43F-43E3-8AEB-E22F9A35C210}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EthnessaPluginManager", "EthnessaPluginManager\EthnessaPluginManager.csproj", "{9FFABC7D-B042-4B58-98F5-7FA787B9A757}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TShockInstaller", "TShockInstaller\TShockInstaller.csproj", "{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TShockPluginManager", "TShockPluginManager\TShockPluginManager.csproj", "{9FFABC7D-B042-4B58-98F5-7FA787B9A757}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EthnessaLauncher", "EthnessaLauncher\EthnessaLauncher.csproj", "{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,38 +70,6 @@ Global
 		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x64.Build.0 = Release|Any CPU
 		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x86.ActiveCfg = Release|Any CPU
 		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x86.Build.0 = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|x64.Build.0 = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Debug|x86.Build.0 = Debug|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|x64.ActiveCfg = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|x64.Build.0 = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|x86.ActiveCfg = Release|Any CPU
-		{2A312452-A43F-43E3-8AEB-E22F9A35C210}.Release|x86.Build.0 = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|x64.Build.0 = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Debug|x86.Build.0 = Debug|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|x64.ActiveCfg = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|x64.Build.0 = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|x86.ActiveCfg = Release|Any CPU
-		{17AC4DD0-8334-4B5C-ABED-77EAF52D75FA}.Release|x86.Build.0 = Release|Any CPU
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -120,6 +86,22 @@ Global
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Release|x64.Build.0 = Release|Any CPU
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Release|x86.ActiveCfg = Release|Any CPU
 		{9FFABC7D-B042-4B58-98F5-7FA787B9A757}.Release|x86.Build.0 = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|x64.Build.0 = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Debug|x86.Build.0 = Debug|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|x64.ActiveCfg = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|x64.Build.0 = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|x86.ActiveCfg = Release|Any CPU
+		{93E4F3F5-FA1F-41F6-9E9D-58D80F6E0476}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -129,5 +111,7 @@ Global
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Terraria.vsmdi
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
