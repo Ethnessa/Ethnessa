@@ -778,7 +778,7 @@ namespace TShockAPI
 			Log.ConsoleInfo(GetString("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again."));
 
 			// Perform a safe shutdown
-			ServerBase.Utils.StopServer(true, GetString("ServerConsole console interrupted!"));
+			ServerBase.Utils.StopServer(true, GetString("Server console interrupted!"));
 		}
 
 		/// <summary>HandleCommandLine - Handles the command line parameters passed to the server.</summary>
@@ -1386,7 +1386,7 @@ namespace TShockAPI
 			if (ShuttingDown)
 			{
 				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1,
-					NetworkText.FromLiteral(GetString("ServerConsole is shutting down...")));
+					NetworkText.FromLiteral(GetString("Server is shutting down...")));
 				args.Handled = true;
 				return;
 			}

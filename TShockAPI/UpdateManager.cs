@@ -117,7 +117,7 @@ namespace TShockAPI
 				{
 					reason = "none";
 				}
-				throw new WebException(GetString($"Update server did not respond with an OK. ServerConsole message: [error {resp.StatusCode}] {reason}"));
+				throw new WebException(GetString($"Update server did not respond with an OK. Server message: [error {resp.StatusCode}] {reason}"));
 			}
 
 			string json = await resp.Content.ReadAsStringAsync();

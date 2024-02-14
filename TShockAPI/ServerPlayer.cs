@@ -2005,7 +2005,7 @@ namespace TShockAPI
 		/// </summary
 		/// <param name="reason">The reason to be displayed to the server.</param>
 		/// <param name="adminUserName">The player who initiated the ban.</param>
-		public bool Ban(string reason, string adminUserName = "ServerConsole")
+		public bool Ban(string reason, string adminUserName = "Server")
 		{
 			if (!ConnectionAlive)
 				return true;

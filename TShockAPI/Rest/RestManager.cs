@@ -334,7 +334,7 @@ namespace TShockAPI
 				return RestInvalidParam("confirm");
 
 			// Inform players the server is shutting down
-			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "ServerConsole is shutting down" : args.Parameters["message"];
+			var reason = string.IsNullOrWhiteSpace(args.Parameters["message"]) ? "Server is shutting down" : args.Parameters["message"];
 			ServerBase.Utils.StopServer(!GetBool(args.Parameters["nosave"], false), reason);
 
 			return RestResponse("The server is shutting down");
@@ -1002,7 +1002,7 @@ namespace TShockAPI
 
 			ServerPlayer player = (ServerPlayer)ret;
 			player.DamagePlayer(999999);
-			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "ServerConsole Admin" : args.Parameters["from"];
+			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "Server Admin" : args.Parameters["from"];
 			player.SendInfoMessage(GetString($"{from} just killed you!"));
 			return RestResponse(GetString($"Player {player.Name} was killed"));
 		}

@@ -26,7 +26,7 @@ namespace TShockAPI.ServerCommands
 				}
 			}
 
-			string reason = ((args.Parameters.Count > 0) ? GetString("ServerConsole shutting down: ") + String.Join(" ", args.Parameters) : GetString("ServerConsole shutting down!"));
+			string reason = ((args.Parameters.Count > 0) ? GetString("Server shutting down: ") + String.Join(" ", args.Parameters) : GetString("Server shutting down!"));
 			ServerBase.Utils.StopServer(true, reason);
 		}
 

@@ -33,7 +33,7 @@ namespace TShockAPI.ServerCommands
 			args.Player.SendSuccessMessage(GetString("You have been successfully logged out of your account."));
 			if (Main.ServerSideCharacter)
 			{
-				args.Player.SendWarningMessage(GetString("ServerConsole side characters are enabled. You need to be logged-in to play."));
+				args.Player.SendWarningMessage(GetString("Server side characters are enabled. You need to be logged-in to play."));
 			}
 		}
 	}

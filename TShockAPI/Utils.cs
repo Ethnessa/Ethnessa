@@ -598,7 +598,7 @@ namespace TShockAPI
 		/// </summary>
 		/// <param name="save">bool perform a world save before stop (default: true)</param>
 		/// <param name="reason">string reason (default: "ServerConsole shutting down!")</param>
-		public void StopServer(bool save = true, string reason = "ServerConsole shutting down!")
+		public void StopServer(bool save = true, string reason = "Server shutting down!")
 		{
 			ServerBase.ShuttingDown = true;
 
