@@ -91,6 +91,7 @@ namespace TShockAPI
 			add(new SpawnCommand());
 			add(new BanCommand());
 			add(new UuidCommand());
+			add(new MuteCommand());
 
 			TShockCommands = new List<Command>(tshockCommands);
 		}

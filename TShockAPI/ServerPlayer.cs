@@ -319,7 +319,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Whether the player is muted or not.
 		/// </summary>
-		public bool mute;
+		public bool IsMuted => MuteManager.IsPlayerMuted(this);
 
 		private Player FakePlayer;
 
@@ -2010,10 +2010,10 @@ namespace TShockAPI
 			if (!ConnectionAlive)
 				return true;
 
-			BanManager.CreateBan(BanType.IpAddress, this.IP, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+			BanManager.CreateBan(IdentifierType.IpAddress, this.IP, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
 			if (Account != null)
 			{
-				BanManager.CreateBan(BanType.AccountName, this.Account.Name, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+				BanManager.CreateBan(IdentifierType.AccountName, this.Account.Name, reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
 			}
 
 			Disconnect(GetString("Banned: {0}", reason));

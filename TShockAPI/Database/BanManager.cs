@@ -141,7 +141,7 @@ namespace TShockAPI.Database
 			};
 		}
 
-		public static Ban CreateBan(BanType type, string value, string reason, string banningUser, DateTime start,
+		public static Ban CreateBan(IdentifierType type, string value, string reason, string banningUser, DateTime start,
 			DateTime? endDate = null)
 		{
 			Ban ban = new()
@@ -156,7 +156,7 @@ namespace TShockAPI.Database
 
 			switch (type)
 			{
-				case BanType.Uuid:
+				case IdentifierType.Uuid:
 				{
 					ban.Uuid = value;
 
@@ -164,7 +164,7 @@ namespace TShockAPI.Database
 					ServerBase.Players.FirstOrDefault(x=>x.UUID == value)?.Disconnect(banMessage);
 					break;
 				}
-				case BanType.AccountName:
+				case IdentifierType.AccountName:
 				{
 					ban.AccountName = value;
 
@@ -172,7 +172,7 @@ namespace TShockAPI.Database
 					ServerBase.Players.FirstOrDefault(x=>x.Account?.Name == value)?.Disconnect(banMessage);
 					break;
 				}
-				case BanType.IpAddress:
+				case IdentifierType.IpAddress:
 				{
 					ban.IpAddress = value;
 
@@ -412,10 +412,4 @@ namespace TShockAPI.Database
 
 	}
 
-	public enum BanType
-	{
-		Uuid,
-		AccountName,
-		IpAddress
-	}
 }

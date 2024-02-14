@@ -923,7 +923,7 @@ namespace TShockAPI
 				{"ip", player.IP},
 				{"group", player.Group.Name},
 				{"registered", player.Account?.Registered},
-				{"muted", player.mute },
+				{"muted", player.IsMuted },
 				{"position", player.TileX + "," + player.TileY},
 				{"inventory", string.Join(", ", inventory.Select(p => (p.Name + ":" + p.stack)))},
 				{"armor", string.Join(", ", equipment.Select(p => (p.netID + ":" + p.prefix)))},
@@ -964,7 +964,7 @@ namespace TShockAPI
 				{"ip", player.IP},
 				{"group", player.Group.Name},
 				{"registered", player.Account?.Registered},
-				{"muted", player.mute },
+				{"muted", player.IsMuted },
 				{"position", player.TileX + "," + player.TileY},
 				{"items", items},
 				{"buffs", string.Join(", ", player.TPlayer.buffType)}
@@ -1326,14 +1326,25 @@ namespace TShockAPI
 				return ret;
 
 			ServerPlayer player = (ServerPlayer)ret;
-			player.mute = mute;
 			if (mute)
 			{
+				if (player.IsMuted)
+				{
+					return RestResponse(GetString($"Player {player.Name} is already muted!"));
+				}
+
+				MuteManager.MutePlayer(player);
 				player.SendInfoMessage(GetString("You have been remotely muted"));
 				return RestResponse(GetString($"Player {player.Name} has been muted"));
 			}
 			else
 			{
+				if (player.IsMuted is false)
+				{
+					return RestResponse(GetString($"Player {player.Name} is not muted!"));
+				}
+
+				MuteManager.UnmutePlayer(player);
 				player.SendInfoMessage(GetString("You have been remotely unmmuted"));
 				return RestResponse(GetString($"Player {player.Name} has been unmuted"));
 			}

@@ -1594,7 +1594,7 @@ namespace TShockAPI
 					return;
 				}
 
-				if (player.mute) // are they muted ?
+				if (player.IsMuted) // are they muted ?
 				{
 					args.Handled = true;
 					player.SendErrorMessage(GetString("You are muted!"));

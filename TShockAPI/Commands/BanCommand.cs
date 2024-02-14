@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using TShockAPI.Database;
+using TShockAPI.Database.Models;
 
 namespace TShockAPI.ServerCommands;
 
@@ -45,7 +46,7 @@ public class BanCommand : Command
 			expiry = DateTime.Now + timespan.Value;
 		}
 
-		BanType banType;
+		IdentifierType banType;
 		switch (type.ToLower())
 		{
 			case "ip":
@@ -66,7 +67,7 @@ public class BanCommand : Command
 
 				target = ip.ToString();
 
-				banType = BanType.IpAddress;
+				banType = IdentifierType.IpAddress;
 				break;
 			}
 			case "player":
@@ -79,7 +80,7 @@ public class BanCommand : Command
 				}
 
 				var account = UserAccountManager.GetUserAccountByName(target);
-				banType = BanType.AccountName;
+				banType = IdentifierType.AccountName;
 
 				if(account is null)
 				{
@@ -98,7 +99,7 @@ public class BanCommand : Command
 					}
 					else
 					{
-						banType = BanType.Uuid;
+						banType = IdentifierType.Uuid;
 						target = targetPlayer.UUID;
 					}
 				}
@@ -113,7 +114,7 @@ public class BanCommand : Command
 					return;
 				}
 
-				banType = BanType.Uuid;
+				banType = IdentifierType.Uuid;
 				break;
 			}
 			default:
