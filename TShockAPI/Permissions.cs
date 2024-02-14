@@ -514,9 +514,9 @@ namespace TShockAPI
 		/// <returns>List of commands</returns>
 		private static List<Command> GetCommands(string perm)
 		{
-			if (Commands.ChatCommands.Count < 1)
+			if (Commands.ServerCommands.Count < 1)
 				Commands.InitCommands();
-			return Commands.ChatCommands.Where(c => c.Permissions.Contains(perm)).ToList();
+			return Commands.ServerCommands.Where(c => c.Permissions.Contains(perm)).ToList();
 		}
 
 		/// <summary>

@@ -57,7 +57,10 @@ namespace TShockAPI.Database
 		/// </summary>
 		public static event Action<Ban> OnBanRemove;
 
-
+		public static List<Ban> GetPaginatedBans(int page, int perPageCount)
+		{
+			return bans.Find(Builders<Ban>.Filter.Empty).Skip((page - 1) * perPageCount).Limit(perPageCount).ToList();
+		}
 		internal static bool IsPlayerBanned(ServerPlayer player)
 		{
 			// Attempt to find a ban by account name if the player is logged in,

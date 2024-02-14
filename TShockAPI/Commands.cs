@@ -49,9 +49,7 @@ namespace TShockAPI
 
 	public static class Commands
 	{
-		// TODO: Merge into one List
-		public static List<Command> ChatCommands = new List<Command>();
-		public static List<Command> TShockCommands = new List<Command>(new List<Command>());
+		public static List<Command> ServerCommands = new List<Command>();
 
 		/// <summary>
 		/// The command specifier, defaults to "/"
@@ -65,35 +63,33 @@ namespace TShockAPI
 
 		private delegate void AddChatCommand(string permission, CommandDelegate command, params string[] names);
 
+		// Maybe we could just initialize commands directly in the declaration? - will probably be a bit cleaner
 		public static void InitCommands()
 		{
-			List<Command> tshockCommands = new List<Command>();
-			Action<Command> add = (cmd) =>
+			ServerCommands = new List<Command>()
 			{
-				tshockCommands.Add(cmd);
-				ChatCommands.Add(cmd);
+				new UserCommand(),
+				new StopCommand(),
+				new GroupCommand(),
+				new HelpCommand(),
+				new UserInfoCommand(),
+				new LoginCommand(),
+				new LogoutCommand(),
+				new RegisterCommand(),
+				new ChangePasswordCommand(),
+				new AccountInfoCommand(),
+				new ConfigCommand(),
+				new UuidCommand(),
+				new SetSpawnCommand(),
+				new SpawnCommand(),
+				new KickCommand(),
+				new BanCommand(),
+				new ListBansCommand(),
+				new UnbanCommand(),
+				new MuteCommand(),
+				new UnmuteCommand(),
+				new ListMutesCommand()
 			};
-
-			// TODO: just add these to a list, instead of calling the add action for each one
-			add(new UserCommand());
-			add(new StopCommand());
-			add(new GroupCommand());
-			add(new HelpCommand());
-			add(new UserInfoCommand());
-			add(new LoginCommand());
-			add(new LogoutCommand());
-			add(new RegisterCommand());
-			add(new ChangePasswordCommand());
-			add(new AccountInfoCommand());
-			add(new KickCommand());
-			add(new ConfigCommand());
-			add(new SetSpawnCommand());
-			add(new SpawnCommand());
-			add(new BanCommand());
-			add(new UuidCommand());
-			add(new MuteCommand());
-
-			TShockCommands = new List<Command>(tshockCommands);
 		}
 
 		/// <summary>
@@ -134,7 +130,7 @@ namespace TShockAPI
 			else
 				args = ParseParameters(cmdText.Substring(index));
 
-			IEnumerable<Command> cmds = ChatCommands.FindAll(c => c.HasAlias(cmdName));
+			IEnumerable<Command> cmds = ServerCommands.FindAll(c => c.HasAlias(cmdName));
 
 			if (Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
 				return true;

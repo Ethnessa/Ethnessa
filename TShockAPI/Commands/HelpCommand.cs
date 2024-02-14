@@ -28,7 +28,7 @@ namespace TShockAPI.ServerCommands
 					return;
 				}
 
-				IEnumerable<string> cmdNames = Commands.ChatCommands.Where(cmd => cmd.CanRun(args.Player)).Select(cmd => Commands.Specifier + cmd.Name);
+				IEnumerable<string> cmdNames = Commands.ServerCommands.Where(cmd => cmd.CanRun(args.Player)).Select(cmd => Commands.Specifier + cmd.Name);
 
 				PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(cmdNames),
 					new PaginationTools.Settings
@@ -45,7 +45,7 @@ namespace TShockAPI.ServerCommands
 					commandName = commandName.Substring(1);
 				}
 
-				Command command = Commands.ChatCommands.Find(c => c.Names.Contains(commandName));
+				Command command = Commands.ServerCommands.Find(c => c.Names.Contains(commandName));
 				if (command == null)
 				{
 					args.Player.SendErrorMessage(GetString("Invalid command."));

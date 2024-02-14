@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HttpServer;
 using MongoDB.Driver;
 using TShockAPI.Database.Models;
@@ -18,13 +19,21 @@ public class MuteManager
 		return mutes.CountDocuments(Builders<MutedPlayer>.Filter.Empty);
 	}
 
+	public static List<MutedPlayer> GetPaginatedMutes(int page, int pageSize)
+	{
+		return mutes.Find(Builders<MutedPlayer>.Filter.Empty)
+			.Limit(pageSize)
+			.Skip(page * pageSize)
+			.ToList();
+	}
+
 	public static bool IsPlayerMuted(ServerPlayer player)
 	{
 		var ip = player.IP;
 		var uuid = player.UUID;
 		var accountName = player.Account?.Name;
 
-		return mutes.Find(x=>x.IpAddress == ip || x.Uuid == uuid || x.AccountName == accountName).Any();
+		return mutes.Find(x => x.IpAddress == ip || x.Uuid == uuid || x.AccountName == accountName).Any();
 	}
 
 	public static bool CreateMute(IdentifierType type, string value, DateTime? expiryTime = null)
@@ -47,6 +56,17 @@ public class MuteManager
 		return false;
 	}
 
+	public static bool RemoveMute(string value)
+	{
+		var mute = mutes.FindOneAndDelete(x => x.IpAddress == value || x.Uuid == value || x.AccountName == value);
+		if (mute != null)
+		{
+			OnMuteRemove?.Invoke(mute);
+			return true;
+		}
+		return false;
+	}
+
 	public static bool MutePlayer(ServerPlayer player, DateTime? expiryTime = null)
 	{
 		var ip = player.IP;
@@ -54,7 +74,7 @@ public class MuteManager
 		var accountName = player.Account?.Name;
 
 		var success = CreateMute(IdentifierType.Uuid, uuid, expiryTime) &&
-		              CreateMute(IdentifierType.IpAddress, ip, expiryTime);
+					  CreateMute(IdentifierType.IpAddress, ip, expiryTime);
 
 		if (accountName is not null)
 		{

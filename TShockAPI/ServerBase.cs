@@ -313,7 +313,8 @@ namespace TShockAPI
 			}
 			catch (Exception ex)
 			{
-				// Will be handled by the server api and written to its crashlog.txt.
+				// NOTE: What the hell is crashlog.txt? - Average
+				// Will be handled by the server api and written to its crashlog.txt. 
 				throw new Exception("Fatal TShock initialization exception. See inner exception for details.", ex);
 			}
 
