@@ -34,7 +34,7 @@ namespace TShockAPI.ServerCommands
 						}
 
 						// get field from config, case in-sensitive
-						var setting = ServerBase.Config.GetType().GetField(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+						var setting = ServerBase.Config.Settings.GetType().GetField(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 						if (setting == null)
 						{
 							args.Player.SendErrorMessage("Invalid key!");
@@ -44,7 +44,7 @@ namespace TShockAPI.ServerCommands
 						// if valid value, set the setting and write to file
 						if (setting.FieldType == typeof(string))
 						{
-							setting.SetValue(ServerBase.Config, value);
+							setting.SetValue(ServerBase.Config.Settings, value);
 							ServerBase.Config.Write(FileTools.ConfigPath);
 							args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 						}
@@ -52,7 +52,7 @@ namespace TShockAPI.ServerCommands
 						{
 							if (int.TryParse(value, out int result))
 							{
-								setting.SetValue(ServerBase.Config, result);
+								setting.SetValue(ServerBase.Config.Settings, result);
 								ServerBase.Config.Write(FileTools.ConfigPath);
 								args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 							}
@@ -65,7 +65,7 @@ namespace TShockAPI.ServerCommands
 						{
 							if (bool.TryParse(value, out bool result))
 							{
-								setting.SetValue(ServerBase.Config, result);
+								setting.SetValue(ServerBase.Config.Settings, result);
 								ServerBase.Config.Write(FileTools.ConfigPath);
 								args.Player.SendSuccessMessage("Set {0} to {1}", key, value);
 							}

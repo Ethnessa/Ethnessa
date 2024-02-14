@@ -88,7 +88,9 @@ namespace TShockAPI
 				new UnbanCommand(),
 				new MuteCommand(),
 				new UnmuteCommand(),
-				new ListMutesCommand()
+				new ListMutesCommand(),
+				new TimeCommand(),
+				new SpawnMobCommand()
 			};
 		}
 
@@ -230,7 +232,7 @@ namespace TShockAPI
 
 		private static bool IsWhiteSpace(char c)
 		{
-			return c == ' ' || c == '\t' || c == '\n';
+			return c is ' ' or '\t' or '\n';
 		}
 
 	}

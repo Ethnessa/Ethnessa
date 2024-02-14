@@ -8,8 +8,9 @@ namespace TShockAPI.Database;
 
 public class MuteManager
 {
+	internal static readonly string CollectionName = "mutedplayers";
 	private static IMongoCollection<MutedPlayer> mutes =>
-		ServerBase.GlobalDatabase.GetCollection<MutedPlayer>("mutedplayers");
+		ServerBase.GlobalDatabase.GetCollection<MutedPlayer>(CollectionName);
 
 	public static event Action<MutedPlayer> OnMuteAdd;
 	public static event Action<MutedPlayer> OnMuteRemove;

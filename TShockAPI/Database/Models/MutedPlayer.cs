@@ -6,6 +6,7 @@ namespace TShockAPI.Database.Models;
 public class MutedPlayer
 {
 	public ObjectId Id { get; set; }
+	public int MuteId { get; set; }
 	public string? IpAddress { get; set; }
 	public string? AccountName { get; set; }
 	public string? Uuid { get; set; }
@@ -33,5 +34,6 @@ public class MutedPlayer
 			}
 		}
 		ExpiryTime = expiryTime ?? DateTime.MaxValue;
+		MuteId = CounterManager.GetAndIncrement(MuteManager.CollectionName);
 	}
 }

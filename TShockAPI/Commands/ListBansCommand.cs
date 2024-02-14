@@ -39,7 +39,7 @@ namespace TShockAPI.ServerCommands
 			{
 				// based on what is null, retrieve either the name, ip, or uuid
 				var identifier = ban.AccountName ?? ban.IpAddress ?? ban.Uuid;
-				args.Player.SendInfoMessage($"ID: {ban.Id} - {identifier} - {ban.Reason} - {ban.GetPrettyExpirationString()}");
+				args.Player.SendInfoMessage($"ID: {ban.BanId} - {identifier} - {ban.Reason} - {ban.GetPrettyExpirationString()}");
 			}
 
 			if(maxPages > 1)

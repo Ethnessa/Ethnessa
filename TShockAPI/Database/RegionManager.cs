@@ -33,7 +33,8 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class RegionManager
 	{
-		private static IMongoCollection<Region> regions => ServerBase.GlobalDatabase.GetCollection<Region>("regions");
+		internal static string CollectionName = "regions";
+		private static IMongoCollection<Region> regions => ServerBase.GlobalDatabase.GetCollection<Region>(CollectionName);
 		public static int CountRegions()
 		{
 			return Convert.ToInt32(regions.CountDocuments(Builders<Region>.Filter.Empty));
@@ -59,7 +60,7 @@ namespace TShockAPI.Database
 			}
 			try
 			{
-				int nextId = CountRegions();
+				int nextId = CounterManager.GetAndIncrement(CollectionName);
 				Region region = new Region(nextId, new Rectangle(tx, ty, width, height), regionname, owner, true, worldid, z);
 				Hooks.RegionHooks.OnRegionCreated(region);
 				regions.InsertOne(region);

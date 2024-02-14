@@ -36,7 +36,8 @@ namespace TShockAPI.Database
 	/// </summary>
 	public static class BanManager
 	{
-		private static IMongoCollection<Ban> bans => ServerBase.GlobalDatabase.GetCollection<Ban>("bans");
+		internal static readonly string CollectionName = "bans";
+		private static IMongoCollection<Ban> bans => ServerBase.GlobalDatabase.GetCollection<Ban>(CollectionName);
 
 		/// <summary>
 		/// Returns the number of bans that already exist
@@ -200,7 +201,6 @@ namespace TShockAPI.Database
 				}
 				default: throw new Exception("Invalid ban type!");
 			}
-
 			bans.InsertOne(ban);
 
 			ServerBase.Log.Info("A new ban has been created, AccountId:  " + ban.BanId);
@@ -384,6 +384,11 @@ namespace TShockAPI.Database
 		/// Returns whether or not the ban is still in effect
 		/// </summary>
 		[BsonIgnore] public bool Valid => ExpirationDateTime > BanDateTime;
+
+		public Ban()
+		{
+			BanId = CounterManager.GetAndIncrement(BanManager.CollectionName);
+		}
 
 		/// <summary>
 		/// Returns a string in the format dd:mm:hh:ss indicating the time until the ban expires.

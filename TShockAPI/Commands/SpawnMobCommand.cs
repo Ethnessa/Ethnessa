@@ -10,8 +10,7 @@ namespace TShockAPI.ServerCommands
 		public override List<string> Names { get; protected set; } = new() { "spawnmob", "sm" };
 		public override List<string> Permissions { get; protected set; } = new(){ TShockAPI.Permissions.spawnmob };
 		public override CommandDelegate CommandDelegate { get; set; } = SpawnMob;
-
-		public static void SpawnMob(CommandArgs args)
+		private static void SpawnMob(CommandArgs args)
 		{
 			var mob = args.Parameters[0];
 			var amount = 1;
@@ -29,8 +28,19 @@ namespace TShockAPI.ServerCommands
 
 			if (foundMobs.Count == 1)
 			{
-				
-			}else if (foundMobs.Count > 1)
+				var npc = foundMobs.First();
+
+				ServerPlayer.ServerConsole.SpawnNPC(npc.netID, npc.FullName, amount,args.Player.TileX, args.Player.TileY, 50,20);
+				if (args.Silent)
+				{
+					args.Player.SendSuccessMessage($"Spawned {amount} {npc.FullName}({npc.type}) silently.");
+				}
+				else
+				{
+					ServerPlayer.All.SendSuccessMessage($"{args.Player.Name} has spawned {amount} {npc.FullName}");
+				}
+			}
+			else if (foundMobs.Count > 1)
 			{
 				args.Player.SendMultipleMatchError(foundMobs.Select(n => $"{n.FullName}({n.type})"));
 				return;
