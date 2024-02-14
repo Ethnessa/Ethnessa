@@ -34,7 +34,16 @@ namespace TShockAPI.Database
 	public static class RegionManager
 	{
 		internal static string CollectionName = "regions";
+
+		/// <summary>
+		/// Collection of all regions in the database. Cannot perform LINQ queries on this list.
+		/// </summary>
 		private static IMongoCollection<Region> regions => ServerBase.GlobalDatabase.GetCollection<Region>(CollectionName);
+
+		/// <summary>
+		/// List of all regions, accessible by all plugins. Can perform LINQ queries on this list.
+		/// </summary>
+		public static List<Region> Regions => regions.Find(Builders<Region>.Filter.Empty).ToList();
 		public static int CountRegions()
 		{
 			return Convert.ToInt32(regions.CountDocuments(Builders<Region>.Filter.Empty));
@@ -183,8 +192,7 @@ namespace TShockAPI.Database
 			}
 			Region top = null;
 
-			var regionList = regions.Find<Region>(r => r.InArea(x, y) && r.WorldID == Main.worldID.ToString())
-				.ToList();
+			var regionList = Regions.Where(r => r.InArea(x, y) && r.WorldID == Main.worldID.ToString());
 
 			foreach (Region region in regionList)
 			{
@@ -205,7 +213,7 @@ namespace TShockAPI.Database
 		/// <returns>Whether any regions exist at the given (x, y) coordinate</returns>
 		public static bool InArea(int x, int y)
 		{
-			return regions.CountDocuments<Region>(r => r.InArea(x, y)) > 0;
+			return Regions.Any(r => r.InArea(x, y));
 		}
 
 		/// <summary>
@@ -217,7 +225,7 @@ namespace TShockAPI.Database
 		/// <returns>The <see cref="Region"/> objects of any regions that exist at the given (x, y) coordinate</returns>
 		public static IEnumerable<Region> GetRegionsInArea(int x, int y)
 		{
-			return regions.Find<Region>(r => r.InArea(x, y)).ToList();
+			return Regions.Where(r => r.InArea(x, y)).ToList();
 		}
 
 		/// <summary>
@@ -231,7 +239,7 @@ namespace TShockAPI.Database
 		/// 2 = resize height.
 		/// 3 = resize width and X.</param>
 		/// <returns></returns>
-		public static async Task<bool> ResizeRegion(string regionName, int addAmount, int direction)
+		public static bool ResizeRegion(string regionName, int addAmount, int direction)
 		{
 			//0 = up
 			//1 = right
@@ -244,7 +252,7 @@ namespace TShockAPI.Database
 
 			try
 			{
-				Region region = GetRegionByName(regionName);
+				var region = GetRegionByName(regionName);
 				if (region is null)
 				{
 					return false;

@@ -8,7 +8,7 @@ namespace TShockAPI.Database.Models;
 /// <summary>A database user account.</summary>
 public class UserAccount
 {
-	public ObjectId Id { get; set; }
+	internal ObjectId Id { get; set; }
 	/// <summary>The database AccountId of the user account.</summary>
 	public int AccountId { get; set; }
 
