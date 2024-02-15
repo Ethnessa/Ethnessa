@@ -6,7 +6,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <Version>5.2.0</Version>
+    <Version>1.0.0.0</Version>
     <AssemblyTitle>Ethnessa</AssemblyTitle>
     <Company>Pryaxis &amp; TShock Contributors</Company>
     <Product>EthnessaAPI</Product>

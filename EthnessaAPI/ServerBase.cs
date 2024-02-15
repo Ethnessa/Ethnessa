@@ -416,7 +416,7 @@ namespace EthnessaAPI
 						break;
 				}
 
-				Log.ConsoleInfo(GetString("Paradox x TShock now running!"));
+				Log.ConsoleInfo(GetString("EthnessaAPI now running!"));
 
 				// TODO: look into better event handling :shrug:
 				ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit);

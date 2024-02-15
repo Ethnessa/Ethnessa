@@ -40,6 +40,13 @@ namespace EthnessaAPI.Database
 
 		public static void EnsureDefaultGroups()
 		{
+			var serverInfo = ServerInfoManager.RetrieveServerInfo();
+
+			if (serverInfo.DefaultGroupsCreatedOnce)
+			{
+				return;
+			}
+
 			// Add default groups if they don't exist
 			AddDefaultGroup("guest", "",
 				new List<string>(){
@@ -66,8 +73,18 @@ namespace EthnessaAPI.Database
 					Permissions.magicconch,
 					Permissions.demonconch});
 
+			// admin is different than in TShock, it has all permissions
+			// we don't have a super-admin group because... why would we?
+			// instead of filling the database with a bunch of garbage groups,
+			// we are giving full control to the owner of the server.
+			AddDefaultGroup("admin", "default",
+				new List<string>(){"*"});
+
 			Group.DefaultGroup = GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
 			AssertCoreGroupsPresent();
+
+			serverInfo.DefaultGroupsCreatedOnce = true;
+			ServerInfoManager.SaveServerInfo(serverInfo);
 		}
 
 		internal static void AssertCoreGroupsPresent()
@@ -119,13 +136,7 @@ namespace EthnessaAPI.Database
 		/// </summary>
 		/// <param name="group">The group.</param>
 		/// <returns><c>true</c> if it does; otherwise, <c>false</c>.</returns>
-		public static bool GroupExists(string group)
-		{
-			if (group == "superadmin")
-				return true;
-
-			return groups.CountDocuments(g => g.Name.Equals(group)) > 0;
-		}
+		public static bool GroupExists(string group) => groups.CountDocuments(g => g.Name.Equals(group)) > 0;
 
 		/// <summary>
 		/// Gets the group matching the specified name.
@@ -278,11 +289,7 @@ namespace EthnessaAPI.Database
 				ServerBase.Config.Write(FileTools.ConfigPath);
 			}
 
-			foreach (var player in ServerBase.Players.Where(p => p?.Group.Name == name))
-			{
-				player.Group = group;
-			}
-
+			UserAccountManager.FixGroupName(name,newName);
 			return GetString($"Group {name} has been renamed to {newName}.");
 
 		}

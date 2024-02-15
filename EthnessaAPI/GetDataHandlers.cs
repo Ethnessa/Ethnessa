@@ -2886,15 +2886,12 @@ namespace EthnessaAPI
 						args.Player.State = 2;
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 
-					var group = GroupManager.GetGroupByName(account.Group);
-
-					if (!GroupManager.AssertGroupValid(args.Player, group, true))
+					var group = account.Group;
+					if (group is null)
 						return true;
 
 					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
-					args.Player.Group = group;
-					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
@@ -3526,13 +3523,11 @@ namespace EthnessaAPI
 						args.Player.State = 2;
 					NetMessage.SendData((int)PacketTypes.WorldInfo, args.Player.Index);
 
-					var group = GroupManager.GetGroupByName(account.Group);
+					var group = account.Group;
 
-					if (!GroupManager.AssertGroupValid(args.Player, group, true))
+					if (group is null)
 						return true;
 
-					args.Player.Group = group;
-					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;

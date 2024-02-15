@@ -208,20 +208,9 @@ namespace EthnessaAPI
 		/// <summary>
 		/// The player's group.
 		/// </summary>
-		public Group Group
-		{
-			get => TempGroup ?? group;
-			set => group = value;
-		}
-
-		/// <summary>
-		/// The player's temporary group.  This overrides the user's actual group.
-		/// </summary>
-		public Group? TempGroup = null;
+		public Group? Group => Account?.Group;
 
 		public Timer tempGroupTimer;
-
-		private Group group = null;
 
 		public bool ReceivedInfo { get; set; }
 
@@ -1258,12 +1247,6 @@ namespace EthnessaAPI
 			}
 
 			PlayerData = new PlayerData(this);
-			Group = GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
-			TempGroup = null;
-			if (tempGroupTimer != null)
-			{
-				tempGroupTimer.Stop();
-			}
 			Account = null;
 			IsLoggedIn = false;
 		}
@@ -1277,7 +1260,6 @@ namespace EthnessaAPI
 			TilesDestroyed = new Dictionary<Vector2, ITile>();
 			TilesCreated = new Dictionary<Vector2, ITile>();
 			Index = index;
-			Group = Group.DefaultGroup;
 			IceTiles = new List<Point>();
 			AwaitingResponse = new Dictionary<string, Action<object>>();
 		}
@@ -1292,7 +1274,6 @@ namespace EthnessaAPI
 			TilesCreated = new Dictionary<Vector2, ITile>();
 			Index = -1;
 			FakePlayer = new Player { name = playerName, whoAmI = -1 };
-			Group = Group.DefaultGroup;
 			AwaitingResponse = new Dictionary<string, Action<object>>();
 		}
 
@@ -1303,22 +1284,6 @@ namespace EthnessaAPI
 		public virtual void Disconnect(string reason)
 		{
 			SendData(PacketTypes.Disconnect, reason);
-		}
-
-		/// <summary>
-		/// Fired when the player's temporary group access expires.
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="args"></param>
-		public void TempGroupTimerElapsed(object sender, ElapsedEventArgs args)
-		{
-			SendWarningMessage(GetString("Your temporary group access has expired."));
-
-			TempGroup = null;
-			if (sender != null)
-			{
-				((Timer)sender).Stop();
-			}
 		}
 
 		/// <summary>
@@ -2162,10 +2127,10 @@ namespace EthnessaAPI
 			if (hookResult != PermissionHookResult.Unhandled)
 				return hookResult == PermissionHookResult.Granted;
 
-			if (TempGroup != null)
-				return TempGroup.HasPermission(permission);
-			else
-				return Group.HasPermission(permission);
+			if(IsLoggedIn)
+				return Account.HasPermission(permission);
+
+			return false;
 		}
 
 		/// <summary>
@@ -2174,7 +2139,7 @@ namespace EthnessaAPI
 		/// </summary>
 		/// <param name="bannedItem">The <see cref="ItemBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned item.</returns>
-		public async Task<bool> HasPermission(ItemBan bannedItem)
+		public bool HasPermission(ItemBan bannedItem)
 		{
 			return ItemBanManager.ItemIsBanned(bannedItem.Name, this);
 		}
@@ -2185,7 +2150,7 @@ namespace EthnessaAPI
 		/// </summary>
 		/// <param name="bannedProj">The <see cref="ProjectileBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned projectile.</returns>
-		public async Task<bool> HasPermission(ProjectileBan bannedProj)
+		public bool HasPermission(ProjectileBan bannedProj)
 		{
 			return ProjectileManager.ProjectileIsBanned(bannedProj.Type, this);
 		}
@@ -2195,7 +2160,7 @@ namespace EthnessaAPI
 		/// </summary>
 		/// <param name="bannedTile">The <see cref="TileBan" /> to check.</param>
 		/// <returns>True if the player has permission to use the banned tile.</returns>
-		public async Task<bool> HasPermission(TileBan bannedTile)
+		public bool HasPermission(TileBan bannedTile)
 		{
 			return TileManager.TileIsBanned(bannedTile.Type, this);
 		}
@@ -2207,7 +2172,6 @@ namespace EthnessaAPI
 
 		public ServerRestPlayer(string playerName, Group playerGroup) : base(playerName)
 		{
-			Group = playerGroup;
 			AwaitingResponse = new Dictionary<string, Action<object>>();
 		}
 

@@ -501,18 +501,6 @@ namespace EthnessaAPI.Configuration
 		[Description("Prevents OnSecondUpdate checks from writing to the log file.")]
 		public bool DisableSecondUpdateLogs = false;
 
-		/// <summary>The chat color for the superadmin group.</summary>
-		[Description("The chat color for the superadmin group.\n#.#.# = Red/Blue/Green\nMax value: 255")]
-		public int[] SuperAdminChatRGB = { 255, 255, 255 };
-
-		/// <summary>The superadmin chat prefix.</summary>
-		[Description("The superadmin chat prefix.")]
-		public string SuperAdminChatPrefix = GetString("[Admin] ");
-
-		/// <summary>The superadmin chat suffix.</summary>
-		[Description("The superadmin chat suffix.")]
-		public string SuperAdminChatSuffix = "";
-
 		/// <summary>Whether or not to announce a player's geographic location on join, based on their IP.</summary>
 		[Description("Whether or not to announce a player's geographic location on join, based on their IP.")]
 		public bool EnableGeoIP;

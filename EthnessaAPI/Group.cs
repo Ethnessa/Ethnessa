@@ -234,39 +234,4 @@ namespace EthnessaAPI
 			return this.Name;
 		}
 	}
-
-	/// <summary>
-	/// This class is the SuperAdminGroup, which has access to everything.
-	/// </summary>
-	public class SuperAdminGroup : Group
-	{
-		/// <summary>
-		/// The super admin class has every permission, represented by '*'.
-		/// </summary>
-		public override List<string> Permissions { get; set; } = new() { "*" };
-
-		/// <summary>
-		/// Initializes a new instance of the SuperAdminGroup class with the configured parameters.
-		/// Those can be changed in the config file.
-		/// </summary>
-		public SuperAdminGroup()
-			: base("superadmin")
-		{
-			R = (byte)ServerBase.Config.Settings.SuperAdminChatRGB[0];
-			G = (byte)ServerBase.Config.Settings.SuperAdminChatRGB[1];
-			B = (byte)ServerBase.Config.Settings.SuperAdminChatRGB[2];
-			Prefix = ServerBase.Config.Settings.SuperAdminChatPrefix;
-			Suffix = ServerBase.Config.Settings.SuperAdminChatSuffix;
-		}
-
-		/// <summary>
-		/// Override to allow access to everything.
-		/// </summary>
-		/// <param name="permission">The permission</param>
-		/// <returns>True</returns>
-		public override bool HasPermission(string permission)
-		{
-			return true;
-		}
-	}
 }

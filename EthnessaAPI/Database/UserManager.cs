@@ -41,13 +41,13 @@ namespace EthnessaAPI.Database
 		/// <remarks>You can also use UserAccount.SaveAsync(), however you should check if it already exists first.</remarks>
 		public static void AddUserAccount(UserAccount account)
 		{
-			if (!(GroupManager.GroupExists(account.Group)))
-				throw new GroupNotExistsException(account.Group);
+			if (!(GroupManager.GroupExists(account.GroupName)))
+				throw new GroupNotExistsException(account.GroupName);
 
 			try
 			{
 				// does account already exist?
-				var alreadyExists = userAccounts.Count<UserAccount>(x => x.Name == account.Name) > 0;
+				var alreadyExists = userAccounts.CountDocuments<UserAccount>(x => x.Name == account.Name) > 0;
 				if (alreadyExists)
 				{
 					throw new UserAccountExistsException(account.Name);
@@ -137,21 +137,13 @@ namespace EthnessaAPI.Database
 			if (grp == null)
 				throw new GroupNotExistsException(group);
 
-			account.Group = group;
+			account.GroupName = group;
+		}
 
-			try
-			{
-				// Update player group reference for any logged in player
-				foreach (var player in ServerBase.Players.Where(p =>
-					         p != null && p.Account != null && p.Account.Name == account.Name))
-				{
-					player.Group = grp;
-				}
-			}
-			catch (Exception ex)
-			{
-				throw new UserAccountManagerException(GetString("SetUserGroup returned an error"), ex);
-			}
+		public static void FixGroupName(string oldName, string newName)
+		{
+			var update = Builders<UserAccount>.Update.Set("GroupName", newName);
+			userAccounts.UpdateMany<UserAccount>(x=>x.GroupName==oldName, update);
 		}
 
 		/// <summary>Updates the last accessed time for a database user account to the current time.</summary>

@@ -120,7 +120,7 @@ namespace EthnessaAPI.ServerCommands
 						(usingUUID && account.UUID == args.Player.UUID && !ServerBase.Config.Settings.DisableUUIDLogin &&
 						!String.IsNullOrWhiteSpace(args.Player.UUID)))
 				{
-					var group = GroupManager.GetGroupByName(account.Group);
+					var group = account.Group;
 
 					if (!(GroupManager.AssertGroupValid(args.Player, group, false)))
 					{
@@ -130,8 +130,6 @@ namespace EthnessaAPI.ServerCommands
 
 					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
-					args.Player.Group = group;
-					args.Player.TempGroup = null;
 					args.Player.Account = account;
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;

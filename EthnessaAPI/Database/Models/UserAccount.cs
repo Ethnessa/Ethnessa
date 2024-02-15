@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BCrypt.Net;
 using MongoDB.Bson;
@@ -26,7 +28,7 @@ public class UserAccount
 	public string UUID { get; set; } = "";
 
 	/// <summary>The group object that the user account is a part of.</summary>
-	public string Group { get; set; } = "default";
+	public string GroupName { get; set; } = "default";
 
 	/// <summary>The unix epoch corresponding to the registration date of the user account.</summary>
 	public DateTime Registered { get; set; } = DateTime.Now;
@@ -36,6 +38,10 @@ public class UserAccount
 
 	/// <summary>A JSON serialized list of known IP addresses for a user account.</summary>
 	public string KnownIps { get; set; } = "";
+
+	public List<string> UserPermissions { get; set; } = new List<string>();
+
+	public Group? Group => GroupManager.GetGroupByName(GroupName);
 
 	/// <summary>Constructor for the user account object, assuming you define everything yourself.</summary>
 	/// <param name="name">The user's name.</param>
@@ -52,7 +58,7 @@ public class UserAccount
 		Name = name;
 		Password = pass;
 		UUID = uuid;
-		Group = group;
+		GroupName = group;
 		Registered = registered;
 		LastAccessed = last;
 		KnownIps = known;
@@ -88,9 +94,20 @@ public class UserAccount
 		return false;
 	}
 
+	public bool HasPermission(string permission)
+	{
+		var groupPermissions = Group?.Permissions;
+
+		// add user permissions and group permissions
+		var totalPermissions = new List<string>(UserPermissions);
+		totalPermissions.AddRange(groupPermissions ?? new List<string>());
+
+		return (totalPermissions.Contains(permission) || totalPermissions.Contains("*"));
+	}
+
 	/// <summary>Upgrades a password to the highest work factor available in the config.</summary>
 	/// <param name="password">The raw user account password (unhashed) to upgrade</param>
-	protected async Task UpgradePasswordWorkFactor(string password)
+	protected void UpgradePasswordWorkFactor(string password)
 	{
 		// If the destination work factor is not greater, we won't upgrade it or re-hash it
 		int currentWorkFactor;

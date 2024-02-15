@@ -146,8 +146,7 @@ namespace Rests
 				return new RestObject("403") { Error = GetString("Username or password may be incorrect or this account may not have sufficient privileges.") };
 			}
 
-			var userGroup = GroupManager.GetGroupByName(userAccount.Group);
-			if (!userGroup.HasPermission(RestPermissions.restapi) && userAccount.Group != "superadmin")
+			if (!userAccount.HasPermission(RestPermissions.restapi))
 			{
 				AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
 				return new RestObject("403")
@@ -162,7 +161,7 @@ namespace Rests
 				tokenHash = randbytes.Aggregate("", (s, b) => s + b.ToString("X2"));
 			} while (Tokens.ContainsKey(tokenHash));
 
-			Tokens.Add(tokenHash, new TokenData { Username = userAccount.Name, UserGroupName = userGroup.Name });
+			Tokens.Add(tokenHash, new TokenData { Username = userAccount.Name, UserGroupName = userAccount.GroupName });
 
 			AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
 

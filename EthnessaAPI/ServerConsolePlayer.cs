@@ -37,8 +37,7 @@ namespace EthnessaAPI
 		public ServerConsolePlayer()
 			: base("ServerConsole")
 		{
-			Group = new SuperAdminGroup();
-			Account = new UserAccount { Name = AccountName };
+			Account = new UserAccount { Name = AccountName, UserPermissions = new(){"*"}};
 		}
 
 		public override void SendErrorMessage(string msg)
