@@ -19,6 +19,7 @@ Getting MongoDB installed and configured to run with your server is easy!
 - TShock main class is now **ServerBase**
 - Accessing DB storage can be done from `ServerBase.GlobalDatabase` or `ServerBase.LocalDatabase`. These are both IMongoDatabase objects.
 - ServerPlayer has been renamed to **ServerConsolePlayer**
+- UserAccounts can now have **multiple groups, account-independent permissions, weighted and user-preferred prefixes**
 - Ban system has been redone
 - Most commands have been ripped out
 
