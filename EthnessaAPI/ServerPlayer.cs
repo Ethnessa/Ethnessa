@@ -208,7 +208,7 @@ namespace EthnessaAPI
 		/// <summary>
 		/// The player's group.
 		/// </summary>
-		public Group? Group => Account?.Group;
+		public Group? Group => Account?.Group ?? GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
 
 		public Timer tempGroupTimer;
 
@@ -288,7 +288,7 @@ namespace EthnessaAPI
 		/// <summary>
 		/// Whether the player is logged in or not.
 		/// </summary>
-		public bool IsLoggedIn;
+		public bool IsLoggedIn => Account is not null;
 
 		/// <summary>
 		/// Whether the player has sent their whole inventory to the server while connecting.
@@ -1248,7 +1248,6 @@ namespace EthnessaAPI
 
 			PlayerData = new PlayerData(this);
 			Account = null;
-			IsLoggedIn = false;
 		}
 
 		/// <summary>
@@ -2127,10 +2126,14 @@ namespace EthnessaAPI
 			if (hookResult != PermissionHookResult.Unhandled)
 				return hookResult == PermissionHookResult.Granted;
 
-			if(IsLoggedIn)
+			if ((IsLoggedIn && Account is not null))
+			{
 				return Account.HasPermission(permission);
-
-			return false;
+			}
+			else
+			{
+				return Group.HasPermission(permission);
+			}
 		}
 
 		/// <summary>

@@ -54,13 +54,11 @@ public class Command
 
 		public Command(CommandDelegate cmd, params string[] names)
 		{
-			if (cmd == null)
-				throw new ArgumentNullException("cmd");
 			if (names == null || names.Length < 1)
-				throw new ArgumentException("names");
+				throw new ArgumentException(null, nameof(names));
 
 			AllowServer = true;
-			CommandDelegate = cmd;
+			CommandDelegate = cmd ?? throw new ArgumentNullException("cmd");
 			DoLog = true;
 			HelpText = GetString("No help available.");
 			HelpDesc = null;
@@ -98,11 +96,11 @@ public class Command
 
 		public bool CanRun(ServerPlayer ply)
 		{
-			if (Permissions == null || Permissions.Count < 1)
+			if (Permissions is null || Permissions.Count < 1)
 				return true;
-			foreach (var Permission in Permissions)
+			foreach (var permission in Permissions)
 			{
-				if (ply.HasPermission(Permission))
+				if (ply.HasPermission(permission))
 					return true;
 			}
 			return false;

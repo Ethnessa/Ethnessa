@@ -41,7 +41,7 @@ public class UserAccount
 
 	public List<string> UserPermissions { get; set; } = new List<string>();
 
-	public Group? Group => GroupManager.GetGroupByName(GroupName);
+	public Group? Group => GroupManager.GetGroupByName(GroupName) ?? GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultRegistrationGroupName);
 
 	/// <summary>Constructor for the user account object, assuming you define everything yourself.</summary>
 	/// <param name="name">The user's name.</param>

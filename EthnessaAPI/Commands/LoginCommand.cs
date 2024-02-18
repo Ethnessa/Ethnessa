@@ -131,7 +131,6 @@ namespace EthnessaAPI.ServerCommands
 					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Account = account;
-					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
 
 					if (Main.ServerSideCharacter)

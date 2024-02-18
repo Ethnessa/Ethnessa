@@ -853,7 +853,8 @@ namespace EthnessaAPI
 		/// <param name="owner">The projectile's owner (from the packet).</param>
 		/// <param name="index">The projectile's index (from Main.projectiles).</param>
 		/// <returns>bool</returns>
-		private static bool OnProjectileKill(ServerPlayer player, MemoryStream data, int identity, byte owner, int index)
+		private static bool OnProjectileKill(ServerPlayer player, MemoryStream data, int identity, byte owner,
+			int index)
 		{
 			if (ProjectileKill == null)
 				return false;
@@ -1159,7 +1160,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public static HandlerList<PlayerZoneEventArgs> PlayerZone = new HandlerList<PlayerZoneEventArgs>();
 
-		private static bool OnPlayerZone(ServerPlayer player, MemoryStream data, byte plr, BitsByte zone1, BitsByte zone2,
+		private static bool OnPlayerZone(ServerPlayer player, MemoryStream data, byte plr, BitsByte zone1,
+			BitsByte zone2,
 			BitsByte zone3, BitsByte zone4, BitsByte zone5)
 		{
 			if (PlayerZone == null)
@@ -1843,7 +1845,8 @@ namespace EthnessaAPI
 		/// <summary>When a player heals another player</summary>
 		public static HandlerList<HealOtherPlayerEventArgs> HealOtherPlayer = new();
 
-		private static bool OnHealOtherPlayer(ServerPlayer player, MemoryStream data, byte targetPlayerIndex, short amount)
+		private static bool OnHealOtherPlayer(ServerPlayer player, MemoryStream data, byte targetPlayerIndex,
+			short amount)
 		{
 			if (HealOtherPlayer == null)
 				return false;
@@ -1891,7 +1894,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public static HandlerList<ReleaseNpcEventArgs> ReleaseNPC = new HandlerList<ReleaseNpcEventArgs>();
 
-		private static bool OnReleaseNpc(ServerPlayer player, MemoryStream data, int _x, int _y, short _type, byte _style)
+		private static bool OnReleaseNpc(ServerPlayer player, MemoryStream data, int _x, int _y, short _type,
+			byte _style)
 		{
 			if (ReleaseNPC == null)
 			{
@@ -1939,7 +1943,8 @@ namespace EthnessaAPI
 		/// <summary>Fired when an object is placed in the world.</summary>
 		public static HandlerList<PlaceObjectEventArgs> PlaceObject = new();
 
-		private static bool OnPlaceObject(ServerPlayer player, MemoryStream data, short x, short y, short type, short style,
+		private static bool OnPlaceObject(ServerPlayer player, MemoryStream data, short x, short y, short type,
+			short style,
 			byte alternate, sbyte random, bool direction)
 		{
 			if (PlaceObject == null)
@@ -2069,7 +2074,8 @@ namespace EthnessaAPI
 		public static HandlerList<TeleportThroughPortalEventArgs> PortalTeleport =
 			new HandlerList<TeleportThroughPortalEventArgs>();
 
-		private static bool OnPlayerTeleportThroughPortal(ServerPlayer sender, byte targetPlayerIndex, MemoryStream data,
+		private static bool OnPlayerTeleportThroughPortal(ServerPlayer sender, byte targetPlayerIndex,
+			MemoryStream data,
 			Vector2 position, Vector2 velocity, int colorIndex)
 		{
 			TeleportThroughPortalEventArgs args = new TeleportThroughPortalEventArgs
@@ -2217,7 +2223,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public static HandlerList<PlayerDamageEventArgs> PlayerDamage = new();
 
-		private static bool OnPlayerDamage(ServerPlayer player, MemoryStream data, byte id, byte dir, short dmg, bool pvp,
+		private static bool OnPlayerDamage(ServerPlayer player, MemoryStream data, byte id, byte dir, short dmg,
+			bool pvp,
 			bool crit, sbyte cooldownCounter, PlayerDeathReason playerDeathReason)
 		{
 			if (PlayerDamage == null)
@@ -2419,7 +2426,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public static HandlerList<RequestTileEntityInteractionEventArgs> RequestTileEntityInteraction = new();
 
-		private static bool OnRequestTileEntityInteraction(ServerPlayer player, MemoryStream data, TileEntity tileEntity,
+		private static bool OnRequestTileEntityInteraction(ServerPlayer player, MemoryStream data,
+			TileEntity tileEntity,
 			byte playerIndex)
 		{
 			if (RequestTileEntityInteraction == null)
@@ -2567,7 +2575,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public static HandlerList<FishOutNPCEventArgs> FishOutNPC = new();
 
-		private static bool OnFishOutNPC(ServerPlayer player, MemoryStream data, ushort tileX, ushort tileY, short npcID)
+		private static bool OnFishOutNPC(ServerPlayer player, MemoryStream data, ushort tileX, ushort tileY,
+			short npcID)
 		{
 			if (FishOutNPC == null)
 				return false;
@@ -2798,7 +2807,8 @@ namespace EthnessaAPI
 
 			if (ServerBase.Config.Settings.MediumcoreOnly && difficulty < 1)
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerInfo rejected mediumcore required"));
+				ServerBase.Log.ConsoleDebug(
+					GetString("GetDataHandlers / HandlePlayerInfo rejected mediumcore required"));
 				args.Player.Kick(GetString("You need to join with a mediumcore player or higher."), true, true);
 				return true;
 			}
@@ -2834,12 +2844,13 @@ namespace EthnessaAPI
 			}
 
 			if (OnPlayerSlot(args.Player, args.Data, plr, slot, stack, prefix, type) || plr != args.Player.Index ||
-				slot < 0 ||
-				slot > NetItem.MaxInventory)
+			    slot < 0 ||
+			    slot > NetItem.MaxInventory)
 				return true;
 			if (args.Player.IgnoreSscPackets)
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerSlot rejected ignore ssc packets"));
+				ServerBase.Log.ConsoleDebug(
+					GetString("GetDataHandlers / HandlePlayerSlot rejected ignore ssc packets"));
 				args.Player.SendData(PacketTypes.PlayerSlot, "", args.Player.Index, slot, prefix);
 				return true;
 			}
@@ -2854,8 +2865,8 @@ namespace EthnessaAPI
 				args.Player.PlayerData.StoreSlot(slot, type, prefix, stack);
 			}
 			else if (Main.ServerSideCharacter && ServerBase.Config.Settings.DisableLoginBeforeJoin &&
-					 !bypassTrashCanCheck &&
-					 args.Player.HasSentInventory && !args.Player.HasPermission(Permissions.bypassssc))
+			         !bypassTrashCanCheck &&
+			         args.Player.HasSentInventory && !args.Player.HasPermission(Permissions.bypassssc))
 			{
 				// The player might have moved an item to their trash can before they performed a single login attempt yet.
 				args.Player.IsDisabledPendingTrashRemoval = true;
@@ -2893,7 +2904,6 @@ namespace EthnessaAPI
 					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
 					args.Player.Account = account;
-					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
 
 					if (Main.ServerSideCharacter)
@@ -2901,7 +2911,7 @@ namespace EthnessaAPI
 						if (args.Player.HasPermission(Permissions.bypassssc))
 						{
 							if (args.Player.PlayerData.exists && ServerBase.ServerSideCharacterConfig.Settings
-									.WarnPlayersAboutBypassPermission)
+								    .WarnPlayersAboutBypassPermission)
 							{
 								args.Player.SendWarningMessage(GetString(
 									"Bypass SSC is enabled for your account. SSC data will not be loaded or saved."));
@@ -2958,7 +2968,7 @@ namespace EthnessaAPI
 				return true;
 
 			if (ServerBase.Utils.GetActivePlayerCount() + 1 > ServerBase.Config.Settings.MaxSlots &&
-				!args.Player.HasPermission(Permissions.reservedslot))
+			    !args.Player.HasPermission(Permissions.reservedslot))
 			{
 				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleGetSection rejected reserve slot"));
 				args.Player.Kick(ServerBase.Config.Settings.ServerFullReason, true, true);
@@ -2988,29 +2998,30 @@ namespace EthnessaAPI
 			PlayerSpawnContext context = (PlayerSpawnContext)args.Data.ReadByte();
 
 			if (OnPlayerSpawn(args.Player, args.Data, player, spawnx, spawny, respawnTimer, numberOfDeathsPVE,
-					numberOfDeathsPVP, context))
+				    numberOfDeathsPVP, context))
 				return true;
 
 			if ((Main.ServerSideCharacter) &&
-				(spawnx == -1 && spawny == -1)) //this means they want to spawn to vanilla spawn
+			    (spawnx == -1 && spawny == -1)) //this means they want to spawn to vanilla spawn
 			{
 				args.Player.sX = Main.spawnTileX;
 				args.Player.sY = Main.spawnTileY;
 				args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport 'vanilla spawn' {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSpawn force teleport 'vanilla spawn' {0}",
 					args.Player.Name));
 			}
 
 			else if ((Main.ServerSideCharacter) && (args.Player.sX > 0) && (args.Player.sY > 0) &&
-					 (args.TPlayer.SpawnX > 0) && ((args.TPlayer.SpawnX != args.Player.sX) &&
-												   (args.TPlayer.SpawnY != args.Player.sY)))
+			         (args.TPlayer.SpawnX > 0) && ((args.TPlayer.SpawnX != args.Player.sX) &&
+			                                       (args.TPlayer.SpawnY != args.Player.sY)))
 			{
 				args.Player.sX = args.TPlayer.SpawnX;
 				args.Player.sY = args.TPlayer.SpawnY;
 
 				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() &&
-					  Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
-					(WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
+				      Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
+				    (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
 				{
 					args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
 					ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 1 {0}",
@@ -3021,8 +3032,8 @@ namespace EthnessaAPI
 			else if ((Main.ServerSideCharacter) && (args.Player.sX > 0) && (args.Player.sY > 0))
 			{
 				if (((Main.tile[args.Player.sX, args.Player.sY - 1].active() &&
-					  Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
-					(WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
+				      Main.tile[args.Player.sX, args.Player.sY - 1].type == TileID.Beds)) &&
+				    (WorldGen.StartRoomCheck(args.Player.sX, args.Player.sY - 1)))
 				{
 					args.Player.Teleport(args.Player.sX * 16, (args.Player.sY * 16) - 48);
 					ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawn force teleport phase 2 {0}",
@@ -3068,7 +3079,7 @@ namespace EthnessaAPI
 			}
 
 			if (OnPlayerUpdate(args.Player, args.Data, playerID, controls, miscData1, miscData2, miscData3,
-					selectedItem, position, velocity, originalPosition, homePosition))
+				    selectedItem, position, velocity, originalPosition, homePosition))
 				return true;
 
 			return false;
@@ -3081,7 +3092,7 @@ namespace EthnessaAPI
 			var max = args.Data.ReadInt16();
 
 			if (OnPlayerHP(args.Player, args.Data, plr, cur, max) || cur <= 0 || max <= 0 ||
-				args.Player.IgnoreSscPackets)
+			    args.Player.IgnoreSscPackets)
 				return true;
 
 			if (max > ServerBase.Config.Settings.MaxHP && !args.Player.HasPermission(Permissions.ignorehp))
@@ -3109,7 +3120,7 @@ namespace EthnessaAPI
 			short tileY = args.Data.ReadInt16();
 			short editData = args.Data.ReadInt16();
 			EditType type = (action == EditAction.KillTile || action == EditAction.KillWall ||
-							 action == EditAction.KillTileNoItem || action == EditAction.TryKillTile)
+			                 action == EditAction.KillTileNoItem || action == EditAction.TryKillTile)
 				? EditType.Fail
 				: (action == EditAction.PlaceTile || action == EditAction.PlaceWall ||
 				   action == EditAction.ReplaceTile || action == EditAction.ReplaceWall)
@@ -3151,8 +3162,8 @@ namespace EthnessaAPI
 
 
 			if (tileType != TileID.ClosedDoor && tileType != TileID.OpenDoor
-											  && tileType != TileID.TallGateClosed && tileType != TileID.TallGateOpen
-											  && tileType != TileID.TrapdoorClosed && tileType != TileID.TrapdoorOpen)
+			                                  && tileType != TileID.TallGateClosed && tileType != TileID.TallGateOpen
+			                                  && tileType != TileID.TrapdoorClosed && tileType != TileID.TrapdoorOpen)
 			{
 				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleDoorUse rejected door gap check {0}",
 					args.Player.Name));
@@ -3393,7 +3404,7 @@ namespace EthnessaAPI
 
 			string pvpMode = ServerBase.Config.Settings.PvPMode.ToLowerInvariant();
 			if (pvpMode == "disabled" || pvpMode == "always" || pvpMode == "pvpwithnoteam" ||
-				(DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
+			    (DateTime.UtcNow - args.Player.LastPvPTeamChange).TotalSeconds < 5)
 			{
 				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTogglePvp rejected fastswitch {0}",
 					args.Player.Name));
@@ -3529,7 +3540,6 @@ namespace EthnessaAPI
 						return true;
 
 					args.Player.Account = account;
-					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
 
 					if (Main.ServerSideCharacter)
@@ -3636,12 +3646,13 @@ namespace EthnessaAPI
 			var max = args.Data.ReadInt16();
 
 			if (OnPlayerMana(args.Player, args.Data, plr, cur, max) || cur < 0 || max < 0 ||
-				args.Player.IgnoreSscPackets)
+			    args.Player.IgnoreSscPackets)
 				return true;
 
 			if (max > ServerBase.Config.Settings.MaxMP && !args.Player.HasPermission(Permissions.ignoremp))
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerMana rejected max mana {0} {1}/{2}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandlePlayerMana rejected max mana {0} {1}/{2}",
 					args.Player.Name, max, ServerBase.Config.Settings.MaxMP));
 				args.Player.Disable("Maximum MP beyond limit", DisableFlags.WriteToLogAndConsole);
 				return true;
@@ -3711,7 +3722,8 @@ namespace EthnessaAPI
 			if (!args.Player.HasBuildPermission(x, y))
 			{
 				args.Player.SendData(PacketTypes.SignNew, "", id);
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSign rejected sign on build permission {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSign rejected sign on build permission {0}",
 					args.Player.Name));
 				return true;
 			}
@@ -3773,7 +3785,8 @@ namespace EthnessaAPI
 				}
 			}
 
-			ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePlayerBuffList handled event and sent data {0}",
+			ServerBase.Log.ConsoleDebug(GetString(
+				"GetDataHandlers / HandlePlayerBuffList handled event and sent data {0}",
 				args.Player.Name));
 			NetMessage.SendData((int)PacketTypes.PlayerBuff, -1, args.Player.Index, NetworkText.Empty,
 				args.Player.Index);
@@ -3890,7 +3903,7 @@ namespace EthnessaAPI
 			var thingType = args.Data.ReadInt16();
 
 			var isKnownBoss = thingType > 0 && thingType < Terraria.ID.NPCID.Count &&
-							  NPCID.Sets.MPAllowedEnemies[thingType];
+			                  NPCID.Sets.MPAllowedEnemies[thingType];
 			if ((isKnownBoss || thingType == -16) && !args.Player.HasPermission(Permissions.summonboss))
 			{
 				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSpawnBoss rejected boss {0} {1}",
@@ -3974,7 +3987,8 @@ namespace EthnessaAPI
 					break;
 				default:
 					if (!isKnownBoss)
-						ServerBase.Log.ConsoleDebug("GetDataHandlers / HandleSpawnBoss unknown boss {0} summoned by {1}",
+						ServerBase.Log.ConsoleDebug(
+							"GetDataHandlers / HandleSpawnBoss unknown boss {0} summoned by {1}",
 							thingType, args.Player.Name);
 					NPC npc = new NPC();
 					npc.SetDefaults(thingType);
@@ -4016,23 +4030,24 @@ namespace EthnessaAPI
 
 			// Not selecting paintbrush or paint scraper or the spectre versions? Hacking.
 			if (args.Player.SelectedItem.type != ItemID.PaintRoller &&
-				args.Player.SelectedItem.type != ItemID.PaintScraper &&
-				args.Player.SelectedItem.type != ItemID.Paintbrush &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
-				!args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
-				!args.Player.Inventory.Any(HasPaintSprayerAbilities))
+			    args.Player.SelectedItem.type != ItemID.PaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.Paintbrush &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
+			    !args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
+			    !args.Player.Inventory.Any(HasPaintSprayerAbilities))
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintTile rejected select consistency {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandlePaintTile rejected select consistency {0}",
 					args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintTile, "", x, y, Main.tile[x, y].color());
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled() ||
-				!args.Player.HasPaintPermission(x, y) ||
-				!args.Player.IsInRange(x, y))
+			    !args.Player.HasPaintPermission(x, y) ||
+			    !args.Player.IsInRange(x, y))
 			{
 				ServerBase.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandlePaintTile rejected throttle/permission/range check {0}",
@@ -4070,23 +4085,24 @@ namespace EthnessaAPI
 
 			// Not selecting paint roller or paint scraper or the spectre versions? Hacking.
 			if (args.Player.SelectedItem.type != ItemID.PaintRoller &&
-				args.Player.SelectedItem.type != ItemID.PaintScraper &&
-				args.Player.SelectedItem.type != ItemID.Paintbrush &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
-				args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
-				!args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
-				!args.Player.Inventory.Any(HasPaintSprayerAbilities))
+			    args.Player.SelectedItem.type != ItemID.PaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.Paintbrush &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintRoller &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintScraper &&
+			    args.Player.SelectedItem.type != ItemID.SpectrePaintbrush &&
+			    !args.Player.Accessories.Any(HasPaintSprayerAbilities) &&
+			    !args.Player.Inventory.Any(HasPaintSprayerAbilities))
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandlePaintWall rejected selector consistency {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandlePaintWall rejected selector consistency {0}",
 					args.Player.Name));
 				args.Player.SendData(PacketTypes.PaintWall, "", x, y, Main.tile[x, y].wallColor());
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled() ||
-				!args.Player.HasPaintPermission(x, y) ||
-				!args.Player.IsInRange(x, y))
+			    !args.Player.HasPaintPermission(x, y) ||
+			    !args.Player.IsInRange(x, y))
 			{
 				ServerBase.Log.ConsoleDebug(GetString(
 					"GetDataHandlers / HandlePaintWall rejected throttle/permission/range {0}", args.Player.Name));
@@ -4165,7 +4181,8 @@ namespace EthnessaAPI
 			{
 				if (id >= Main.maxPlayers || Main.player[id] == null || ServerBase.Players[id] == null)
 				{
-					ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleTeleport rejected p2p extents {0} {1}",
+					ServerBase.Log.ConsoleDebug(GetString(
+						"GetDataHandlers / HandleTeleport rejected p2p extents {0} {1}",
 						args.Player.Name, type));
 					return true;
 				}
@@ -4203,7 +4220,8 @@ namespace EthnessaAPI
 
 			if (Main.npc[npcID]?.catchItem == 0)
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc catch zero {0}", args.Player.Name));
+				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleCatchNpc catch zero {0}",
+					args.Player.Name));
 				Main.npc[npcID].active = true;
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcID);
 				return true;
@@ -4250,7 +4268,7 @@ namespace EthnessaAPI
 			{
 				case 0: // Teleportation Potion
 					if (args.Player.ItemInHand.type != ItemID.TeleportationPotion &&
-						args.Player.SelectedItem.type != ItemID.TeleportationPotion)
+					    args.Player.SelectedItem.type != ItemID.TeleportationPotion)
 					{
 						ServerBase.Log.ConsoleDebug(GetString(
 							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
@@ -4267,9 +4285,9 @@ namespace EthnessaAPI
 					break;
 				case 1: // Magic Conch or Shellphone (Ocean)
 					if (args.Player.ItemInHand.type != ItemID.MagicConch &&
-						args.Player.SelectedItem.type != ItemID.MagicConch &&
-						args.Player.ItemInHand.type != ItemID.ShellphoneOcean &&
-						args.Player.SelectedItem.type != ItemID.ShellphoneOcean)
+					    args.Player.SelectedItem.type != ItemID.MagicConch &&
+					    args.Player.ItemInHand.type != ItemID.ShellphoneOcean &&
+					    args.Player.SelectedItem.type != ItemID.ShellphoneOcean)
 					{
 						ServerBase.Log.ConsoleDebug(GetString(
 							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
@@ -4280,7 +4298,7 @@ namespace EthnessaAPI
 					if (!args.Player.HasPermission(Permissions.magicconch))
 					{
 						if (args.Player.ItemInHand.type == ItemID.ShellphoneOcean ||
-							args.Player.SelectedItem.type == ItemID.ShellphoneOcean)
+						    args.Player.SelectedItem.type == ItemID.ShellphoneOcean)
 						{
 							Fail("the Shellphone (Ocean)");
 						}
@@ -4295,9 +4313,9 @@ namespace EthnessaAPI
 					break;
 				case 2: // Demon Conch or Shellphone (Underworld)
 					if (args.Player.ItemInHand.type != ItemID.DemonConch &&
-						args.Player.SelectedItem.type != ItemID.DemonConch &&
-						args.Player.ItemInHand.type != ItemID.ShellphoneHell &&
-						args.Player.SelectedItem.type != ItemID.ShellphoneHell)
+					    args.Player.SelectedItem.type != ItemID.DemonConch &&
+					    args.Player.ItemInHand.type != ItemID.ShellphoneHell &&
+					    args.Player.SelectedItem.type != ItemID.ShellphoneHell)
 					{
 						ServerBase.Log.ConsoleDebug(GetString(
 							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
@@ -4308,7 +4326,7 @@ namespace EthnessaAPI
 					if (!args.Player.HasPermission(Permissions.demonconch))
 					{
 						if (args.Player.ItemInHand.type == ItemID.ShellphoneHell ||
-							args.Player.SelectedItem.type == ItemID.ShellphoneHell)
+						    args.Player.SelectedItem.type == ItemID.ShellphoneHell)
 						{
 							Fail("the Shellphone (Underworld)");
 						}
@@ -4323,7 +4341,7 @@ namespace EthnessaAPI
 					break;
 				case 3: // Shellphone (Spawn)
 					if (args.Player.ItemInHand.type != ItemID.ShellphoneSpawn &&
-						args.Player.SelectedItem.type != ItemID.ShellphoneSpawn)
+					    args.Player.SelectedItem.type != ItemID.ShellphoneSpawn)
 					{
 						ServerBase.Log.ConsoleDebug(GetString(
 							"GetDataHandlers / HandleTeleportationPotion rejected not holding the correct item {0} {1}",
@@ -4428,9 +4446,10 @@ namespace EthnessaAPI
 			var position = new Vector2(args.Data.ReadSingle(), args.Data.ReadSingle());
 
 			if (position.X < 0 || position.X >= (Main.maxTilesX * 16.0f) || position.Y < 0 ||
-				position.Y >= (Main.maxTilesY * 16.0f))
+			    position.Y >= (Main.maxTilesY * 16.0f))
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncExtraValue rejected extents check {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncExtraValue rejected extents check {0}",
 					args.Player.Name));
 				return true;
 			}
@@ -4454,7 +4473,8 @@ namespace EthnessaAPI
 			if (npc == null)
 			{
 				ServerBase.Log.ConsoleDebug(
-					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC AccountId: {0}", npcIndex));
+					GetString("GetDataHandlers / HandleSyncExtraValue rejected npc is null - NPC AccountId: {0}",
+						npcIndex));
 				return true;
 			}
 
@@ -4521,7 +4541,8 @@ namespace EthnessaAPI
 
 			if (projectile == null || !projectile.active)
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleNpcTeleportPortal rejected null check {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleNpcTeleportPortal rejected null check {0}",
 					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npcIndex);
 				return true;
@@ -4601,7 +4622,8 @@ namespace EthnessaAPI
 				ServerBase.Utils.SendLogs(GetString("{0} started the Old One's Army event!", args.Player.Name),
 					Color.PaleVioletRed, args.Player);
 			else
-				ServerBase.Utils.Broadcast(GetString("{0} started the Old One's Army event!", args.Player.Name), 175, 75,
+				ServerBase.Utils.Broadcast(GetString("{0} started the Old One's Army event!", args.Player.Name), 175,
+					75,
 					255);
 			return false;
 		}
@@ -4618,7 +4640,7 @@ namespace EthnessaAPI
 			var cooldownCounter = (sbyte)args.Data.ReadInt8();
 
 			if (OnPlayerDamage(args.Player, args.Data, id, direction, dmg, pvp, crit, cooldownCounter,
-					playerDeathReason))
+				    playerDeathReason))
 				return true;
 
 			return false;
@@ -4642,8 +4664,8 @@ namespace EthnessaAPI
 			foreach (NPC npc in Main.npc)
 			{
 				if (npc.active && (npc.boss || npc.type == 13 || npc.type == 14 || npc.type == 15) &&
-					Math.Abs(args.TPlayer.Center.X - npc.Center.X) + Math.Abs(args.TPlayer.Center.Y - npc.Center.Y) <
-					4000f)
+				    Math.Abs(args.TPlayer.Center.X - npc.Center.X) + Math.Abs(args.TPlayer.Center.Y - npc.Center.Y) <
+				    4000f)
 				{
 					args.Player.RespawnTimer = ServerBase.Config.Settings.RespawnBossSeconds;
 					break;
@@ -4749,7 +4771,7 @@ namespace EthnessaAPI
 				newItem.Prefix(prefix);
 
 				if (OnDisplayDollItemSync(args.Player, args.Data, playerIndex, tileEntityID, displayDoll, slot, isDye,
-						oldItem, newItem))
+					    oldItem, newItem))
 					return true;
 			}
 
@@ -4869,7 +4891,8 @@ namespace EthnessaAPI
 
 			if (args.Player.IsBeingDisabled())
 			{
-				ServerBase.Log.ConsoleDebug(GetString("GetDataHandlers / HandleSyncLoadout rejected loadout index sync {0}",
+				ServerBase.Log.ConsoleDebug(GetString(
+					"GetDataHandlers / HandleSyncLoadout rejected loadout index sync {0}",
 					args.Player.Name));
 				NetMessage.SendData((int)PacketTypes.SyncLoadout, number: args.Player.Index,
 					number2: args.TPlayer.CurrentLoadoutIndex);

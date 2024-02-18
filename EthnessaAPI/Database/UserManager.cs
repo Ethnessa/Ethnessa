@@ -33,7 +33,8 @@ namespace EthnessaAPI.Database
 	/// <summary>UserAccountManager - Methods for dealing with database user accounts and other related functionality within TShock.</summary>
 	public static class UserAccountManager
 	{
-		private static IMongoCollection<UserAccount> userAccounts => ServerBase.GlobalDatabase.GetCollection<UserAccount>("useraccounts");
+		internal static string _collectionName => "useraccounts";
+		private static IMongoCollection<UserAccount> userAccounts => ServerBase.GlobalDatabase.GetCollection<UserAccount>(_collectionName);
 		/// <summary>
 		/// Adds the given user account to the database
 		/// </summary>
@@ -53,7 +54,7 @@ namespace EthnessaAPI.Database
 					throw new UserAccountExistsException(account.Name);
 				}
 
-				account.AccountId = GetNextUserId();
+				account.AccountId = CounterManager.GetAndIncrement(_collectionName);
 				userAccounts.InsertOne(account);
 			}
 			catch (Exception ex)
@@ -62,14 +63,6 @@ namespace EthnessaAPI.Database
 			}
 
 			Hooks.AccountHooks.OnAccountCreate(account);
-		}
-
-		public static int GetNextUserId()
-		{
-			var last = userAccounts.Find<UserAccount>(x => true).SortByDescending(x => x.AccountId).Limit(1).FirstOrDefault();
-			if (last == null)
-				return 1;
-			return last.AccountId + 1;
 		}
 
 		/// <summary>
@@ -164,7 +157,7 @@ namespace EthnessaAPI.Database
 		/// <summary>Gets the database AccountId of a given user account object from the database.</summary>
 		/// <param name="username">The username of the user account to query for.</param>
 		/// <returns>The user account AccountId</returns>
-		public static async Task<int?> GetUserAccountId(string username)
+		public static int? GetUserAccountId(string username)
 		{
 			try
 			{

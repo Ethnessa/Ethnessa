@@ -374,7 +374,7 @@ namespace EthnessaAPI
 					File.Delete(Path.Combine(SavePath, "tshock.pid"));
 				}
 
-				File.WriteAllTextAsync(Path.Combine(SavePath, "tshock.pid"),
+				File.WriteAllText(Path.Combine(SavePath, "tshock.pid"),
 					Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture));
 
 				CliParser.Reset();
@@ -655,7 +655,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnItemForceIntoChest - Internal hook fired when a player quick stacks items into a chest.</summary>
 		/// <param name="args">The <see cref="ForceItemIntoChestEventArgs"/> object.</param>
-		private async void OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
+		private void OnItemForceIntoChest(ForceItemIntoChestEventArgs args)
 		{
 			if (args.Handled)
 			{
@@ -987,7 +987,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnPostInit - Fired when the server loads a map, to perform world specific operations.</summary>
 		/// <param name="args">args - The EventArgs object.</param>
-		private async void OnPostInit(EventArgs args)
+		private void OnPostInit(EventArgs args)
 		{
 			Utils.SetConsoleTitle(false);
 
@@ -1108,7 +1108,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnUpdate - Called when ever the server ticks.</summary>
 		/// <param name="args">args - EventArgs args</param>
-		private async void OnUpdate(EventArgs args)
+		private void OnUpdate(EventArgs args)
 		{
 			// This forces Terraria to actually continue to update
 			// even if there are no clients connected
@@ -1146,7 +1146,7 @@ namespace EthnessaAPI
 		}
 
 		/// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
-		private async void OnSecondUpdate()
+		private void OnSecondUpdate()
 		{
 			DisableFlags flags = Config.Settings.DisableSecondUpdateLogs
 				? DisableFlags.WriteToConsole
@@ -1429,7 +1429,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnJoin - Internal hook called when a player joins. This is called after OnConnect.</summary>
 		/// <param name="args">args - The JoinEventArgs object.</param>
-		private async void OnJoin(JoinEventArgs args)
+		private void OnJoin(JoinEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
@@ -1452,7 +1452,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnLeave - Called when a player leaves the server.</summary>
 		/// <param name="args">args - The LeaveEventArgs object.</param>
-		private async void OnLeave(LeaveEventArgs args)
+		private void OnLeave(LeaveEventArgs args)
 		{
 			if (args.Who >= Players.Length || args.Who < 0)
 			{
@@ -1527,7 +1527,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnChat - Fired when a player chats. Used for handling chat and commands.</summary>
 		/// <param name="args">args - The ServerChatEventArgs object.</param>
-		private async void OnChat(ServerChatEventArgs args)
+		private void OnChat(ServerChatEventArgs args)
 		{
 			var player = Players.ElementAtOrDefault(args.Who);
 
@@ -1639,7 +1639,7 @@ namespace EthnessaAPI
 		/// Called when a command is issued from the server console.
 		/// </summary>
 		/// <param name="args">The CommandEventArgs object</param>
-		private async void ServerHooks_OnCommand(CommandEventArgs args)
+		private void ServerHooks_OnCommand(CommandEventArgs args)
 		{
 			if (args.Handled)
 				return;
@@ -1678,7 +1678,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnGetData - Called when the server gets raw data packets.</summary>
 		/// <param name="e">e - The GetDataEventArgs object.</param>
-		private async void OnGetData(GetDataEventArgs e)
+		private void OnGetData(GetDataEventArgs e)
 		{
 			if (e.Handled)
 				return;
@@ -1721,7 +1721,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnGreetPlayer - Fired when a player is greeted by the server. Handles things like the MOTD, join messages, etc.</summary>
 		/// <param name="args">args - The GreetPlayerEventArgs object.</param>
-		private async void OnGreetPlayer(GreetPlayerEventArgs args)
+		private void OnGreetPlayer(GreetPlayerEventArgs args)
 		{
 			var player = Players[args.Who];
 			if (player == null)
