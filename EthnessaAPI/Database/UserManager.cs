@@ -33,7 +33,7 @@ namespace EthnessaAPI.Database
 	/// <summary>UserAccountManager - Methods for dealing with database user accounts and other related functionality within TShock.</summary>
 	public static class UserAccountManager
 	{
-		internal static string _collectionName => "useraccounts";
+		internal static string _collectionName => "user_accounts";
 		private static IMongoCollection<UserAccount> userAccounts => ServerBase.GlobalDatabase.GetCollection<UserAccount>(_collectionName);
 		/// <summary>
 		/// Adds the given user account to the database
@@ -81,6 +81,24 @@ namespace EthnessaAPI.Database
 			}
 
 			Hooks.AccountHooks.OnAccountDelete(account);
+		}
+
+		public static bool AddTag(UserAccount account, string tagName)
+		{
+			var tag = TagManager.GetTag(tagName);
+			if (tag is null)
+			{
+				return false;
+			}
+
+			if(account.TagStatuses.Any(x=>x.Name==tagName))
+			{
+				return false;
+			}
+
+			account.TagStatuses.Add(new(tagName, true));
+			userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
+			return true;
 		}
 
 		/// <summary>
@@ -221,7 +239,7 @@ namespace EthnessaAPI.Database
 				ServerBase.Log.ConsoleError(GetString($"FetchHashedPasswordAndGroup returned an error: {ex}"));
 			}
 
-			return -1;
+			return null;
 		}
 
 		/// <summary>Gets a user account object by name.</summary>
@@ -231,7 +249,7 @@ namespace EthnessaAPI.Database
 		{
 			try
 			{
-				return GetUserAccount(new UserAccount { Name = name });
+				return userAccounts.Find<UserAccount>(x => x.Name == name).FirstOrDefault();
 			}
 			catch (UserAccountManagerException)
 			{
@@ -242,11 +260,11 @@ namespace EthnessaAPI.Database
 		/// <summary>Gets a user account object by their user account AccountId.</summary>
 		/// <param name="id">The user's AccountId.</param>
 		/// <returns>The user account object returned from the search.</returns>
-		public static UserAccount? GetUserAccountById(int id)
+		public static UserAccount? GetUserAccountById(int? id)
 		{
 			try
 			{
-				return GetUserAccount(new UserAccount { AccountId = id });
+				return GetUserAccount(new UserAccount { AccountId = id.Value });
 			}
 			catch (UserAccountManagerException)
 			{

@@ -475,7 +475,7 @@ namespace EthnessaAPI.Configuration
 		public string MongoConnectionString = "mongodb://localhost:27017";
 
 		[Description("The global database, or default. This database will be used to synchronize data between servers.")]
-		public string DefaultGlobalDatabase = "tsd";
+		public string DefaultGlobalDatabase = "ethnessa";
 
 		[Description("The local database, essentially replacing a server's SQlite databases.")]
 		public string LocalDatabase = "server1";
@@ -509,9 +509,9 @@ namespace EthnessaAPI.Configuration
 		[Description("Displays a player's IP on join to users with the log permission.")]
 		public bool DisplayIPToAdmins;
 
-		/// <summary>Changes in-game chat format: {0} = Group Name, {1} = Group Prefix, {2} = Player Name, {3} = Group Suffix, {4} = Chat Message.</summary>
-		[Description("Changes in-game chat format: {0} = Group Name, {1} = Group Prefix, {2} = Player Name, {3} = Group Suffix, {4} = Chat Message.")]
-		public string ChatFormat = "{1}{2}{3}: {4}";
+		/// <summary>Changes in-game chat format: {0} = Group Name, {1} = Group Prefix, {2} = Player Name, {3} = Group Suffix, {4} = Chat Message. {5} = Tags</summary>
+		[Description("Changes in-game chat format: {0} = Group Name, {1} = Group Prefix, {2} = Player Name, {3} = Group Suffix, {4} = Chat Message, {5} = Tags.")]
+		public string ChatFormat = "{5}{1}{2}{3}: {4}";
 
 		/// <summary>Changes the player name when using chat above heads. Starts with a player name wrapped in brackets, as per Terraria's formatting.\nSame formatting as ChatFormat without the message.</summary>
 		[Description("Changes the player name when using chat above heads. Starts with a player name wrapped in brackets, as per Terraria's formatting.\nSame formatting as ChatFormat without the message.")]

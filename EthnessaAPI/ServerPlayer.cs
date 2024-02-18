@@ -74,7 +74,7 @@ namespace EthnessaAPI
 		/// <summary>
 		/// This represents the server as a player.
 		/// </summary>
-		public static readonly ServerConsolePlayer ServerConsole = new ServerConsolePlayer();
+		public static ServerConsolePlayer ServerConsole = new ServerConsolePlayer();
 
 		/// <summary>
 		/// This player represents all the players.
@@ -277,7 +277,7 @@ namespace EthnessaAPI
 		/// UserAccount object associated with the player.
 		/// Set when the player logs in.
 		/// </summary>
-		public UserAccount? Account => UserAccountManager.GetUserAccountById(UserAccountId ?? -1);
+		public UserAccount? Account => UserAccountManager.GetUserAccountById(UserAccountId);
 		internal int? UserAccountId { get; set; }
 
 		/// <summary>
@@ -2110,6 +2110,25 @@ namespace EthnessaAPI
 			}
 
 			AwaitingResponse.Add(name, callback);
+		}
+
+		public string GetTagsText()
+		{
+			string tags = "";
+			if (IsLoggedIn is false)
+			{
+				return tags;
+			}
+
+			foreach(var tag in Account.TagStatuses)
+			{
+				if (tag.Enabled)
+				{
+					tags += TagManager.GetTag(tag.Name)?.FormattedText ?? "";
+				}
+			}
+
+			return tags;
 		}
 
 		public string GetPrefix()

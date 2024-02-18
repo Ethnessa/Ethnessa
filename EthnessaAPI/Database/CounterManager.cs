@@ -19,7 +19,7 @@ public static class CounterManager
 	{
 		var filter = Builders<Counter>.Filter.Eq(c => c.Collection, collection);
 		var counter = _collection.Find(filter).FirstOrDefault();
-		return counter?.Increment ?? 0;
+		return counter?.Increment ?? 1;
 	}
 
 	public static int GetAndIncrement(string collection, int amount = 1)

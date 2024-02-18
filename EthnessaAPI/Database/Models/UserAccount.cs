@@ -40,6 +40,8 @@ public class UserAccount
 	/// <summary>The unix epoch corresponding to the last access date of the user account.</summary>
 	public DateTime LastAccessed { get; set; } = DateTime.Now;
 
+	public List<TagStatus> TagStatuses { get; set; } = new List<TagStatus>();
+
 	/// <summary>A JSON serialized list of known IP addresses for a user account.</summary>
 	public string KnownIps { get; set; } = "";
 

@@ -57,6 +57,9 @@ namespace EthnessaAPI
 		[Description("Prevents you from being banned.")]
 		public static readonly string immunetoban = "tshock.admin.noban";
 
+		[Description("User can manage tags")]
+		public static readonly string managetags = "tshock.admin.managetags";
+
 		[Description("Specific log messages are sent to users with this permission.")]
 		public static readonly string logs = "tshock.admin.viewlogs";
 

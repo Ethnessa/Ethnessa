@@ -90,7 +90,9 @@ namespace EthnessaAPI
 				new UnmuteCommand(),
 				new ListMutesCommand(),
 				new TimeCommand(),
-				new SpawnMobCommand()
+				new SpawnMobCommand(),
+				new ButcherCommand(),
+				new TagCommand()
 			};
 		}
 

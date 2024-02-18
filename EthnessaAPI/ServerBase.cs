@@ -355,9 +355,11 @@ namespace EthnessaAPI
 
 				// attempt to make connection to global database
 				GlobalDatabase = mongoClient.GetDatabase(Config.Settings.DefaultGlobalDatabase);
+				ServerApi.LogWriter.PluginWriteLine(this, $"Connected to global database: '{Config.Settings.DefaultGlobalDatabase}'", TraceLevel.Info);
 
 				// attempt to make connection to local database
 				LocalDatabase = mongoClient.GetDatabase(Config.Settings.LocalDatabase);
+				ServerApi.LogWriter.PluginWriteLine(this, $"Connected to local database: '{Config.Settings.LocalDatabase}'", TraceLevel.Info);
 
 				// TODO: Allow MongoDB logging to be enabled/disabled, like TShock's prev SQL logging
 
@@ -1623,13 +1625,12 @@ namespace EthnessaAPI
 					{2} = player name
 					{3} = group suffix
 					{4} = chat message
+					{5} = tags
 				*/
-
-
 
 				text = string.Format(Config.Settings.ChatFormat, player.Group?.Name, player.GetPrefix(), player.Name,
 					player.Group.Suffix,
-					args.Text);
+					args.Text, player.GetTagsText());
 
 				// Invoke the PlayerChat hook. If this hook event handled then we need to prevent sending the chat message
 				args.Handled = true;
