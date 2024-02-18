@@ -42,8 +42,8 @@ namespace EthnessaAPI.Database
 		/// <remarks>You can also use UserAccount.SaveAsync(), however you should check if it already exists first.</remarks>
 		public static void AddUserAccount(UserAccount account)
 		{
-			if (!(GroupManager.GroupExists(account.GroupName)))
-				throw new GroupNotExistsException(account.GroupName);
+			if (!(GroupManager.GroupExists(account.Groups.FirstOrDefault())))
+				throw new GroupNotExistsException(account.Groups.FirstOrDefault());
 
 			try
 			{
@@ -127,17 +127,70 @@ namespace EthnessaAPI.Database
 		public static void SetUserGroup(UserAccount account, string group)
 		{
 			var grp = GroupManager.GetGroupByName(group);
-			if (grp == null)
+			if (grp is null)
 				throw new GroupNotExistsException(group);
 
-			account.GroupName = group;
+			// prepend the group to the user's group list
+			account.Groups = new[] { group }.Concat(account.Groups).ToArray();
 		}
+
+
+
+		public static bool SetDesiredGroupPrefix(UserAccount account, string? groupToDisplay)
+		{
+			if (groupToDisplay is null)
+			{
+				account.DesiredGroupNamePrefix = null;
+				userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
+				return true;
+			}
+
+			var targetGroup = GroupManager.GetGroupByName(groupToDisplay);
+			if (targetGroup == null)
+			{
+				return false; // Exit early if the target group does not exist.
+			}
+
+			bool IsMemberOfGroupOrAncestor(Group group)
+			{
+				// Check if the user is a member of the specified group or any of its ancestors.
+				while (group != null)
+				{
+					if (account.Groups.Contains(group.Name))
+					{
+						return true; // User is a member of this group or an ancestor.
+					}
+					group = group.ParentGroupName != null ? GroupManager.GetGroupByName(group.ParentGroupName) : null;
+				}
+				return false;
+			}
+
+			// Check if the account is part of the target group or any of its parent groups.
+			if (!IsMemberOfGroupOrAncestor(targetGroup))
+			{
+				return false; // User is not a member of the target group or its ancestors.
+			}
+
+			account.DesiredGroupNamePrefix = targetGroup.Name;
+			// Save the changes to MongoDB.
+			userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
+
+			return true;
+		}
+
 
 		public static void FixGroupName(string oldName, string newName)
 		{
-			var update = Builders<UserAccount>.Update.Set("GroupName", newName);
-			userAccounts.UpdateMany<UserAccount>(x=>x.GroupName==oldName, update);
+			// Filter to find documents where the 'Groups' array contains 'oldName'.
+			var filter = Builders<UserAccount>.Filter.AnyEq(x => x.Groups, oldName);
+
+			// Update definition to set 'GroupName' to 'newName'.
+			var update = Builders<UserAccount>.Update.Set(x => x.Name, newName);
+
+			// Performing the update operation on all matching documents.
+			userAccounts.UpdateMany(filter, update);
 		}
+
 
 		/// <summary>Updates the last accessed time for a database user account to the current time.</summary>
 		/// <param name="account">The user account object to modify.</param>
@@ -314,6 +367,19 @@ namespace EthnessaAPI.Database
 				: base(GetString($"Group {group} does not exist"))
 			{
 			}
+		}
+
+		public static UserAccount AssureAccount(string accountName, string[] permissions)
+		{
+			var account = GetUserAccountByName(accountName);
+			if (account is null)
+			{
+				account = new UserAccount(accountName, "", "", "default", DateTime.UtcNow, DateTime.UtcNow, "");
+				account.UserPermissions = permissions.ToList();
+				AddUserAccount(account);
+			}
+
+			return account;
 		}
 	}
 }

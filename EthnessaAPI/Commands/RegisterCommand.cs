@@ -57,7 +57,6 @@ namespace EthnessaAPI.ServerCommands
 					return;
 				}
 
-				account.GroupName = ServerBase.Config.Settings.DefaultRegistrationGroupName; // FIXME -- we should get this from the Database. --Why?
 				account.UUID = args.Player.UUID;
 
 				if (UserAccountManager.GetUserAccountByName(account.Name) is null && account.Name != ServerConsolePlayer.AccountName) // Cheap way of checking for existance of a user

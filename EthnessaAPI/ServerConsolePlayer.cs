@@ -37,7 +37,7 @@ namespace EthnessaAPI
 		public ServerConsolePlayer()
 			: base("ServerConsole")
 		{
-			Account = new UserAccount { Name = AccountName, UserPermissions = new(){"*"}};
+			UserAccountId = UserAccountManager.AssureAccount("ServerConsole", new[]{"*"}).AccountId;
 		}
 
 		public override void SendErrorMessage(string msg)

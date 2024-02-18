@@ -13,7 +13,6 @@ namespace EthnessaAPI.ServerCommands
 		public override List<string> Names { get; protected set; } = new List<string>() { "accountinfo", "ai" };
 		public override CommandDelegate CommandDelegate { get; set; } = ViewAccountInfo;
 		public override List<string> Permissions { get; protected set; } = new() { EthnessaAPI.Permissions.checkaccountinfo };
-		public override bool AllowServer { get; set; } = false;
 		private static void ViewAccountInfo(CommandArgs args)
 		{
 			if (args.Parameters.Count < 1)

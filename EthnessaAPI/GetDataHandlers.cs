@@ -2903,7 +2903,7 @@ namespace EthnessaAPI
 
 					args.Player.PlayerData = CharacterManager.GetPlayerData(account.AccountId);
 
-					args.Player.Account = account;
+					args.Player.UserAccountId = account.AccountId;
 					args.Player.IsDisabledForSSC = false;
 
 					if (Main.ServerSideCharacter)
@@ -3539,7 +3539,7 @@ namespace EthnessaAPI
 					if (group is null)
 						return true;
 
-					args.Player.Account = account;
+					args.Player.UserAccountId = account.AccountId;
 					args.Player.IsDisabledForSSC = false;
 
 					if (Main.ServerSideCharacter)

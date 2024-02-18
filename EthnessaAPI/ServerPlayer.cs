@@ -277,7 +277,8 @@ namespace EthnessaAPI
 		/// UserAccount object associated with the player.
 		/// Set when the player logs in.
 		/// </summary>
-		public UserAccount? Account { get; set; }
+		public UserAccount? Account => UserAccountManager.GetUserAccountById(UserAccountId ?? -1);
+		internal int? UserAccountId { get; set; }
 
 		/// <summary>
 		/// Whether the player performed a valid login attempt (i.e. entered valid user name and password) but is still blocked
@@ -1247,7 +1248,7 @@ namespace EthnessaAPI
 			}
 
 			PlayerData = new PlayerData(this);
-			Account = null;
+			UserAccountId = null;
 		}
 
 		/// <summary>

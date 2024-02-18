@@ -161,7 +161,7 @@ namespace Rests
 				tokenHash = randbytes.Aggregate("", (s, b) => s + b.ToString("X2"));
 			} while (Tokens.ContainsKey(tokenHash));
 
-			Tokens.Add(tokenHash, new TokenData { Username = userAccount.Name, UserGroupName = userAccount.GroupName });
+			Tokens.Add(tokenHash, new TokenData { Username = userAccount.Name, UserGroupName = userAccount.Group?.Name });
 
 			AddTokenToBucket(context.RemoteEndPoint.Address.ToString());
 

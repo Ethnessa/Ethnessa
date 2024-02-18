@@ -503,7 +503,7 @@ namespace EthnessaAPI
 		{
 			foreach (ServerPlayer player in ServerBase.Players)
 			{
-				player.Account = null;
+				player.UserAccountId = null;
 			}
 		}
 
@@ -1618,7 +1618,45 @@ namespace EthnessaAPI
 				// so we can just send the message
 
 				// format the chat message
-				text = string.Format(Config.Settings.ChatFormat, player.Group.Name, player.Group.Prefix, player.Name,
+				/*  {0} = group name
+					{1} = group prefix
+					{2} = player name
+					{3} = group suffix
+					{4} = chat message
+				*/
+				string prefix = "";
+				if (player.IsLoggedIn)
+				{
+					Console.WriteLine("1");
+					if (player.Account?.DesiredGroupNamePrefix is not null)
+					{
+						Console.WriteLine("2");
+						var group = GroupManager.GetGroupByName(player.Account.DesiredGroupNamePrefix);
+						if (group is null)
+						{
+							Console.WriteLine("3");
+							UserAccountManager.SetDesiredGroupPrefix(player.Account, "");
+						}
+						else
+						{
+							Console.WriteLine("4");
+							prefix = GroupManager.GetGroupByName(player.Account.DesiredGroupNamePrefix).Prefix;
+						}
+
+					}
+					else
+					{
+						Console.WriteLine("5");
+						prefix = player.Account.GroupPrefix;
+					}
+				}
+				else
+				{
+					Console.WriteLine("6");
+					prefix = player.Group.Prefix;
+				}
+
+				text = string.Format(Config.Settings.ChatFormat, player.Group?.Name, prefix, player.Name,
 					player.Group.Suffix,
 					args.Text);
 

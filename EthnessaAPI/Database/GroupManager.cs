@@ -136,7 +136,7 @@ namespace EthnessaAPI.Database
 		/// </summary>
 		/// <param name="group">The group.</param>
 		/// <returns><c>true</c> if it does; otherwise, <c>false</c>.</returns>
-		public static bool GroupExists(string group) => groups.CountDocuments(g => g.Name.Equals(group)) > 0;
+		public static bool GroupExists(string? group) => groups.CountDocuments(g => g.Name.Equals(group)) > 0;
 
 		/// <summary>
 		/// Gets the group matching the specified name.

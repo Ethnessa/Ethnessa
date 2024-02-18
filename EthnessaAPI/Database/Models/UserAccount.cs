@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BCrypt.Net;
+using HttpServer;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -28,7 +29,10 @@ public class UserAccount
 	public string UUID { get; set; } = "";
 
 	/// <summary>The group object that the user account is a part of.</summary>
-	public string GroupName { get; set; } = "default";
+	public string[] Groups { get; set; } = { ServerBase.Config.Settings.DefaultRegistrationGroupName };
+	public string? DesiredGroupNamePrefix { get; set; } = null;
+
+	public string GroupPrefix => GroupManager.GetGroupByName(DesiredGroupNamePrefix)?.Prefix ?? Group?.Prefix ?? "";
 
 	/// <summary>The unix epoch corresponding to the registration date of the user account.</summary>
 	public DateTime Registered { get; set; } = DateTime.Now;
@@ -41,7 +45,8 @@ public class UserAccount
 
 	public List<string> UserPermissions { get; set; } = new List<string>();
 
-	public Group? Group => GroupManager.GetGroupByName(GroupName) ?? GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultRegistrationGroupName);
+	public Group? Group => GroupManager.GetGroupByName(Groups.FirstOrDefault())
+	                       ?? GroupManager.GetGroupByName(ServerBase.Config.Settings.DefaultRegistrationGroupName);
 
 	/// <summary>Constructor for the user account object, assuming you define everything yourself.</summary>
 	/// <param name="name">The user's name.</param>
@@ -58,7 +63,7 @@ public class UserAccount
 		Name = name;
 		Password = pass;
 		UUID = uuid;
-		GroupName = group;
+		Groups[0] = group;
 		Registered = registered;
 		LastAccessed = last;
 		KnownIps = known;
@@ -94,9 +99,14 @@ public class UserAccount
 		return false;
 	}
 
+	public bool ChangeToDesiredPrefix(string groupName)
+	{
+		return UserAccountManager.SetDesiredGroupPrefix(this, groupName);
+	}
+
 	public bool HasPermission(string permission)
 	{
-		var groupPermissions = Group?.Permissions;
+		var groupPermissions = Group?.GetPermissions();
 
 		// add user permissions and group permissions
 		var totalPermissions = new List<string>(UserPermissions);

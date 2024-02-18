@@ -40,7 +40,8 @@ namespace EthnessaAPI.ServerCommands
 					args.Player.SendErrorMessage(GetString("Password must be greater than or equal to {0} characters.", ServerBase.Config.Settings.MinimumPasswordLength));
 					return;
 				}
-				account.GroupName = args.Parameters[3];
+
+				account.Groups[0] = args.Parameters[3];
 
 				try
 				{
