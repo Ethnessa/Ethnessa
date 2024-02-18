@@ -20,6 +20,7 @@ Getting MongoDB installed and configured to run with your server is easy!
 - Accessing DB storage can be done from `ServerBase.GlobalDatabase` or `ServerBase.LocalDatabase`. These are both IMongoDatabase objects.
 - ServerPlayer has been renamed to **ServerConsolePlayer**
 - UserAccounts can now have **multiple groups, account-independent permissions, weighted and user-preferred prefixes**
+- **Default groups re-worked:** only three groups are created and are not enforced, except for "default" and "guest" (which can be configured if you'd like to change the names). One un-enforced group is created called "admin", this group has the `*` flag, which means it has all permissions. This group can be removed. We have removed the enforcement of a super-admin group in place of forcing the console to have a user account with all permissions added by default. This means you can also change the permissions the server console itself has, which isn't really recommended, but you can. 
 - Ban system has been redone
 - Most commands have been ripped out
 
