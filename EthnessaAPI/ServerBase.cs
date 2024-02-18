@@ -1504,7 +1504,7 @@ namespace EthnessaAPI
 						(int)(tsplr.Y / 16));
 				}
 
-				if (tsplr.tempGroupTimer != null)
+				if (tsplr.tempGroupTimer is not null)
 				{
 					tsplr.tempGroupTimer.Stop();
 				}
@@ -1624,39 +1624,10 @@ namespace EthnessaAPI
 					{3} = group suffix
 					{4} = chat message
 				*/
-				string prefix = "";
-				if (player.IsLoggedIn)
-				{
-					Console.WriteLine("1");
-					if (player.Account?.DesiredGroupNamePrefix is not null)
-					{
-						Console.WriteLine("2");
-						var group = GroupManager.GetGroupByName(player.Account.DesiredGroupNamePrefix);
-						if (group is null)
-						{
-							Console.WriteLine("3");
-							UserAccountManager.SetDesiredGroupPrefix(player.Account, "");
-						}
-						else
-						{
-							Console.WriteLine("4");
-							prefix = GroupManager.GetGroupByName(player.Account.DesiredGroupNamePrefix).Prefix;
-						}
 
-					}
-					else
-					{
-						Console.WriteLine("5");
-						prefix = player.Account.GroupPrefix;
-					}
-				}
-				else
-				{
-					Console.WriteLine("6");
-					prefix = player.Group.Prefix;
-				}
 
-				text = string.Format(Config.Settings.ChatFormat, player.Group?.Name, prefix, player.Name,
+
+				text = string.Format(Config.Settings.ChatFormat, player.Group?.Name, player.GetPrefix(), player.Name,
 					player.Group.Suffix,
 					args.Text);
 

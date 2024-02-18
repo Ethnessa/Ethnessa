@@ -33,23 +33,32 @@ namespace EthnessaAPI.Database
 	public static class GroupManager
 	{
 		public static IMongoCollection<Group> groups => ServerBase.GlobalDatabase.GetCollection<Group>("groups");
+
 		public static List<Group> GetGroups()
 		{
 			return groups.Find(Builders<Group>.Filter.Empty).ToList();
 		}
 
+		/// <summary>
+		/// Ensures the default groups are present in the database, and creates them if they are not.
+		/// <remarks>This method returns if MongoDB's `serverinfo` collection has `DefaultGroupsCreatedOnce` set to true.</remarks>
+		/// </summary>
 		public static void EnsureDefaultGroups()
 		{
+			// check if the default groups have been created once
 			var serverInfo = ServerInfoManager.RetrieveServerInfo();
 
 			if (serverInfo.DefaultGroupsCreatedOnce)
 			{
+				AssertCoreGroupsPresent();
 				return;
 			}
 
 			// Add default groups if they don't exist
+			// If they do exist, they will not be overwritten
 			AddDefaultGroup("guest", "",
-				new List<string>(){
+				new List<string>()
+				{
 					Permissions.canbuild,
 					Permissions.canregister,
 					Permissions.canlogin,
@@ -57,10 +66,12 @@ namespace EthnessaAPI.Database
 					Permissions.cantalkinthird,
 					Permissions.canchat,
 					Permissions.synclocalarea,
-					Permissions.sendemoji});
+					Permissions.sendemoji
+				}, 0);
 
 			AddDefaultGroup("default", "guest",
-				new List<string>(){
+				new List<string>()
+				{
 					Permissions.warp,
 					Permissions.canchangepassword,
 					Permissions.canlogout,
@@ -71,18 +82,20 @@ namespace EthnessaAPI.Database
 					Permissions.pylon,
 					Permissions.tppotion,
 					Permissions.magicconch,
-					Permissions.demonconch});
+					Permissions.demonconch
+				}, 2);
 
-			// admin is different than in TShock, it has all permissions
+			// admin is different than in vanilla TShock, it has all permissions
 			// we don't have a super-admin group because... why would we?
 			// instead of filling the database with a bunch of garbage groups,
 			// we are giving full control to the owner of the server.
 			AddDefaultGroup("admin", "default",
-				new List<string>(){"*"});
+				new List<string>() { "*" }, 100);
 
 			Group.DefaultGroup = GetGroupByName(ServerBase.Config.Settings.DefaultGuestGroupName);
-			AssertCoreGroupsPresent();
 
+			// Set the server info to indicate that the default groups have been created
+			// This is to prevent the default groups from being created again, if they are deleted or renamed by the user
 			serverInfo.DefaultGroupsCreatedOnce = true;
 			ServerInfoManager.SaveServerInfo(serverInfo);
 		}
@@ -91,13 +104,15 @@ namespace EthnessaAPI.Database
 		{
 			if (!(GroupExists(ServerBase.Config.Settings.DefaultGuestGroupName)))
 			{
-				ServerBase.Log.ConsoleError(GetString("The guest group could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
+				ServerBase.Log.ConsoleError(GetString(
+					"The guest group could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The guest group could not be found."));
 			}
 
 			if (!(GroupExists(ServerBase.Config.Settings.DefaultRegistrationGroupName)))
 			{
-				ServerBase.Log.ConsoleError(GetString("The default usergroup could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
+				ServerBase.Log.ConsoleError(GetString(
+					"The default usergroup could not be found. This may indicate a typo in the configuration file, or that the group was renamed or deleted."));
 				throw new Exception(GetString("The default usergroup could not be found."));
 			}
 		}
@@ -112,21 +127,24 @@ namespace EthnessaAPI.Database
 		/// <returns></returns>
 		public static bool AssertGroupValid(ServerPlayer player, Group group, bool kick)
 		{
-			if (group == null)
+			if (group is null)
 			{
 				if (kick)
-					player.Disconnect(GetString("Your account's group could not be loaded. Please contact server administrators about this."));
+					player.Disconnect(GetString(
+						"Your account's group could not be loaded. Please contact server administrators about this."));
 				else
-					player.SendErrorMessage(GetString("Your account's group could not be loaded. Please contact server administrators about this."));
+					player.SendErrorMessage(GetString(
+						"Your account's group could not be loaded. Please contact server administrators about this."));
 				return false;
 			}
 
 			return true;
 		}
 
-		private static void AddDefaultGroup(string name, string parent, List<string> permissions)
+		private static void AddDefaultGroup(string name, string parent, List<string> permissions, int weight)
 		{
-			if (!(GroupExists(name))){
+			if (!(GroupExists(name)))
+			{
 				AddGroup(name, parent, permissions, Group.DefaultChatColor);
 			}
 		}
@@ -161,14 +179,15 @@ namespace EthnessaAPI.Database
 		/// <param name="parentName">parent of group</param>
 		/// <param name="permissions">permissions</param>
 		/// <param name="chatColor">chatcolor</param>
-		public static void AddGroup(String name, string parentName, List<string> permissions, String chatColor)
+		public static void AddGroup(String name, string parentName, List<string> permissions, String chatColor,
+			int weight = 0)
 		{
 			if (GroupExists(name))
 			{
 				throw new GroupExistsException(name);
 			}
 
-			var group = new Group(name, null, chatColor)
+			var group = new Group(name, null, weight, chatColor)
 			{
 				Permissions = permissions
 			};
@@ -182,6 +201,7 @@ namespace EthnessaAPI.Database
 					ServerBase.Log.ConsoleError(error);
 					throw new GroupManagerException(error);
 				}
+
 				group.ParentGroupName = parent.Name;
 			}
 
@@ -197,7 +217,8 @@ namespace EthnessaAPI.Database
 		/// <param name="chatcolor">chatcolor</param>
 		/// <param name="prefix">prefix</param>
 		/// <param name="suffix">suffix</param>
-		public static void UpdateGroup(string name, string parentname, List<string> permissions, string chatcolor, string prefix, string suffix)
+		public static void UpdateGroup(string name, string parentname, List<string> permissions, string chatcolor,
+			string prefix, string suffix)
 		{
 			Group group = GetGroupByName(name);
 			if (group == null)
@@ -217,7 +238,8 @@ namespace EthnessaAPI.Database
 				{
 					if (groupChain.Contains(checkingGroup))
 						throw new GroupManagerException(
-							GetString($"Parenting group {group} to {parentname} would cause loops in the parent chain."));
+							GetString(
+								$"Parenting group {group} to {parentname} would cause loops in the parent chain."));
 
 					groupChain.Add(checkingGroup);
 					checkingGroup = GetGroupByName(parent.ParentGroupName);
@@ -265,7 +287,7 @@ namespace EthnessaAPI.Database
 			group.Name = newName;
 			groups.ReplaceOne(g => g.Id == group.Id, group);
 
-			var childGroups = groups.Find<Group>(x => x.ParentGroupName ==name)
+			var childGroups = groups.Find<Group>(x => x.ParentGroupName == name)
 				.ToList();
 
 			foreach (Group grp in childGroups)
@@ -280,18 +302,19 @@ namespace EthnessaAPI.Database
 				ServerBase.Config.Settings.DefaultGuestGroupName = newName;
 				Group.DefaultGroup = group;
 			}
+
 			if (ServerBase.Config.Settings.DefaultRegistrationGroupName == name)
 			{
 				ServerBase.Config.Settings.DefaultRegistrationGroupName = newName;
 			}
+
 			if (writeConfig)
 			{
 				ServerBase.Config.Write(FileTools.ConfigPath);
 			}
 
-			UserAccountManager.FixGroupName(name,newName);
+			UserAccountManager.FixGroupName(name, newName);
 			return GetString($"Group {name} has been renamed to {newName}.");
-
 		}
 
 		/// <summary>
@@ -361,7 +384,6 @@ namespace EthnessaAPI.Database
 			groups.ReplaceOne(x => x.Id == group.Id, group);
 			return "";
 		}
-
 	}
 
 	/// <summary>

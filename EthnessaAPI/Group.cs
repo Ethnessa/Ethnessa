@@ -38,6 +38,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public string Prefix { get; set; }
 
+		public int Weight { get; set; } = 0;
+
 		/// <summary>
 		/// The chat suffix for this group.
 		/// </summary>
@@ -131,13 +133,14 @@ namespace EthnessaAPI
 		/// <param name="parentgroup">The parent group, if any.</param>
 		/// <param name="chatcolor">The chat color, in "RRR,GGG,BBB" format.</param>
 		/// <param name="permissions">The list of permissions associated with this group, separated by commas.</param>
-		public Group(string groupname, Group? parentgroup = null, string chatcolor = "255,255,255",
+		public Group(string groupname, Group? parentgroup = null, int weight = 0, string chatcolor = "255,255,255",
 			List<string> permissions = null)
 		{
 			Name = groupname;
 			ParentGroupName = parentgroup?.Name;
 			ChatColor = chatcolor;
 			Permissions = permissions;
+			Weight = weight;
 		}
 
 		/// <summary>

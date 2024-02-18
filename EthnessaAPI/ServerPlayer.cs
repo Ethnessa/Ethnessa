@@ -2112,6 +2112,33 @@ namespace EthnessaAPI
 			AwaitingResponse.Add(name, callback);
 		}
 
+		public string GetPrefix()
+		{
+			string prefix = "";
+
+			if (IsLoggedIn)
+			{
+				var desiredPrefix = Account?.DesiredGroupNamePrefix;
+				var group = desiredPrefix != null ? GroupManager.GetGroupByName(desiredPrefix) : null;
+
+				if (group != null)
+				{
+					prefix = group.Prefix;
+				}
+				else
+				{
+					prefix = Account?.GroupPrefix ?? "";
+					if (desiredPrefix != null) UserAccountManager.SetDesiredGroupPrefix(Account, "");
+				}
+			}
+			else
+			{
+				prefix = Group?.Prefix ?? "";
+			}
+
+			return prefix;
+		}
+
 		/// <summary>
 		/// Checks to see if a player has a specific permission.
 		/// Fires the <see cref="PlayerHooks.OnPlayerPermission"/> hook which may be handled to override permission checks.

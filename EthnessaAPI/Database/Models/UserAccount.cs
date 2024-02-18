@@ -32,7 +32,7 @@ public class UserAccount
 	public string[] Groups { get; set; } = { ServerBase.Config.Settings.DefaultRegistrationGroupName };
 	public string? DesiredGroupNamePrefix { get; set; } = null;
 
-	public string GroupPrefix => GroupManager.GetGroupByName(DesiredGroupNamePrefix)?.Prefix ?? Group?.Prefix ?? "";
+	public string GroupPrefix => GetWeightedPrefix() ?? "";
 
 	/// <summary>The unix epoch corresponding to the registration date of the user account.</summary>
 	public DateTime Registered { get; set; } = DateTime.Now;
@@ -104,9 +104,44 @@ public class UserAccount
 		return UserAccountManager.SetDesiredGroupPrefix(this, groupName);
 	}
 
+	public string? GetWeightedPrefix()
+	{
+		Group? highestedWeightedGroup = null;
+
+		foreach(string groupName in Groups)
+		{
+			var group = GroupManager.GetGroupByName(groupName);
+			if (group != null)
+			{
+				if (highestedWeightedGroup is null || group.Weight >= highestedWeightedGroup.Weight)
+				{
+					highestedWeightedGroup = group;
+				}
+			}
+		}
+
+		return highestedWeightedGroup?.Prefix;
+	}
+
+	public List<string> GetAllGroupPermissions()
+	{
+		var permissions = new List<string>();
+
+		foreach (string groupName in Groups)
+		{
+			var group = GroupManager.GetGroupByName(groupName);
+			if (group != null)
+			{
+				permissions.AddRange(group.GetPermissions());
+			}
+		}
+
+		return permissions;
+	}
+
 	public bool HasPermission(string permission)
 	{
-		var groupPermissions = Group?.GetPermissions();
+		var groupPermissions = GetAllGroupPermissions();
 
 		// add user permissions and group permissions
 		var totalPermissions = new List<string>(UserPermissions);
