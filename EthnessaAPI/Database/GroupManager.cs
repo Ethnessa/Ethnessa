@@ -56,7 +56,7 @@ namespace EthnessaAPI.Database
 
 			// Add default groups if they don't exist
 			// If they do exist, they will not be overwritten
-			AddDefaultGroup("guest", "",
+			AddDefaultGroup(ServerBase.Config.Settings.DefaultGuestGroupName, "",
 				new List<string>()
 				{
 					Permissions.canbuild,
@@ -69,7 +69,7 @@ namespace EthnessaAPI.Database
 					Permissions.sendemoji
 				}, 0);
 
-			AddDefaultGroup("default", "guest",
+			AddDefaultGroup(ServerBase.Config.Settings.DefaultRegistrationGroupName, "guest",
 				new List<string>()
 				{
 					Permissions.warp,
