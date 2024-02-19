@@ -44,6 +44,9 @@ namespace EthnessaAPI
 
 		[Description("User can change password in game.")]
 		public static readonly string canchangepassword = "tshock.account.changepassword";
+
+		[Description("User can manage their prefixes and tags.")]
+		public static readonly string canmanageprefixes = "tshock.account.manageprefixes";
 		#endregion
 
 		#region tshock.admin nodes
@@ -518,7 +521,7 @@ namespace EthnessaAPI
 		private static List<Command> GetCommands(string perm)
 		{
 			if (Commands.ServerCommands.Count < 1)
-				Commands.InitCommands();
+				Commands.InitializeCommands();
 			return Commands.ServerCommands.Where(c => c.Permissions.Contains(perm)).ToList();
 		}
 

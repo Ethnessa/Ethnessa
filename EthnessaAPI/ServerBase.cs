@@ -448,7 +448,7 @@ namespace EthnessaAPI
 				Hooks.AccountHooks.AccountCreate += OnAccountCreate;
 
 				GetDataHandlers.InitGetDataHandler();
-				Commands.InitCommands();
+				Commands.InitializeCommands();
 
 				EnglishLanguage.Initialize();
 

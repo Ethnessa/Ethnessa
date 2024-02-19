@@ -63,8 +63,10 @@ namespace EthnessaAPI
 
 		private delegate void AddChatCommand(string permission, CommandDelegate command, params string[] names);
 
-		// Maybe we could just initialize commands directly in the declaration? - will probably be a bit cleaner
-		public static void InitCommands()
+		/// <summary>
+		/// Initializes EthnessaAPI's commands.
+		/// </summary>
+		public static void InitializeCommands()
 		{
 			ServerCommands = new List<Command>()
 			{
@@ -92,7 +94,8 @@ namespace EthnessaAPI
 				new TimeCommand(),
 				new SpawnMobCommand(),
 				new ButcherCommand(),
-				new TagCommand()
+				new TagCommand(),
+				new PrefixCommand()
 			};
 		}
 

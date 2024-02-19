@@ -101,6 +101,33 @@ namespace EthnessaAPI.Database
 			return true;
 		}
 
+		public static bool SaveAccount(UserAccount account)
+		{
+			var result = userAccounts.ReplaceOne(x=>x.AccountId==account.AccountId, account);
+			return result.ModifiedCount > 0;
+		}
+
+		public static List<Models.Tag> GetTags(UserAccount account)
+		{
+			List<Models.Tag> tags = new();
+			foreach (var tagStatus in account.TagStatuses)
+			{
+				if (tagStatus.Enabled)
+				{
+					var tag = TagManager.GetTag(tagStatus.Name);
+
+					if (tag is null)
+					{
+						continue;
+					}
+
+					tags.Add(tag);
+				}
+			}
+
+			return tags;
+		}
+
 		/// <summary>
 		/// Sets the Hashed Password for a given username
 		/// </summary>
