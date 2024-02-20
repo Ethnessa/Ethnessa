@@ -136,6 +136,11 @@ namespace EthnessaAPI
 			return found;
 		}
 
+		public static ServerPlayer? GetPlayerOfUserAccount(UserAccount account)
+		{
+			return ServerBase.Players.FirstOrDefault(p => p?.Account == account);
+		}
+
 		public static ServerPlayer? GetFirstByNameOrId(string search)
 		{
 			var players = GetByNameOrId(search);

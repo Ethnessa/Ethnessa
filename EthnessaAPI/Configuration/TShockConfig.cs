@@ -526,6 +526,8 @@ namespace EthnessaAPI.Configuration
 		[Description("The RGB values used for the color of broadcast messages.\n#.#.# = Red/Blue/Green\nMax value: 255")]
 		public int[] BroadcastRGB = { 127, 255, 212 };
 
+		public int MaxNicknameLength = 24;
+
 		#endregion
 
 
@@ -567,6 +569,12 @@ namespace EthnessaAPI.Configuration
 		{
 			new CommandAlias("announce",  "bc")
 		};
+
+		#endregion
+
+		#region Chat filter words
+
+		public string[] FilteredWords { get; set; } = { "fuck", "shit", "bitch" };
 
 		#endregion
 

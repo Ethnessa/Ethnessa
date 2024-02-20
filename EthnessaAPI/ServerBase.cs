@@ -1643,6 +1643,13 @@ namespace EthnessaAPI
 					return;
 				}
 
+				if (ServerBase.Utils.ContainsFilteredWord(text) && player.HasPermission(EthnessaAPI.Permissions.canbypassfilter) is false)
+				{
+					// censor filtered words with ***
+					text = ServerBase.Utils.CensorFilteredWords(text);
+					ServerBase.Log.Info($"Filtered word detected in chat message from user: {player.Name}.");
+				}
+
 				Utils.Broadcast(text, player.Group.R, player.Group.G, player.Group.B);
 			}
 		}

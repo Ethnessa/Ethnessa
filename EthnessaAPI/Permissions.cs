@@ -47,6 +47,12 @@ namespace EthnessaAPI
 
 		[Description("User can manage their prefixes and tags.")]
 		public static readonly string canmanageprefixes = "tshock.account.manageprefixes";
+
+		[Description("User can change their in-game name.")]
+		public static readonly string canchangenickname = "tshock.account.changenickname";
+
+		[Description("User can send filtered words without censoring.")]
+		public static readonly string canbypassfilter = "tshock.account.bypasschatfilter";
 		#endregion
 
 		#region tshock.admin nodes

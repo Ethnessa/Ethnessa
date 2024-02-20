@@ -633,6 +633,26 @@ namespace EthnessaAPI
 			EnsureAliases();
 		}
 
+		public bool ContainsFilteredWord(string unfilteredText)
+		{
+			var filteredWords = ServerBase.Config.Settings.FilteredWords;
+
+			// regex to match any word in the filtered words list
+			// TODO: Cache regex for performance
+			var regex = new Regex(@"\b(" + string.Join("|", filteredWords) + @")\b", RegexOptions.IgnoreCase);
+			return regex.IsMatch(unfilteredText);
+		}
+
+		public string CensorFilteredWords(string unfilteredText)
+		{
+			var filteredWords = ServerBase.Config.Settings.FilteredWords;
+
+			// regex to match any word in the filtered words list
+
+			var regex = new Regex(@"\b(" + string.Join("|", filteredWords) + @")\b", RegexOptions.IgnoreCase);
+			return regex.Replace(unfilteredText, "***");
+		}
+
 		public void EnsureAliases()
 		{
 			foreach (CommandAlias alias in ServerBase.Config.Settings.CommandAliases)
