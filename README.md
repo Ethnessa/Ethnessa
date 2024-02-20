@@ -24,6 +24,8 @@ Getting MongoDB installed and configured to run with your server is easy!
 - **Introducing.. tags!** Tags are prefixes that can be appended to user's chat messages alongside the user's group prefix. As many can be toggled on or off. Why would you want this? Let's say you want staff members to have a "[Staff]" tag while also retaining their other group tags.
 - Ban & mute system has been redone
 - Most commands have been ripped out
+- **Chat filtering!** You can now filter the chat for messages you don't want players saying. Blacklisted words will be censored as '***'
+- **Nicknames!** Players can now change their name on the server to their preferred nickname, differing from their account name / character name.
 
 ## Why?
 We are a group of developers that are working on creating a new Terraria server network, and we will be using this fork of TShock.
