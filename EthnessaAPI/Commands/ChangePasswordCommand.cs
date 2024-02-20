@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EthnessaAPI.Database;
+using EthnessaAPI.Models;
 using EthnessaAPI.ServerCommands;
 
 namespace EthnessaAPI.ServerCommands

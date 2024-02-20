@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using EthnessaAPI.Models;
 
 namespace EthnessaAPI.ServerCommands
 {

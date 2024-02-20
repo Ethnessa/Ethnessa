@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EthnessaAPI.Models;
 using Terraria;
 
 namespace EthnessaAPI.ServerCommands;

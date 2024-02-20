@@ -101,6 +101,12 @@ public class UserAccount
 		return false;
 	}
 
+	public void SetUUID(string uuid)
+	{
+		UUID = uuid;
+		UserAccountManager.SaveAccount(this);
+	}
+
 	public bool ChangeToDesiredPrefix(string groupName)
 	{
 		return UserAccountManager.SetDesiredGroupPrefix(this, groupName);

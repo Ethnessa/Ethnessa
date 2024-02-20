@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EthnessaAPI.Database;
 using EthnessaAPI.Database.Models;
+using EthnessaAPI.Models;
 using EthnessaAPI.ServerCommands;
 using Microsoft.Xna.Framework;
 

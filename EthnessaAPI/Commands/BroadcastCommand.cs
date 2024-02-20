@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EthnessaAPI.Models;
 
 namespace EthnessaAPI.ServerCommands;
 

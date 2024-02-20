@@ -155,8 +155,7 @@ namespace EthnessaAPI.Database
 		{
 			try
 			{
-				account.UUID = uuid;
-				userAccounts.ReplaceOne(acc => acc.Id == account.Id, account);
+				account.SetUUID(uuid);
 			}
 			catch (Exception ex)
 			{

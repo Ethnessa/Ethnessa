@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EthnessaAPI.Database;
 using EthnessaAPI.Hooks;
+using EthnessaAPI.Models;
 using Terraria;
 
 namespace EthnessaAPI.ServerCommands

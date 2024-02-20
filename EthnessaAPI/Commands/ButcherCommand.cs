@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using EthnessaAPI.Models;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
