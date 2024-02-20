@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EthnessaAPI.Database;
 using EthnessaAPI.Localization;
+using EthnessaAPI.Models;
 using Terraria;
 using Terraria.ID;
 
@@ -628,6 +629,27 @@ namespace EthnessaAPI
 		{
 			FileTools.SetupConfig();
 			ServerBase.HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
+
+			EnsureAliases();
+		}
+
+		public void EnsureAliases()
+		{
+			foreach (CommandAlias alias in ServerBase.Config.Settings.CommandAliases)
+			{
+				var realCommand = Commands.ServerCommands.FirstOrDefault(x => x.Names.Contains(alias.Command, StringComparer.InvariantCultureIgnoreCase));
+
+				if (realCommand is null)
+				{
+					ServerBase.Log.ConsoleWarn($"Command alias '{alias.Alias}' references non-existent command '{alias.Command}'. Is this misconfigured, if not you may remove it!");
+					continue;
+				}
+
+				if (realCommand.Names.Contains(alias.Alias) is false)
+				{
+					realCommand.Names.Add(alias.Alias);
+				}
+			}
 		}
 
 		/// <summary>

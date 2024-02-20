@@ -4,13 +4,14 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using EthnessaAPI.Models;
 
 namespace EthnessaAPI.Configuration
 {
 	/// <summary>
 	/// Settings used in the TShock configuration file
 	/// </summary>
-	public class TShockSettings
+	public class EthnessaSettings
 	{
 
 		#region ServerConsole Settings
@@ -559,22 +560,32 @@ namespace EthnessaAPI.Configuration
 		public Dictionary<string, SecureRest.TokenData> ApplicationRestTokens = new Dictionary<string, SecureRest.TokenData>();
 
 		#endregion
+
+		#region Command alias settings
+
+		public CommandAlias[] CommandAliases { get; set; } =
+		{
+			new CommandAlias("announce",  "bc")
+		};
+
+		#endregion
+
 	}
 
 	/// <summary>
 	/// TShock's configuration file
 	/// </summary>
-	public class TShockConfig : ConfigFile<TShockSettings>
+	public class TShockConfig : ConfigFile<EthnessaSettings>
 	{
 		/// <summary>
-		/// Upgrades the configuration file from the old format if required, then reads and returns the currently configured <see cref="TShockSettings"/>
+		/// Upgrades the configuration file from the old format if required, then reads and returns the currently configured <see cref="EthnessaSettings"/>
 		/// </summary>
 		/// <param name="json"></param>
 		/// <param name="incompleteSettings"></param>
 		/// <returns></returns>
-		public override TShockSettings ConvertJson(string json, out bool incompleteSettings)
+		public override EthnessaSettings ConvertJson(string json, out bool incompleteSettings)
 		{
-			var settings = FileTools.LoadConfigAndCheckForChanges<TShockSettings>(json, out incompleteSettings);
+			var settings = FileTools.LoadConfigAndCheckForChanges<EthnessaSettings>(json, out incompleteSettings);
 
 			Settings = settings;
 			OnConfigRead?.Invoke(this);
@@ -588,7 +599,7 @@ namespace EthnessaAPI.Configuration
 		public static void DumpDescriptions()
 		{
 			var sb = new StringBuilder();
-			var defaults = new TShockSettings();
+			var defaults = new EthnessaSettings();
 
 			foreach (var field in defaults.GetType().GetFields().OrderBy(f => f.Name))
 			{

@@ -292,6 +292,8 @@ namespace EthnessaAPI
 					LogPath = Config.Settings.LogPath;
 				}
 
+				Utils.EnsureAliases();
+
 				try
 				{
 					logFilename = Path.Combine(LogPath, now.ToString(LogFormat) + ".log");
@@ -1897,7 +1899,7 @@ namespace EthnessaAPI
 
 		/// <summary>OnConfigRead - Fired when the config file has been read.</summary>
 		/// <param name="file">file - The config file object.</param>
-		public void OnConfigRead(ConfigFile<TShockSettings> file)
+		public void OnConfigRead(ConfigFile<EthnessaSettings> file)
 		{
 			NPC.defaultMaxSpawns = file.Settings.DefaultMaximumSpawns;
 			NPC.defaultSpawnRate = file.Settings.DefaultSpawnRate;
