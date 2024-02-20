@@ -1,6 +1,9 @@
 # Ethnessa API
 What is this? As of right now it is a fork of TShock which features a complete database provider switch. We use MongoDB for local server and global server storage. This is the only major change at the moment, apart from minor changes here and there.
 
+> [!CAUTION]
+> EthnessaAPI is not in any way finished, and is expected to have bugs. Please keep this in mind. 
+
 > [!WARNING]
 > Vanilla TShock plugins WILL NOT WORK with this fork! However -- they are not hard to port over!
  
