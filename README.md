@@ -15,17 +15,39 @@ Getting MongoDB installed and configured to run with your server is easy!
 3. (Recommended, but optional) Setup authentication on your MongoDB!
 
 ## Notable changes:
+
+### Refactoring
+ Some pretty major refactoring has taken place in Ethnessa. Our aim is to make the codebase more consistent, and easy to maintain. As of right now, a lot of the code still uses TShock's original code, but throughout the development cycle of this project we aim to be pretty distinctive from TShock. Here are some important things to note as far as refactoring: 
 - TSPlayer has been renamed **ServerPlayer**
+  - ServerPlayer has been renamed to **ServerConsolePlayer**
 - TShock main class is now **ServerBase**
-- Accessing DB storage can be done from `ServerBase.GlobalDatabase` or `ServerBase.LocalDatabase`. These are both IMongoDatabase objects.
-- ServerPlayer has been renamed to **ServerConsolePlayer**
-- UserAccounts can now have **multiple groups, account-independent permissions, weighted and user-preferred prefixes**
-- **Default groups re-worked:** only three groups are created and are not enforced, except for "default" and "guest" (which can be configured if you'd like to change the names). One un-enforced group is created called "admin", this group has the `*` flag, which means it has all permissions. This group can be removed. We have removed the enforcement of a super-admin group in place of forcing the console to have a user account with all permissions added by default. This means you can also change the permissions the server console itself has, which isn't really recommended, but you can.
-- **Introducing.. tags!** Tags are prefixes that can be appended to user's chat messages alongside the user's group prefix. As many can be toggled on or off. Why would you want this? Let's say you want staff members to have a "[Staff]" tag while also retaining their other group tags.
-- Ban & mute system has been redone
-- Most commands have been ripped out
+- TShockAPI namespace is now **EthnessaAPI**
+
+### Database Provider Swap
+ As stated earlier, we have switched from using SQLite and MySQL to MongoDB for concurrent data storage. This means there are some changes to note:
+  - Accessing DB storage can be done from `ServerBase.GlobalDatabase` or `ServerBase.LocalDatabase`. These are both IMongoDatabase objects.
+  - All database managers previously were objects, now they are interfaced through a static class.
+
+### UserAccounts, groups, and permissions re-done
+Ethnessa has remodeled the permissions systems and user accounts to further align with more familiar permission systems, such as PermissionsEx from Minecraft.   
+- UserAccounts can now have **multiple groups!**
+  - They can also have account-independent permissions.
+        - The server console now has an account within the database, with no group, but with the `*` permission flag in it's **User Permissions**. This means it still has access to all permission.
+   - Groups are now weighted, for prefix assignment
+     - Prefixes can also be chosen by the user in-game     
+- **Default groups re-worked:**
+   -  Only three default groups are created
+   -  The only enforced groups are a default, and guest group. Both of which can be renamed.
+   -  SuperAdmin and all staff groups have been replaced with `admin`, which is unenforced (can be deleted) and is not as restrictive as the super-admin group in vanilla TShock. **NOTE:** `admin` has the `*` permissions flag, meaning it has access to all permissions.
+
+### Quality of Life improvements
+- **Introducing.. tags!** Tags are prefixes that can be appended to user's chat messages alongside the user's group prefix. As many can be toggled on or off. Why would you want this? Let's say you want staff members to have a "[Staff]" tag while also retaining their other group tags, or maybe a "[Donor]" tag.
+- Ban & mute system has been redone to be more understandable and easy to manage and use.
 - **Chat filtering!** You can now filter the chat for messages you don't want players saying. Blacklisted words will be censored as '***'
 - **Nicknames!** Players can now change their name on the server to their preferred nickname, differing from their account name / character name.
+ 
+### Other notes
+- Most commands have been ripped out but we are slowly working on reimplementing most useful and essential commands.
 
 ## Why?
 We are a group of developers that are working on creating a new Terraria server network, and we will be using this fork of TShock.
