@@ -61,7 +61,7 @@ public static class NicknameManager
 		return result.ModifiedCount > 0;
 	}
 
-	private static void UpdateIngameName(UserAccount account, string newName)
+	internal static void UpdateIngameName(UserAccount account, string newName)
 	{
 		var onlinePlayer = ServerPlayer.GetPlayerOfUserAccount(account);
 		if (onlinePlayer is not null)

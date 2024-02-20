@@ -95,7 +95,9 @@ namespace EthnessaAPI
 				new SpawnMobCommand(),
 				new ButcherCommand(),
 				new TagCommand(),
-				new PrefixCommand()
+				new PrefixCommand(),
+				new BroadcastCommand(),
+				new NicknameCommand()
 			};
 		}
 

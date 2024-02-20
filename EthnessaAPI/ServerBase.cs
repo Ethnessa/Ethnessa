@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using EthnessaAPI.CLI;
 using EthnessaAPI.Configuration;
 using EthnessaAPI.Database;
+using EthnessaAPI.Database.Models;
 using EthnessaAPI.Hooks;
 using EthnessaAPI.Localization;
 using EthnessaAPI.Modules;
@@ -597,6 +598,13 @@ namespace EthnessaAPI
 
 			// Check if the player is banned
 			BanManager.IsPlayerBanned(args.Player);
+
+			// check if player has a nickname
+			var nickname = NicknameManager.GetNickname(account);
+			if (nickname is not null)
+			{
+				NicknameManager.UpdateIngameName(account, nickname.AccountNickname);
+			}
 		}
 
 
