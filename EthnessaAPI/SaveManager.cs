@@ -1,21 +1,4 @@
-﻿/*
-TShock, a server mod for Terraria
-Copyright (C) 2011-2019 Pryaxis & TShock Contributors
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -26,6 +9,9 @@ using TerrariaApi.Server;
 
 namespace EthnessaAPI
 {
+	/// <summary>
+	/// Intended to be a thread safe way to save the world
+	/// </summary>
 	class SaveManager : IDisposable
 	{
 		// Singleton
@@ -33,7 +19,7 @@ namespace EthnessaAPI
 		private SaveManager()
 		{
 			_saveThread = new Thread(SaveWorker);
-			_saveThread.Name = "TShock SaveManager Worker";
+			_saveThread.Name = "Ethnessa SaveManager Worker";
 			_saveThread.Start();
 		}
 		public static SaveManager Instance { get { return instance; } }
@@ -126,13 +112,13 @@ namespace EthnessaAPI
 							// These can be caused by an unexpected error such as a bad or out of date plugin
 							try
 							{
-								if (task.direct)
+								if (task.Direct)
 								{
 									OnSaveWorld(new WorldSaveEventArgs());
-									WorldFile.SaveWorld(task.resetTime);
+									WorldFile.SaveWorld(task.ResetTime);
 								}
 								else
-									WorldFile.SaveWorld(task.resetTime);
+									WorldFile.SaveWorld(task.ResetTime);
 
 								if (ServerBase.Config.Settings.AnnounceSave)
 									ServerBase.Utils.Broadcast(GetString("World saved."), Color.Yellow);
@@ -153,17 +139,17 @@ namespace EthnessaAPI
 
 		class SaveTask
 		{
-			public bool resetTime { get; set; }
-			public bool direct { get; set; }
+			public bool ResetTime { get; set; }
+			public bool Direct { get; set; }
 			public SaveTask(bool resetTime, bool direct)
 			{
-				this.resetTime = resetTime;
-				this.direct = direct;
+				this.ResetTime = resetTime;
+				this.Direct = direct;
 			}
 
 			public override string ToString()
 			{
-				return GetString("resetTime {0}, direct {1}", resetTime, direct);
+				return GetString("resetTime {0}, direct {1}", ResetTime, Direct);
 			}
 		}
 	}
