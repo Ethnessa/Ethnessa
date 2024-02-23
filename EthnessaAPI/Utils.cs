@@ -660,6 +660,7 @@ namespace EthnessaAPI
 
 				if (realCommand is null)
 				{
+					if (ServerBase.Log is null) continue;
 					ServerBase.Log.ConsoleWarn($"Command alias '{alias.Alias}' references non-existent command '{alias.Command}'. Is this misconfigured, if not you may remove it!");
 					continue;
 				}

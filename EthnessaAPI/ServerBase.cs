@@ -100,7 +100,7 @@ namespace EthnessaAPI
 		public static UpdateManager UpdateManager;
 
 		/// <summary>Log - Static reference to the log system, which outputs to either SQL or a text file, depending on user config.</summary>
-		public static ILog Log;
+		public static ILog? Log;
 
 		/// <summary>instance - Static reference to the TerrariaPlugin instance.</summary>
 		public static TerrariaPlugin instance;
@@ -367,7 +367,6 @@ namespace EthnessaAPI
 				// TODO: Allow MongoDB logging to be enabled/disabled, like TShock's prev SQL logging
 
 				Log = new TextLog(logFilename, LogClear);
-				Utils.EnsureAliases();
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
@@ -453,6 +452,7 @@ namespace EthnessaAPI
 
 				GetDataHandlers.InitGetDataHandler();
 				Commands.InitializeCommands();
+				Utils.EnsureAliases();
 
 				EnglishLanguage.Initialize();
 
