@@ -1,5 +1,5 @@
 # Ethnessa API
-What is this? As of right now it is a fork of TShock which features a complete database provider switch. We use MongoDB for local server and global server storage. This is the only major change at the moment, apart from minor changes here and there.
+What is this? As of right now it is a fork of TShock which features a complete database provider switch. We use MongoDB for local server and global server storage. Along with this, we have re-done a few of the administration systems.
 
 > [!CAUTION]
 > EthnessaAPI is not in any way finished, and is expected to have bugs. Please keep this in mind. 
@@ -10,7 +10,10 @@ What is this? As of right now it is a fork of TShock which features a complete d
 > [!IMPORTANT]
 > A MongoDB connection is REQUIRED for this to run! Configure in `data/config.json`
 
-## How do I get MongoDB setup?
+## Why?
+We are a group of developers that are working on creating a new Terraria server network, and we will be using this fork of TShock.
+
+## For personal use: How do I get MongoDB setup?
 Getting MongoDB installed and configured to run with your server is easy! 
 
 1. Download & Install [MongoDB](https://www.mongodb.com/try/download/community)
@@ -59,6 +62,3 @@ Ethnessa has remodeled the permissions systems and user accounts to further alig
  
 ### Other notes
 - Most commands have been ripped out but we are slowly working on reimplementing most useful and essential commands.
-
-## Why?
-We are a group of developers that are working on creating a new Terraria server network, and we will be using this fork of TShock.
