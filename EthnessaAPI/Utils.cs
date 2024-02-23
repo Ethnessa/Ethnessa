@@ -630,7 +630,6 @@ namespace EthnessaAPI
 			FileTools.SetupConfig();
 			ServerBase.HandleCommandLinePostConfigLoad(Environment.GetCommandLineArgs());
 
-			EnsureAliases();
 		}
 
 		public bool ContainsFilteredWord(string unfilteredText)

@@ -367,6 +367,7 @@ namespace EthnessaAPI
 				// TODO: Allow MongoDB logging to be enabled/disabled, like TShock's prev SQL logging
 
 				Log = new TextLog(logFilename, LogClear);
+				Utils.EnsureAliases();
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
