@@ -166,7 +166,7 @@ namespace EthnessaAPI.ServerCommands
 						args.Player.LoginHarassed = false;
 
 					}
-					UserAccountManager.SetUserAccountUUID(account, args.Player.UUID);
+					account.UUID = args.Player.UUID;
 
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
