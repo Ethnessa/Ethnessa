@@ -288,6 +288,8 @@ namespace EthnessaAPI.Database
 		/// <returns>The user account object returned from the search.</returns>
 		public static UserAccount? GetUserAccountById(int? id)
 		{
+			if (id == null) return null;
+
 			try
 			{
 				return GetUserAccount(new UserAccount { AccountId = id.Value });
