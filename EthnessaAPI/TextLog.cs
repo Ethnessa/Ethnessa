@@ -36,6 +36,8 @@ namespace EthnessaAPI
 		/// </summary>
 		public string FileName { get; set; }
 
+		public Action<string> WriteLine { get; set; }
+
 		/// <summary>
 		/// Creates the log file stream and sets the initial log level.
 		/// </summary>
@@ -274,6 +276,7 @@ namespace EthnessaAPI
 					DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
 					caller, level.ToString().ToUpper(), message);
 			}
+			WriteLine?.Invoke(logEntry);
 		}
 
 		public void Dispose()
